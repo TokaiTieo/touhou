@@ -52,6 +52,7 @@ coverage/
 .tmp/
 tmp/
 temp/
+/*.docx
 *.tmp
 *.temp
 *.bak
