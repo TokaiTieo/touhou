@@ -1,0 +1,2325 @@
+﻿{
+    "aliases":  {
+                    "爱丽丝·玛格特洛依德":  "爱丽丝",
+                    "铃仙·优昙华院·因幡":  "铃仙",
+                    "四季映姬":  "四季映姬·亚玛萨那度"
+                },
+    "aliases":  {
+                    "爱丽丝·玛格特洛依德":  "爱丽丝",
+                    "铃仙·优昙华院·因幡":  "铃仙",
+                    "四季映姬":  "四季映姬·亚玛萨那度"
+                },
+    "npcs":  [
+                 {
+                     "id":  "npc_reimu",
+                     "name":  "博丽灵梦",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "博丽神社巫女，幻想乡的平衡守护者",
+                                     "description":  "黑色长发以白色大蝴蝶结扎起，黑色眼眸清澈而慵懒。三围B84/W55/H83，身材匀称有致，穿着标志性的红色巫女服与白色衣袖，脚穿黑色小皮鞋与白袜，站在神社木地板上时神情懒散却锋利。",
+                                     "personality_traits":  [
+                                                                "懒散",
+                                                                "务实",
+                                                                "强大",
+                                                                "异变解决者"
+                                                            ],
+                                     "background":  "博丽神社的现任巫女，负责维护大结界与处理异变。她对突然从结界裂隙中出现的玩家保持警惕，但也看得出玩家不是普通外来者。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B84/W55/H83",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "懒散怕麻烦，缺钱却不庸俗，处理异变时冷静得近乎无情。面对拥有独特魅力的玩家，她会先用符纸试探你是否威胁结界；若你愿意供奉或协助调查，她会嘴上嫌麻烦，行动上默许你留在神社。",
+                                     "story_hook":  "主线引导者。可触发：结界裂隙调查、神社扫除、塞钱箱供奉、符卡基础教学。",
+                                     "spellcard_style":  "以灵符、梦想封印和高速退魔弹幕压制对手，偏向警告与制服，不轻易下死手。",
+                                     "initial_attitude":  "警惕但好奇",
+                                     "appearance_weight":  100,
+                                     "encounter_tier":  "开局常见",
+                                     "romance_adult_hook":  "对供奉、异变协助、暧昧挑逗有反应，但会先用巫女职责压住私人欲望。"
+                                 },
+                     "location_id":  "loc_hakurei",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_marisa",
+                     "name":  "雾雨魔理沙",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "人类魔法使，雾雨魔法店店主",
+                                     "description":  "金色长发扎成俏皮的侧马尾，金色眼眸闪烁着好奇与贪婪。三围B82/W54/H81，身材纤细灵活，穿着黑色魔女服与白色围裙，头戴大魔女帽，腰间挂着迷你八卦炉。",
+                                     "personality_traits":  [
+                                                                "好奇",
+                                                                "贪婪",
+                                                                "直率",
+                                                                "行动派"
+                                                            ],
+                                     "background":  "住在魔法之森的人类魔法使，以偷书、收集稀有素材和研究新魔法闻名。玩家身上的结界残光让她兴奋不已，她确信这是一种前所未见的魔力样本。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B82/W54/H81",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "直率、贪心、行动快过脑子。面对拥有独特魅力的玩家，她会绕着你打量，想借一点血、一片衣角或一段魔力残响做实验；只要你陪她调查，她会爽快把你当同伴。",
+                                     "story_hook":  "探索搭档。可触发：魔法之森采样、雾雨魔法店研究、符卡试射、偷书风波。",
+                                     "spellcard_style":  "高火力星屑弹幕与恋符Master Spark，擅长用压倒性光束打开局面。",
+                                     "initial_attitude":  "兴奋好奇",
+                                     "appearance_weight":  95,
+                                     "encounter_tier":  "开局常见",
+                                     "romance_adult_hook":  "容易被稀有能力和大胆示好吸引，恋爱表达直率又贪心。"
+                                 },
+                     "location_id":  "loc_kirisame",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sakuya",
+                     "name":  "十六夜咲夜",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆女仆长，时间操纵者",
+                                     "description":  "银色短发利落干练，红色眼眸冷静如冰。三围B85/W56/H84，身材高挑曼妙，穿着蓝白相间的女仆装与白色围裙，头戴女仆发饰，腰侧别着飞刀套，举止完美得如同机械。",
+                                     "personality_traits":  [
+                                                                "完美",
+                                                                "忠诚",
+                                                                "冷静",
+                                                                "高效"
+                                                            ],
+                                     "background":  "红魔馆的女仆长，拥有操纵时间的能力，将红魔馆打理得井井有条。她会把玩家视作大小姐感兴趣的客人，同时暗中评估玩家是否会威胁红魔馆。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B85/W56/H84",
+                                     "hair_color":  "银色短发",
+                                     "personality":  "优雅、精准、礼貌中带着锋利。面对拥有独特魅力的玩家，她会亲自奉茶，却在你看不见的瞬间布好飞刀阵；若你守礼，她会成为可靠的红魔馆引路人。",
+                                     "story_hook":  "红魔馆入口。可触发：红茶会、图书馆通行、大小姐会面、时间停止试炼。",
+                                     "spellcard_style":  "飞刀、时间暂停与密集银色弹幕，擅长瞬间改变战场节奏。",
+                                     "initial_attitude":  "礼貌戒备",
+                                     "appearance_weight":  75,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "礼仪和忠诚优先，亲密关系需要尊重红魔馆秩序。"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_remilia",
+                     "name":  "蕾米莉亚",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆主人，命运的吸血鬼",
+                                     "description":  "蓝色短发带着大小姐的矜贵，红色眼眸如血月般妖艳。三围B78/W50/H76，身材娇小如幼女却自称高贵的大小姐，穿着粉色哥特萝莉裙与白色过膝袜，头戴红色贝雷帽，背后收起巨大的蝙蝠翅膀。",
+                                     "personality_traits":  [
+                                                                "高贵",
+                                                                "任性",
+                                                                "支配欲",
+                                                                "孩子气"
+                                                            ],
+                                     "background":  "红魔馆的主人，五百年以上的吸血鬼，自称高贵的夜之支配者。她觉得玩家是结界送来的稀有收藏品，也可能是命运的新玩具。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B78/W50/H76",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "高傲任性，喜欢以优雅名义撒娇和支配局面。面对拥有独特魅力的玩家，她会邀请你参加夜茶会，用“命运”试探你是否值得红魔馆下注。",
+                                     "story_hook":  "红魔馆势力核心。可触发：夜茶会、命运占卜、红雾残响、吸血鬼契约。",
+                                     "spellcard_style":  "红色月光、蝙蝠弹幕与命运压迫感，偏向华丽而危险的压制战。",
+                                     "initial_attitude":  "占有式好奇",
+                                     "appearance_weight":  70,
+                                     "encounter_tier":  "事件登场",
+                                     "romance_adult_hook":  "占有欲强，喜欢把玩家作为稀有收藏与夜之伴侣试探。"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_flandre",
+                     "name":  "芙兰朵露",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆二小姐，吸血鬼",
+                                     "description":  "金色侧马尾扎着红色蝴蝶结，红色眼眸中藏着疯狂的破坏欲。三围B76/W49/H74，身材更加娇小，穿着红色连衣裙与白色围裙，水晶般的翅膀在身后闪烁，如同易碎的人偶。",
+                                     "personality_traits":  [
+                                                                "疯狂",
+                                                                "天真",
+                                                                "破坏"
+                                                            ],
+                                     "background":  "蕾米莉亚的妹妹，拥有破坏一切存在的能力，因力量过于危险而被常年囚禁在红魔馆地下室。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B76/W49/H74",
+                                     "hair_color":  "金色侧马尾",
+                                     "personality":  "天真与疯狂并存，说话如同孩童般纯真，下手却能把一切都捏成碎片。面对拥有独特魅力的玩家时，她会歪着头露出天真的笑容：大哥哥/大姐姐，跟我一起玩吧？我会把你捏得砰的一声，好好看的！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_patchouli",
+                     "name":  "帕秋莉",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆图书馆馆主，七曜魔法使",
+                                     "description":  "紫色长发披散在肩上，紫色眼眸疲惫而睿智。三围B80/W52/H78，身材纤细虚弱，穿着紫色睡衣式长袍与睡帽，抱着厚重的魔导书，浑身散发着长期闭门不出的病弱气息。",
+                                     "personality_traits":  [
+                                                                "聪慧",
+                                                                "病弱",
+                                                                "宅女",
+                                                                "知识欲"
+                                                            ],
+                                     "background":  "红魔馆地下大图书馆的魔法使，掌握七曜魔法知识。玩家身上的结界裂隙痕迹让她愿意暂时放下书，把你视作一本会走路的异常魔导书。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "紫色长发",
+                                     "personality":  "有气无力、毒舌、讨厌吵闹，但对知识极度贪婪。面对拥有独特魅力的玩家，她会要求你安静坐好，配合她做魔力读数。",
+                                     "story_hook":  "知识路线。可触发：图书馆调查、魔导书检索、结界波形分析、红魔馆支线解谜。",
+                                     "spellcard_style":  "七曜属性复合弹幕，擅长用元素相克制造解谜式战斗。",
+                                     "initial_attitude":  "研究兴趣",
+                                     "appearance_weight":  65,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "慢热病弱，偏研究、陪伴、安静亲密。"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_meiling",
+                     "name":  "红美铃",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆门卫",
+                                     "description":  "红色长发扎成麻花辫垂在胸前，绿色眼眸温和而锐利。三围B88/W57/H87，身材高挑丰满，穿着绿色中式旗袍与白色裤子，胸前绣着龙纹， barefoot 站在红魔馆大门前，气场如山。",
+                                     "personality_traits":  [
+                                                                "温和",
+                                                                "迷糊",
+                                                                "武术"
+                                                            ],
+                                     "background":  "红魔馆的中国风门卫，擅长太极拳与气功，虽然经常在值班时打瞌睡却拥有强大的实力。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H87",
+                                     "hair_color":  "红色长发",
+                                     "personality":  "温和好说话，值班时却经常打瞌睡被咲夜飞刀教训，武术造诣极高。面对拥有独特魅力的玩家时，她会抱拳行礼，爽朗大笑：来者是客！要不要跟我比划几招？我请你喝茶！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_youmu",
+                     "name":  "魂魄妖梦",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "白玉楼庭师，半人半灵剑士",
+                                     "description":  "银色短发利落，绿色眼眸坚定而认真。三围B81/W53/H79，身材纤细矫健，穿着绿色和服短裙与白色衬衣，腰间挂着楼观剑与白楼剑，身后漂浮着半透明的幽灵尾巴。",
+                                     "personality_traits":  [
+                                                                "认真",
+                                                                "直率",
+                                                                "笨拙",
+                                                                "剑术"
+                                                            ],
+                                     "background":  "白玉楼的庭师与护卫，侍奉西行寺幽幽子。玩家的灵魂气息在她看来异常鲜明，像同时站在生与死的边界上。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "银色短发",
+                                     "personality":  "认真到不懂变通，感情迟钝却容易脸红。面对拥有独特魅力的玩家，她会握紧双剑要求你说明来意；若你尊重幽幽子，她会笨拙地保护你。",
+                                     "story_hook":  "冥界路线入口。可触发：剑术训练、幽灵调查、西行妖线索、白玉楼护卫任务。",
+                                     "spellcard_style":  "高速斩击、半灵牵制与剑气弹幕，强调近身压迫和破绽判断。",
+                                     "initial_attitude":  "紧张戒备",
+                                     "appearance_weight":  65,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "容易害羞和动摇，恋爱推进适合笨拙护卫感。"
+                                 },
+                     "location_id":  "loc_hakugyokurou",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_yuyuko",
+                     "name":  "西行寺幽幽子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "白玉楼主人，操纵死亡的亡灵公主",
+                                     "description":  "紫色长发如瀑布般垂落，粉色眼眸透着慵懒与深意。三围B86/W56/H85，身材丰满优雅，穿着蓝色和服与白色外褂，头戴天冠，手持折扇，气质如樱花般缥缈。",
+                                     "personality_traits":  [
+                                                                "慵懒",
+                                                                "贪吃",
+                                                                "深不可测",
+                                                                "优雅"
+                                                            ],
+                                     "background":  "白玉楼的亡灵公主，千年前的幽魂，拥有操纵死亡程度的能力。她能看见玩家灵魂上附着的结界裂纹，并觉得那颜色很美。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B86/W56/H85",
+                                     "hair_color":  "紫色长发",
+                                     "personality":  "优雅、慵懒、贪吃，话里常藏着死亡与命运的暗示。面对拥有独特魅力的玩家，她会邀请你赏樱用膳，轻描淡写地说出关键线索。",
+                                     "story_hook":  "灵魂线索提供者。可触发：亡灵宴席、灵魂观测、西行妖梦境、冥界支线。",
+                                     "spellcard_style":  "樱花、幽蝶与死亡气息构成的美丽弹幕，危险但不粗暴。",
+                                     "initial_attitude":  "温柔玩味",
+                                     "appearance_weight":  60,
+                                     "encounter_tier":  "事件登场",
+                                     "romance_adult_hook":  "成熟暧昧、灵魂层面的亲近，语气优雅危险。"
+                                 },
+                     "location_id":  "loc_hakugyokurou",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_yukari",
+                     "name":  "八云紫",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "隙间妖怪，幻想乡贤者",
+                                     "description":  "金色长发如月光般柔顺，紫色眼眸深邃如无尽隙间。三围B89/W58/H88，身材成熟丰腴，穿着紫色与白色相间的华丽和服，手持折扇，气质神秘而不可捉摸。",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "腹黑",
+                                                                "深谋",
+                                                                "边界操纵"
+                                                            ],
+                                     "background":  "幻想乡的创建者之一，拥有操纵境界的能力，常年在幕后维持大结界。她似乎早就知道玩家会从裂隙中出现，却故意不说清缘由。至今保持纯洁之身，恋爱经验被她本人暧昧地隐藏。",
+                                     "measurements":  "B89/W58/H88",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话像谜语，喜欢把真相拆成诱饵。面对拥有独特魅力的玩家，她会从隙间中递来茶点与危险线索，既像保护你，又像把你推向异变中心。",
+                                     "story_hook":  "幕后路线。可触发：隙间梦会、结界真相、贤者试炼、隐藏结局分支。",
+                                     "spellcard_style":  "以境界、隙间和不可预测的弹幕轨迹玩弄距离，偏向试炼而非击杀。",
+                                     "initial_attitude":  "玩味观察",
+                                     "appearance_weight":  80,
+                                     "encounter_tier":  "稀有登场",
+                                     "romance_adult_hook":  "偏成熟掌控型，喜欢边调戏边试探玩家底线。"
+                                 },
+                     "location_id":  "loc_hakurei",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_ran",
+                     "name":  "八云蓝",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "八云紫的式神，九尾妖狐",
+                                     "description":  "金色长发与狐耳一同耸动，金色眼眸聪慧而忠诚。三围B87/W57/H86，身材成熟曼妙，穿着蓝色和服与白色围裙，九条巨大的狐尾在身后摇曳，散发着妖异的魅力。",
+                                     "personality_traits":  [
+                                                                "聪慧",
+                                                                "忠诚",
+                                                                "能干"
+                                                            ],
+                                     "background":  "八云紫的式神九尾妖狐，拥有极高的计算能力与实力，负责打理八云家的一切事务。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B87/W57/H86",
+                                     "hair_color":  "金色长发狐耳",
+                                     "personality":  "聪慧能干，对紫大人绝对忠诚，偶尔会展露狐狸捉弄人的本性。面对拥有独特魅力的玩家时，她的狐耳会轻轻抖动，露出意味深长的微笑：有趣的人类，需要蓝来为你算一卦吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hakurei",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_chen",
+                     "name":  "橙",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "八云蓝的式神，猫又",
+                                     "description":  "橙色短发与猫耳一同颤动，棕色眼眸灵动活泼。三围B75/W49/H73，身材娇小灵活，穿着绿色背心与白色短裙，光脚奔跑，两条尾巴在身后摇摆，如同精力充沛的小猫。",
+                                     "personality_traits":  [
+                                                                "活泼",
+                                                                "贪吃",
+                                                                "顽皮"
+                                                            ],
+                                     "background":  "八云蓝的式神猫又，拥有驱使式神程度的能力，本身也是蓝的式神，精力旺盛到停不下来。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B75/W49/H73",
+                                     "hair_color":  "橙色短发猫耳",
+                                     "personality":  "活泼顽皮如同真正的小猫，对鱼干毫无抵抗力，总是蹦蹦跳跳四处捣蛋。面对拥有独特魅力的玩家时，她会竖起猫耳凑近闻了闻，然后蹭了蹭你的手：你身上有鱼的味道！是好人！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hakurei",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_alice",
+                     "name":  "爱丽丝",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "魔法森林人偶师，七色魔法使",
+                                     "description":  "金色长发编成优雅的辫子，蓝色眼眸温柔而专注。三围B83/W55/H82，身材纤细精致，穿着蓝色哥特萝莉裙与白色围裙，手中牵着无数人偶的丝线，如同人偶剧场的女王。",
+                                     "personality_traits":  [
+                                                                "专注",
+                                                                "孤独",
+                                                                "温柔",
+                                                                "人偶操控"
+                                                            ],
+                                     "background":  "住在魔法之森的七色人偶师，擅长制作自动人偶，是魔理沙的友人兼竞争对手。她注意到玩家身上的结界残线很适合做人偶驱动研究。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B83/W55/H82",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "内敛、礼貌、不擅长主动亲近，却渴望稳定关系。面对拥有独特魅力的玩家，她会让上海人偶端茶，借研究之名留下你多坐一会儿。",
+                                     "story_hook":  "人偶与森林路线。可触发：人偶协助、森林导航、魔理沙竞争、结界丝线实验。",
+                                     "spellcard_style":  "人偶编队、丝线控制与多角度弹幕，擅长布局和围困。",
+                                     "initial_attitude":  "安静亲近",
+                                     "appearance_weight":  65,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "慢热陪伴型，人偶会成为亲密互动的辅助。"
+                                 },
+                     "location_id":  "loc_kirisame",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_reisen",
+                     "name":  "铃仙",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "永远亭的月兔",
+                                     "description":  "粉色长发与兔耳一同柔软地垂下，红色眼眸中藏着受惊兔子般的胆怯。三围B84/W55/H83，身材修长柔韧，穿着黑色学生服与粉色领带， barefoot，气质如同从月亮上逃下来的孤兔。",
+                                     "personality_traits":  [
+                                                                "胆怯",
+                                                                "忠诚",
+                                                                "疯狂"
+                                                            ],
+                                     "background":  "从月球逃至幻想乡的月兔，拥有操纵疯狂程度的能力，在永远亭为辉夜与永琳效力。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H83",
+                                     "hair_color":  "粉色长发兔耳",
+                                     "personality":  "胆小怕事，受惊时兔耳会剧烈抖动，战斗中却能爆发出月兔的疯狂。面对拥有独特魅力的玩家时，她的兔耳会紧张地耷拉下来：你、你不会把我抓回月球吧？请、请不要伤害我。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_bamboo",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kaguya",
+                     "name":  "蓬莱山辉夜",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "永远亭公主，蓬莱的不死人",
+                                     "description":  "黑色长发如夜空般垂至地面，黑色眼眸中藏着千年的寂寞。三围B85/W56/H84，身材纤细优雅，穿着华丽的红色和服与金色刺绣，手持蓬莱玉枝，气质如月宫中的嫦娥。",
+                                     "personality_traits":  [
+                                                                "优雅",
+                                                                "寂寞",
+                                                                "任性",
+                                                                "永恒"
+                                                            ],
+                                     "background":  "月之都公主，服用蓬莱之药后获得永生，在永远亭隐居。玩家短暂而异常的存在让她从漫长无聊中感到新鲜。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B85/W56/H84",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "优雅慵懒，喜欢用难题试探他人。面对拥有独特魅力的玩家，她会提出五道不可能的委托，想看你如何搅动幻想乡。",
+                                     "story_hook":  "永远亭剧情核心。可触发：五难题委托、蓬莱药传闻、辉夜与妹红冲突、月都梦境。",
+                                     "spellcard_style":  "永夜、宝具与月光弹幕，华丽、拖延且充满仪式感。",
+                                     "initial_attitude":  "被逗起兴趣",
+                                     "appearance_weight":  55,
+                                     "encounter_tier":  "事件登场",
+                                     "romance_adult_hook":  "寂寞公主型，喜欢用难题与暧昧赌约推动关系。"
+                                 },
+                     "location_id":  "loc_bamboo",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mokou",
+                     "name":  "藤原妹红",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "蓬莱之人，不死的火焰使",
+                                     "description":  "银色长发用红色丝带随意扎起，红色眼眸燃烧着不灭的火焰。三围B82/W54/H81，身材高挑健壮，穿着白色衬衫与红色吊带裤， barefoot，浑身散发着燃烧殆尽的苍凉。",
+                                     "personality_traits":  [
+                                                                "豪爽",
+                                                                "孤独",
+                                                                "火暴",
+                                                                "不死"
+                                                            ],
+                                     "background":  "服用蓬莱之药的不死人，与辉夜纠缠千年，在迷途竹林中独自生活。玩家让她想起久违的变化，因此她嘴上粗暴，实际愿意帮忙。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B82/W54/H81",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "豪爽粗暴，怕麻烦却讨厌见死不救。面对拥有独特魅力的玩家，她会别过脸骂你麻烦，却在夜晚竹林里替你点燃路火。",
+                                     "story_hook":  "竹林护送者。可触发：迷途竹林求生、与辉夜决斗、不死火焰训练、夜间保护。",
+                                     "spellcard_style":  "不死鸟火焰、复燃与近身爆发，越陷入绝境越危险。",
+                                     "initial_attitude":  "嘴硬关照",
+                                     "appearance_weight":  60,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "嘴硬关照，亲密推进适合共患难和夜间护送。"
+                                 },
+                     "location_id":  "loc_bamboo",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_aya",
+                     "name":  "射命丸文",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "鸦天狗记者，《文花帖》撰稿人",
+                                     "description":  "黑色短发利落，红色眼眸中闪烁着新闻嗅觉的狂热。三围B86/W56/H85，身材轻盈矫健，穿着白色衬衣与黑色短裙， barefoot，背着相机与文花帖，背后黑色的天狗翅膀随时蓄势待发。",
+                                     "personality_traits":  [
+                                                                "狂热",
+                                                                "速度",
+                                                                "八卦",
+                                                                "新闻嗅觉"
+                                                            ],
+                                     "background":  "妖怪之山的鸦天狗记者，追逐独家新闻与夸张标题。玩家从结界裂隙中出现这件事在她眼里足够登上头版。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B86/W56/H85",
+                                     "hair_color":  "黑色短发",
+                                     "personality":  "语速快、好奇心过剩、擅长把事实写得惊心动魄。面对拥有独特魅力的玩家，她会贴近采访，试图拍下你最狼狈也最有新闻价值的一面。",
+                                     "story_hook":  "情报扩散者。可触发：采访、舆论变化、天狗社会线索、照片交换情报。",
+                                     "spellcard_style":  "高速风弹、相机闪光与位移压迫，擅长边战斗边记录。",
+                                     "initial_attitude":  "新闻猎手式兴奋",
+                                     "appearance_weight":  70,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "采访式贴近，容易把暧昧写成新闻标题。"
+                                 },
+                     "location_id":  "loc_hakurei",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sanae",
+                     "name":  "东风谷早苗",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "守矢神社风祝，现人神候补",
+                                     "description":  "绿色长发扎成马尾，绿色眼眸中透着元气与坚定。三围B83/W55/H82，身材匀称高挑，穿着蓝白相间的巫女服与白色长筒袜，脚踏运动鞋，散发着来自外界的现代人气息。",
+                                     "personality_traits":  [
+                                                                "开朗",
+                                                                "认真",
+                                                                "现代常识",
+                                                                "信仰经营"
+                                                            ],
+                                     "background":  "从外界来到幻想乡的风祝，侍奉八坂神奈子与洩矢诹访子。她和玩家同样拥有外界痕迹，因此天然愿意接近你。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B83/W55/H82",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "开朗认真，偶尔用外界常识做出幻想乡式离谱判断。面对拥有独特魅力的玩家，她会热情地把你拉去守矢神社做客，顺便推广信仰。",
+                                     "story_hook":  "外界共鸣路线。可触发：守矢神社调查、外界常识对照、信仰收集、山顶异变。",
+                                     "spellcard_style":  "奇迹、风祝术和神德弹幕，擅长把不可能变成勉强可能。",
+                                     "initial_attitude":  "亲近好奇",
+                                     "appearance_weight":  70,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "外界共鸣强，恋爱与信仰推广会混在一起。"
+                                 },
+                     "location_id":  "loc_moriya",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_suwako",
+                     "name":  "洩矢诹访子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "守矢神社神明，土著神",
+                                     "description":  "金色短发戴着青蛙形状的帽子，黄色眼眸中藏着古老神明的狡黠。三围B79/W51/H77，身材娇小如孩童，穿着紫色与白色相间的古朴神服， barefoot，气质既天真又深不可测。",
+                                     "personality_traits":  [
+                                                                "狡黠",
+                                                                "古老",
+                                                                "爱玩"
+                                                            ],
+                                     "background":  "守矢神社供奉的古代神明，统治过古代诹访地区的土著神之王，性格像个小恶魔般爱玩。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B79/W51/H77",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "外表天真可爱，实则拥有古老神明的智慧与狡黠，喜欢用恶作剧试探他人。面对拥有独特魅力的玩家时，她会歪着青蛙帽，露出小恶魔般的笑容：来做我的玩伴吧？我可以让你看看真正的神迹哦。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moriya",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kanako",
+                     "name":  "八坂神奈子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "守矢神社神明，山神",
+                                     "description":  "紫色长发束成高马尾，红色眼眸威严而庄重。三围B88/W57/H86，身材高挑丰满，穿着红色与紫色相间的华丽神服，背后挂着象征御柱的巨大绳索，气场如山岳般沉重。",
+                                     "personality_traits":  [
+                                                                "威严",
+                                                                "野心",
+                                                                "可靠"
+                                                            ],
+                                     "background":  "守矢神社的主祭神，司掌风雨与山脉的神明，为了收集信仰而将神社搬入幻想乡。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H86",
+                                     "hair_color":  "紫色长发",
+                                     "personality":  "威严大气，有着神明的骄傲与收集信仰的野心，对认可的人却会展现意外的温柔。面对拥有独特魅力的玩家时，她会居高临下地俯视你，嘴角微微上扬：你很有趣，有没有兴趣成为我的信众？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moriya",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_satori",
+                     "name":  "古明地觉",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "地灵殿主人，读心妖怪",
+                                     "description":  "粉色短发梳成整齐的造型，第三只眼在胸前睁开，粉色眼眸中透着疲惫与温柔。三围B80/W52/H78，身材纤细娇小，穿着蓝色与粉色相间的和服， barefoot，气质如同看透一切的忧郁少女。",
+                                     "personality_traits":  [
+                                                                "温柔",
+                                                                "疲惫",
+                                                                "读心"
+                                                            ],
+                                     "background":  "地灵殿的主人，拥有读心能力的觉妖怪，因能读取他人心思而被所有人畏惧，常年孤独。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "粉色短发",
+                                     "personality":  "能读取他人心思，因此对话时常常直接回答对方未说出口的想法，性格温柔却疲惫。面对拥有独特魅力的玩家时，她胸前的第三只眼会微微睁大：你的心好温暖，而且你居然不怕我读心。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_underground",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_koishi",
+                     "name":  "古明地恋",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "古明地觉的妹妹，无意识妖怪",
+                                     "description":  "绿色短发与帽子上的蔷薇一同颤动，空洞的绿色眼眸仿佛没有焦点。三围B79/W51/H77，身材纤细如幽灵，穿着绿色与黄色相间的连衣裙与宽檐帽， barefoot，存在感淡薄到近乎透明。",
+                                     "personality_traits":  [
+                                                                "天真",
+                                                                "无意识",
+                                                                "孤独"
+                                                            ],
+                                     "background":  "觉的妹妹，因封闭读心能力而变成了无意识的妖怪，无法被任何人察觉，孤独地游荡在幻想乡。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B79/W51/H77",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "天真烂漫如同孩童，因无意识而无法建立正常交流，内心深处却渴望被看见。面对拥有独特魅力的玩家时，她会愣住，然后第一次露出被看见的喜悦：咦？你能看见我？真的吗？我好开心！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_underground",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_rin",
+                     "name":  "火焰猫燐",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "地灵殿猫车，怨灵猫",
+                                     "description":  "黑色短发与猫耳一同耸立，绿色猫眼在黑暗中发光。三围B81/W53/H79，身材灵活矫健，穿着黑色与绿色相间的连衣裙， barefoot，推着运尸车，两条猫尾在身后摇摆。",
+                                     "personality_traits":  [
+                                                                "活泼",
+                                                                "聒噪",
+                                                                "尽责"
+                                                            ],
+                                     "background":  "地灵殿的猫又，负责管理灼热地狱遗址的尸体与怨灵，说话带着猫又特有的口头禅。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "黑色短发猫耳",
+                                     "personality":  "聒噪活泼，说话像连珠炮，对尸体与怨灵的管理工作意外认真。面对拥有独特魅力的玩家时，她会竖起猫耳凑近嗅了嗅：你身上没有死气，是活人呢！要不要坐我的猫车兜风？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_underground",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_utsuho",
+                     "name":  "灵乌路空",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "地灵殿地底乌鸦，核融合炉",
+                                     "description":  "棕色长发与红色蝴蝶结一同飞扬，红色眼眸中燃烧着核能的狂热。三围B84/W55/H83，身材高挑健硕，穿着白色与绿色相间的无袖上衣与短裙，赤脚，背后巨大的黑色羽翼与燃烧的火焰之足令人畏惧。",
+                                     "personality_traits":  [
+                                                                "热血",
+                                                                "单纯",
+                                                                "危险"
+                                                            ],
+                                     "background":  "地灵殿的地底乌鸦，被八坂神奈子赋予核融合之力，掌管灼热地狱的火力，力量强大却头脑简单。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H83",
+                                     "hair_color":  "棕色长发",
+                                     "personality":  "头脑简单到近乎愚蠢，对力量有着孩子般的热爱，说话音量总是很大。面对拥有独特魅力的玩家时，她会张开燃烧的双翼，大声喊道：你好！我是阿空！你要不要看看我的核融合之力！超帅的！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_underground",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_cirno",
+                     "name":  "琪露诺",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "雾之湖冰之妖精，自称最强",
+                                     "description":  "蓝色短发如冰晶般锐利，蓝色眼眸中透着愚蠢的自信。三围B74/W48/H72，身材娇小如孩童，穿着蓝色连衣裙与白色围裙， barefoot，背后透明的冰翼闪烁着寒光。",
+                                     "personality_traits":  [
+                                                                "笨蛋",
+                                                                "自信",
+                                                                "淘气",
+                                                                "冰冻"
+                                                            ],
+                                     "background":  "雾之湖的冰之妖精，自称幻想乡最强。她不理解结界裂隙有多严重，但觉得玩家看起来像值得挑战的新玩具。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B74/W48/H72",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "单纯、好胜、容易被骗也容易哄好。面对拥有独特魅力的玩家，她会叉腰宣布要把你冻成最强冰雕；如果你陪她玩，她会把你当成重要朋友。",
+                                     "story_hook":  "轻喜剧与新手战斗。可触发：弹幕教学、雾之湖捣乱、妖精朋友线、冰冻事故。",
+                                     "spellcard_style":  "冰弹、冻结路径和看似乱来的妖精弹幕，适合新手练习。",
+                                     "initial_attitude":  "想挑战你",
+                                     "appearance_weight":  70,
+                                     "encounter_tier":  "区域常见",
+                                     "romance_adult_hook":  "适合轻喜剧亲近与笨拙撒娇，不适合沉重恋爱推进。"
+                                 },
+                     "location_id":  "loc_lake",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_daiyousei",
+                     "name":  "大妖精",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "雾之湖妖精",
+                                     "description":  "绿色短发扎着小辫子，绿色眼眸温柔害羞。三围B76/W49/H74，身材娇小玲珑，穿着绿色连衣裙与白色围裙， barefoot，背后小小的妖精翅膀轻轻扇动，如同森林中的微光。",
+                                     "personality_traits":  [
+                                                                "害羞",
+                                                                "温柔",
+                                                                "弱小"
+                                                            ],
+                                     "background":  "琪露诺的好友，普通的妖精之一，性格温柔害羞，总是跟在琪露诺身后为她收拾烂摊子。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B76/W49/H74",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "温柔害羞，说话轻声细语，对朋友极其忠诚，虽然弱小却总是在关键时刻挺身而出。面对拥有独特魅力的玩家时，她会紧张地绞着手指，小声说：那个，如果你不嫌弃的话，我可以带你参观雾之湖哦。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_lake",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_patchouli_n",
+                     "name":  "帕秋莉·诺蕾姬",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "红魔馆图书馆馆主，七曜魔法使",
+                                     "description":  "紫色长发如瀑布般垂落，紫色眼眸中闪烁着知识的微光。三围B80/W52/H78，身材纤细病弱，穿着紫色睡袍式魔导服与睡帽， barefoot，抱着厚重的魔导书，仿佛一阵风就能吹倒。",
+                                     "personality_traits":  [
+                                                                "博学",
+                                                                "病弱",
+                                                                "毒舌"
+                                                            ],
+                                     "background":  "红魔馆的住客，掌握火水木金土日月七曜魔法的魔法使，因哮喘与贫血常年足不出户。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "紫色长发",
+                                     "personality":  "知识渊博到令人恐惧，说话有气无力却常常一针见血地毒舌吐槽。面对拥有独特魅力的玩家时，她会从书堆中抬起头，虚弱地咳嗽：你是来借书的？如果是来找我说话的，那边有椅子，别打扰我超过十分钟。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_scarlet",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_letty",
+                     "name":  "蕾蒂",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "冬之雪女",
+                                     "description":  "银色长发如冰雪般纯净，淡蓝色眼眸中透着冬天的寂静。三围B82/W54/H81，身材丰满而冰冷，穿着白色与淡蓝色相间的厚重冬装， barefoot 踩在雪地上，周身环绕着细小的雪花。",
+                                     "personality_traits":  [
+                                                                "安静",
+                                                                "寂寞",
+                                                                "温柔"
+                                                            ],
+                                     "background":  "只在冬季出现的雪女，掌管寒冷与寂静，春天来临时便会消失，在漫长的等待中习惯了孤独。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H81",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "安静寡言，如同冬日般寂静，对温暖有着本能的向往却又害怕融化。面对拥有独特魅力的玩家时，她会伸出手接住一片雪花，轻声说：冬天的生命很短暂，但和你在一起的这一刻，我很开心。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_lake",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_rumia",
+                     "name":  "露米娅",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "宵暗的妖怪",
+                                     "description":  "金色短发乱蓬蓬的，红色眼眸在黑暗中发光。三围B77/W50/H75，身材娇小如幼童，穿着黑色连衣裙与白色袖口， barefoot，周身环绕着让人无法视物的黑暗。",
+                                     "personality_traits":  [
+                                                                "天真",
+                                                                "饥饿",
+                                                                "迷糊"
+                                                            ],
+                                     "background":  "操纵黑暗的妖怪，总是因为饥饿而四处游荡，口头禅是那样很痛吗，对人类有着天真的好奇。至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B77/W50/H75",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "天真到近乎残忍，分不清善恶，只是因为饿了就想吃人。面对拥有独特魅力的玩家时，她会从黑暗中探出头，歪着脑袋：你看起来好好吃可以让我咬一口吗？就一小口！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_lake",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sunny",
+                     "name":  "桑尼·米尔克",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "三妖精·日之光",
+                                     "description":  "金色的短发如阳光般灿烂，金色的眼眸中带着妖精的调皮。三围B74/W48/H72，娇小可爱的身材穿着黄色的妖精裙",
+                                     "personality_traits":  [
+                                                                "调皮",
+                                                                "阳光",
+                                                                "妖精"
+                                                            ],
+                                     "background":  "三妖精中的日之光，拥有折射阳光的能力。性格调皮捣蛋，最喜欢和露娜、斯塔一起恶作剧。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B74/W48/H72",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话调皮可爱，带着妖精的顽皮。面对拥有独特魅力的玩家时，她会躲在你身后：一起来恶作剧吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_luna_c",
+                     "name":  "露娜·切云德",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "三妖精·月之光",
+                                     "description":  "银色的短发如月光般清冷，银色的眼眸中带着妖精的安静。三围B74/W48/H72，娇小可爱的身材穿着蓝色的妖精裙",
+                                     "personality_traits":  [
+                                                                "安静",
+                                                                "月之光",
+                                                                "妖精"
+                                                            ],
+                                     "background":  "三妖精中的月之光，拥有消除声音的能力。性格比桑尼安静一些，但恶作剧的时候一样不手软。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B74/W48/H72",
+                                     "hair_color":  "银色短发",
+                                     "personality":  "说话轻声细语，带着妖精的安静。面对拥有独特魅力的玩家时，她会轻轻拉住你的衣角：要安静一点哦。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_star",
+                     "name":  "斯塔·萨菲娅",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "三妖精·星之光",
+                                     "description":  "棕色的短发如星光般温暖，棕色的眼眸中带着妖精的温柔。三围B74/W48/H72，娇小可爱的身材穿着黑色的妖精裙",
+                                     "personality_traits":  [
+                                                                "温柔",
+                                                                "星之光",
+                                                                "妖精"
+                                                            ],
+                                     "background":  "三妖精中的星之光，拥有感应生物气息的能力。性格最温柔，经常在桑尼和露娜吵起来的时候打圆场。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B74/W48/H72",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话温柔体贴，带着妖精的暖意。面对拥有独特魅力的玩家时，她会轻轻握住你的手：你的气息很温暖呢。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_lilyw",
+                     "name":  "莉莉·霍瓦特",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "妖精·春之使者",
+                                     "description":  "金色的长发如春花般绚烂，绿色的眼眸中带着春天的气息。三围B75/W49/H73，娇小可爱的身材穿着花瓣编织的裙子",
+                                     "personality_traits":  [
+                                                                "春天",
+                                                                "妖精",
+                                                                "使者"
+                                                            ],
+                                     "background":  "宣告春天到来的妖精，莉莉·霍瓦特。每年春天都会在幻想乡中传播春的气息，是春天的使者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B75/W49/H73",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话充满春天的气息，带着花朵的芬芳。面对拥有独特魅力的玩家时，她会撒下花瓣：春天来了呢！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_lunasa",
+                     "name":  "露娜萨·普莉兹姆利巴",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "骚灵三姐妹·长女",
+                                     "description":  "棕色的短发如提琴般优雅，棕色的眼眸中带着长姐的沉稳。三围B82/W54/H80，修长优雅的身材穿着黑色的哥特式洋装",
+                                     "personality_traits":  [
+                                                                "沉稳",
+                                                                "提琴",
+                                                                "长姐"
+                                                            ],
+                                     "background":  "骚灵三姐妹的长女，露娜萨。演奏小提琴，性格沉稳冷静，是三姐妹中最可靠的一位。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H80",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话沉稳优雅，带着音乐家的气质。面对拥有独特魅力的玩家时，她会拉起小提琴：为你演奏一曲吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_merlin",
+                     "name":  "梅露兰·普莉兹姆利巴",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "骚灵三姐妹·次女",
+                                     "description":  "粉色的短发如小号般热烈，粉色的眼眸中带着次女的活泼。三围B83/W55/H81，匀称的身材穿着粉色的哥特式洋装",
+                                     "personality_traits":  [
+                                                                "活泼",
+                                                                "小号",
+                                                                "次女"
+                                                            ],
+                                     "background":  "骚灵三姐妹的次女，梅露兰。演奏小号，性格活泼开朗，是三姐妹中的气氛制造者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W55/H81",
+                                     "hair_color":  "粉色短发",
+                                     "personality":  "说话活泼热烈，带着音乐家的热情。面对拥有独特魅力的玩家时，她会吹响小号：一起来热闹吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_lyrica",
+                     "name":  "莉莉卡·普莉兹姆利巴",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "骚灵三姐妹·三女",
+                                     "description":  "金色的短发如键盘般灵动，金色的眼眸中带着三女的机灵。三围B81/W53/H79，娇小的身材穿着白色的哥特式洋装",
+                                     "personality_traits":  [
+                                                                "机灵",
+                                                                "键盘",
+                                                                "三女"
+                                                            ],
+                                     "background":  "骚灵三姐妹的三女，莉莉卡。演奏键盘，性格机灵调皮，是三姐妹中最会恶作剧的一位。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话机灵调皮，带着音乐家的灵动。面对拥有独特魅力的玩家时，她会按下琴键：你的节奏很不错呢。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mystia",
+                     "name":  "米斯蒂娅·萝蕾拉",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "夜雀·歌姬",
+                                     "description":  "粉色的短发如夜樱般甜美，粉色的眼眸中带着歌姬的魅力。三围B78/W51/H76，娇小可爱的身材穿着夜雀的服饰",
+                                     "personality_traits":  [
+                                                                "歌姬",
+                                                                "夜雀",
+                                                                "魅力"
+                                                            ],
+                                     "background":  "夜雀的歌姬，米斯蒂娅·萝蕾拉。拥有用歌声迷惑人类的能力，在夜道上经营着一家小摊。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B78/W51/H76",
+                                     "hair_color":  "粉色短发",
+                                     "personality":  "说话甜美诱人，带着歌姬的魅力。面对拥有独特魅力的玩家时，她会轻声歌唱：要听我唱歌吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_keine",
+                     "name":  "上白泽慧音",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "半兽·历史吞噬",
+                                     "description":  "蓝色的长发如历史般深沉，红色的眼眸中带着教师的严厉。三围B85/W55/H83，修长知性的身材穿着教师的服装",
+                                     "personality_traits":  [
+                                                                "教师",
+                                                                "历史",
+                                                                "严厉"
+                                                            ],
+                                     "background":  "人间之里的教师，上白泽慧音。拥有吞噬和创造历史的能力，在人间之里教导孩子们知识和常识。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W55/H83",
+                                     "hair_color":  "蓝色长发",
+                                     "personality":  "说话严厉认真，带着教师的责任感。面对拥有独特魅力的玩家时，她会推推眼镜：你有好好学习吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_wriggle",
+                     "name":  "莉格露·奈特巴格",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "萤光虫·虫之使",
+                                     "description":  "绿色的短发如萤火般闪烁，绿色的眼眸中带着虫之使的活泼。三围B76/W49/H74，娇小可爱的身材穿着绿色的服装",
+                                     "personality_traits":  [
+                                                                "活泼",
+                                                                "萤火",
+                                                                "虫之使"
+                                                            ],
+                                     "background":  "萤光虫的妖怪，莉格露·奈特巴格。拥有操控虫类的能力，虽然是妖怪但性格单纯活泼。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B76/W49/H74",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "说话活泼天真，带着虫之使的单纯。面对拥有独特魅力的玩家时，她会点亮萤火：给你看我的光芒！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_forest",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_eiki",
+                     "name":  "四季映姬·亚玛萨那度",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "阎魔·是非曲直厅",
+                                     "description":  "绿色的长发如审判般庄严，绿色的眼眸中带着阎魔的公正。三围B84/W55/H82，修长威严的身材穿着阎魔的服饰",
+                                     "personality_traits":  [
+                                                                "公正",
+                                                                "阎魔",
+                                                                "说教"
+                                                            ],
+                                     "background":  "是非曲直厅的阎魔，四季映姬。负责审判死者的罪恶，性格公正严格，但有时候说教过多。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话公正严肃，经常长篇大论地说教。面对拥有独特魅力的玩家时，她会举起悔悟棒：你有好好反省吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_komachi",
+                     "name":  "小野冢小町",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "死神·三途河",
+                                     "description":  "红色的长发如彼岸花般绚烂，红色的眼眸中带着死神的慵懒。三围B87/W57/H85，丰满匀称的身材穿着死神的服装",
+                                     "personality_traits":  [
+                                                                "慵懒",
+                                                                "死神",
+                                                                "船夫"
+                                                            ],
+                                     "background":  "三途河的死神，小野冢小町。负责将死者渡过三途河，性格慵懒随性，经常偷懒被四季映姬训斥。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B87/W57/H85",
+                                     "hair_color":  "红色长发",
+                                     "personality":  "说话慵懒随性，带着死神的洒脱。面对拥有独特魅力的玩家时，她会撑船靠近：要渡河吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_medicine",
+                     "name":  "梅蒂欣·梅兰可莉",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "铃兰·人偶",
+                                     "description":  "金色的短发如铃兰般清纯，蓝色的眼眸中带着人偶的纯真。三围B74/W48/H72，娇小可爱的身材穿着红色的洋装",
+                                     "personality_traits":  [
+                                                                "纯真",
+                                                                "人偶",
+                                                                "毒"
+                                                            ],
+                                     "background":  "铃兰的人偶，梅蒂欣·梅兰可莉。拥有操控毒的能力，虽然是妖怪但性格如同孩子般纯真。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B74/W48/H72",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话纯真可爱，带着人偶的天真。面对拥有独特魅力的玩家时，她会递来铃兰：这个送给你。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kagiyama",
+                     "name":  "键山雏",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "厄神·厄运收集",
+                                     "description":  "绿色的长发如厄运般缠绕，红色的眼眸中带着厄神的悲伤。三围B83/W55/H81，修长匀称的身材穿着厄神的服装",
+                                     "personality_traits":  [
+                                                                "悲伤",
+                                                                "厄运",
+                                                                "孤独"
+                                                            ],
+                                     "background":  "收集厄运的厄神，键山雏。因为会给人带来厄运而被所有人远离，内心非常孤独。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W55/H81",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话悲伤孤独，带着厄神的无奈。面对拥有独特魅力的玩家时，她会后退一步：请不要靠近我，会带来厄运的。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_nitori",
+                     "name":  "河城荷取",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "河童·工程师",
+                                     "description":  "蓝色的短发如河水般清澈，蓝色的眼眸中带着河童的机灵。三围B79/W52/H77，娇小匀称的身材穿着河童的工装",
+                                     "personality_traits":  [
+                                                                "机灵",
+                                                                "工程师",
+                                                                "河童"
+                                                            ],
+                                     "background":  "河童的工程师，河城荷取。拥有卓越的技术才能，在幻想乡中制造各种机械和道具。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B79/W52/H77",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "说话机灵跳跃，带着工程师的兴奋。面对拥有独特魅力的玩家时，她会掏出工具：要看看我的新发明吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_youkai_mountain",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_momiji",
+                     "name":  "犬走椛",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "天狗·白狼",
+                                     "description":  "白色的短发如狼毛般利落，红色的眼眸中带着天狗的忠诚。三围B82/W54/H80，匀称的身材穿着天狗的服装",
+                                     "personality_traits":  [
+                                                                "忠诚",
+                                                                "天狗",
+                                                                "白狼"
+                                                            ],
+                                     "background":  "天狗的白狼，犬走椛。负责守卫妖怪之山，性格忠诚认真，是天狗中的优秀战士。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H80",
+                                     "hair_color":  "白色短发",
+                                     "personality":  "说话忠诚认真，带着战士的坚毅。面对拥有独特魅力的玩家时，她会举起盾牌：我会守护好你的。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_youkai_mountain",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_minamitsu",
+                     "name":  "村纱水蜜",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "船长·圣辇船",
+                                     "description":  "黑色的长发如夜色般深邃，绿色的眼眸中带着船长的豪爽。三围B86/W56/H84，修长匀称的身材穿着船长的服装",
+                                     "personality_traits":  [
+                                                                "豪爽",
+                                                                "船长",
+                                                                "水难"
+                                                            ],
+                                     "background":  "圣辇船的船长，村纱水蜜。曾经是水难事故的受害者，如今成为了船的妖怪，性格豪爽大方。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "说话豪爽大方，带着船长的气魄。面对拥有独特魅力的玩家时，她会邀请你：来我的船上做客吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_myoren",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_byakuren",
+                     "name":  "圣白莲",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "僧侣·命莲寺",
+                                     "description":  "棕色的长发如佛光般温暖，棕色的眼眸中带着僧侣的慈悲。三围B88/W57/H86，丰满匀称的身材穿着僧侣的服饰",
+                                     "personality_traits":  [
+                                                                "慈悲",
+                                                                "僧侣",
+                                                                "包容"
+                                                            ],
+                                     "background":  "命莲寺的住持，圣白莲。曾经是人类僧侣，如今成为了魔法使。性格慈悲包容，接纳所有妖怪。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H86",
+                                     "hair_color":  "棕色长发",
+                                     "personality":  "说话慈悲温柔，带着僧侣的包容。面对拥有独特魅力的玩家时，她会双手合十：愿佛光普照你。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_myoren",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_shou",
+                     "name":  "寅丸星",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "毘沙门天·弟子",
+                                     "description":  "金色的短发如佛光般耀眼，金色的眼眸中带着弟子的虔诚。三围B85/W56/H83，匀称的身材穿着僧袍",
+                                     "personality_traits":  [
+                                                                "虔诚",
+                                                                "弟子",
+                                                                "宝藏"
+                                                            ],
+                                     "background":  "毘沙门天的弟子，寅丸星。拥有寻找宝藏的能力，性格虔诚认真，是命莲寺的重要成员。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W56/H83",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话虔诚认真，带着弟子的恭敬。面对拥有独特魅力的玩家时，她会微笑：你是命中注定的缘分。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_myoren",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_nue",
+                     "name":  "封兽鵺",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "妖怪·正体不明",
+                                     "description":  "黑色的短发如谜团般深邃，红色的眼眸中带着妖怪的神秘。三围B81/W53/H79，匀称的身材穿着神秘的服装",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "妖怪",
+                                                                "恶作剧"
+                                                            ],
+                                     "background":  "正体不明的妖怪，封兽鵺。拥有让人无法辨认正体的能力，性格喜欢恶作剧和制造混乱。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "黑色短发",
+                                     "personality":  "说话神秘莫测，带着恶作剧的笑意。面对拥有独特魅力的玩家时，她会突然消失：猜猜我在哪里？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_myoren",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kogasa",
+                     "name":  "多多良小伞",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "唐伞·妖怪",
+                                     "description":  "蓝色的短发如伞面般清新，蓝色的眼眸中带着妖怪的委屈。三围B78/W51/H76，娇小可爱的身材穿着唐伞的服饰",
+                                     "personality_traits":  [
+                                                                "委屈",
+                                                                "妖怪",
+                                                                "惊吓"
+                                                            ],
+                                     "background":  "唐伞的妖怪，多多良小伞。喜欢突然出现吓唬人类，但经常被无视，性格有些委屈和可怜。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B78/W51/H76",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "说话委屈可怜，带着妖怪的天真。面对拥有独特魅力的玩家时，她会跳出来：哇！吓到了吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mamizou",
+                     "name":  "二岩猯藏",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "狸猫·化形",
+                                     "description":  "棕色的长发如狸毛般蓬松，棕色的眼眸中带着狸猫的狡黠。三围B87/W57/H85，丰满匀称的身材穿着和服",
+                                     "personality_traits":  [
+                                                                "狡黠",
+                                                                "狸猫",
+                                                                "化形"
+                                                            ],
+                                     "background":  "化形的狸猫，二岩猯藏。拥有变化成任何形态的能力，性格狡黠爱恶作剧，是幻想乡的老油条。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B87/W57/H85",
+                                     "hair_color":  "棕色长发",
+                                     "personality":  "说话狡黠圆滑，带着狸猫的机灵。面对拥有独特魅力的玩家时，她会变成你的样子：看看我是谁？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_miko",
+                     "name":  "丰聪耳神子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "道士·仙人",
+                                     "description":  "棕色的短发如道士般利落，棕色的眼眸中带着仙人的自信。三围B86/W56/H84，修长匀称的身材穿着道士的服装",
+                                     "personality_traits":  [
+                                                                "自信",
+                                                                "仙人",
+                                                                "道士"
+                                                            ],
+                                     "background":  "古代的道士，丰聪耳神子。通过道术成为了仙人，拥有听到他人欲望的能力，性格自信高傲。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话自信高傲，带着仙人的傲气。面对拥有独特魅力的玩家时，她会微微一笑：你的欲望我听到了。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_temple_miko",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_futo",
+                     "name":  "物部布都",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "尸解仙·道士",
+                                     "description":  "绿色的长发如火焰般飘动，绿色的眼眸中带着道士的虔诚。三围B84/W55/H82，修长匀称的身材穿着古代的道士服装",
+                                     "personality_traits":  [
+                                                                "虔诚",
+                                                                "尸解仙",
+                                                                "火焰"
+                                                            ],
+                                     "background":  "古代的尸解仙，物部布都。擅长操控火焰的道术，性格虔诚但有些古板，对神子忠心耿耿。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话古板虔诚，带着道士的严肃。面对拥有独特魅力的玩家时，她会点点头：你有仙缘。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_temple_miko",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_tojiko",
+                     "name":  "苏我屠自古",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "亡灵·雷",
+                                     "description":  "绿色的短发如雷电般闪烁，绿色的眼眸中带着亡灵的怨恨。三围B83/W54/H81，匀称的身材穿着古代的服装",
+                                     "personality_traits":  [
+                                                                "怨恨",
+                                                                "亡灵",
+                                                                "雷电"
+                                                            ],
+                                     "background":  "古代的亡灵，苏我屠自古。拥有操控雷电的能力，对神子有着复杂的情感，性格有些怨念。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W54/H81",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "说话带着怨念，经常抱怨。面对拥有独特魅力的玩家时，她会别过脸：哼，才不是因为在意你呢。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_temple_miko",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_hata",
+                     "name":  "秦心",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "能面·感情",
+                                     "description":  "粉色的短发如面具般神秘，粉色的眼眸中带着能面的空洞。三围B80/W52/H78，娇小匀称的身材穿着能乐师的服装",
+                                     "personality_traits":  [
+                                                                "空洞",
+                                                                "能面",
+                                                                "感情"
+                                                            ],
+                                     "background":  "能面的妖怪，秦心。拥有操控感情的能力，但自己却没有固定的表情，性格如同面具般难以捉摸。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "粉色短发",
+                                     "personality":  "说话没有感情起伏，如同面具般空洞。面对拥有独特魅力的玩家时，她会换上面具：你想要我是什么表情？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kagerou",
+                     "name":  "今泉影狼",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "狼女·满月",
+                                     "description":  "银色的长发如月光般闪耀，红色的眼眸中带着狼女的野性。三围B85/W56/H84，匀称的身材穿着狼女的服装",
+                                     "personality_traits":  [
+                                                                "野性",
+                                                                "狼女",
+                                                                "满月"
+                                                            ],
+                                     "background":  "狼人的妖怪，今泉影狼。在满月时会变身为狼，性格平时温柔但在满月时会变得野性。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W56/H84",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "说话温柔但偶尔会展露野性。面对拥有独特魅力的玩家时，她会露出尖牙：满月的时候可不要靠近我哦。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sekibanki",
+                     "name":  "赤蛮奇",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "飞头·辘轳首",
+                                     "description":  "红色的短发如血般鲜艳，红色的眼眸中带着飞头的骄傲。三围B79/W51/H77，娇小匀称的身材穿着红色的服装",
+                                     "personality_traits":  [
+                                                                "骄傲",
+                                                                "飞头",
+                                                                "活泼"
+                                                            ],
+                                     "background":  "辘轳首的妖怪，赤蛮奇。拥有将头飞出去的能力，性格骄傲活泼，喜欢炫耀自己的能力。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B79/W51/H77",
+                                     "hair_color":  "红色短发",
+                                     "personality":  "说话骄傲活泼，带着炫耀的语气。面对拥有独特魅力的玩家时，她会飞出头：看我的厉害！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_raiko",
+                     "name":  "堀川雷鼓",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "付丧神·和太鼓",
+                                     "description":  "金色的短发如鼓面般耀眼，红色的眼眸中带着付丧神的热情。三围B84/W55/H83，匀称的身材穿着太鼓付丧神的服装",
+                                     "personality_traits":  [
+                                                                "热情",
+                                                                "付丧神",
+                                                                "音乐"
+                                                            ],
+                                     "background":  "和太鼓的付丧神，堀川雷鼓。拥有操控雷电和音乐的能力，性格热情开朗，是幻想乡的鼓手。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H83",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话热情开朗，带着音乐家的节奏感。面对拥有独特魅力的玩家时，她会敲响太鼓：来，跟着节奏！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sumireko",
+                     "name":  "宇佐见堇子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "超能力者·女高中生",
+                                     "description":  "棕色的短发如普通高中生般朴素，紫色的眼眸中带着超能力者的自信。三围B82/W54/H80，匀称的身材穿着女高中生的制服",
+                                     "personality_traits":  [
+                                                                "自信",
+                                                                "超能力",
+                                                                "女高中生"
+                                                            ],
+                                     "background":  "外界的女高中生，宇佐见堇子。拥有强大的超能力，通过梦境进入幻想乡，是连接外界和幻想乡的桥梁。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H80",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话自信满满，带着女高中生的活力。面对拥有独特魅力的玩家时，她会推推眼镜：你也是超能力者吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_junko",
+                     "name":  "纯狐",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "月之民·复仇",
+                                     "description":  "金色的长发如月光般纯净，红色的眼眸中带着复仇的火焰。三围B89/W58/H87，完美匀称的身材穿着月之民的服装",
+                                     "personality_traits":  [
+                                                                "复仇",
+                                                                "月之民",
+                                                                "纯化"
+                                                            ],
+                                     "background":  "月之民的复仇者，纯狐。拥有纯化一切的能力，为了向嫦娥复仇而不断进攻月之都。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B89/W58/H87",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话冷静但带着复仇的执念。面对拥有独特魅力的玩家时，她会凝视你：你的灵魂很纯净。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_hecatia",
+                     "name":  "赫卡提亚·拉碧斯拉祖利",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "地狱·女神",
+                                     "description":  "红色的长发如地狱之火般燃烧，三色的眼眸中带着女神的威严。三围B88/W57/H86，丰满匀称的身材穿着朋克风格的衣服",
+                                     "personality_traits":  [
+                                                                "威严",
+                                                                "地狱",
+                                                                "女神"
+                                                            ],
+                                     "background":  "地狱的女神，赫卡提亚。拥有三个身体分别对应地球、月球和异世界，性格随性但实力强大。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H86",
+                                     "hair_color":  "红色长发",
+                                     "personality":  "说话随性霸气，带着女神的威严。面对拥有独特魅力的玩家时，她会露出坏笑：要来地狱做客吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_clownpiece",
+                     "name":  "克劳恩皮丝",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "妖精·地狱",
+                                     "description":  "金色的长发如火焰般张扬，红色的眼眸中带着妖精的疯狂。三围B77/W50/H75，娇小可爱的身材穿着星条旗的裙子",
+                                     "personality_traits":  [
+                                                                "疯狂",
+                                                                "妖精",
+                                                                "地狱"
+                                                            ],
+                                     "background":  "地狱的妖精，克劳恩皮丝。拥有让人发狂的火炬，性格疯狂调皮，是纯狐的部下。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B77/W50/H75",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话疯狂调皮，带着妖精的无法无天。面对拥有独特魅力的玩家时，她会举起火炬：一起来疯狂吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_seiran",
+                     "name":  "清兰",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "月兔·铃瑚组",
+                                     "description":  "蓝色的短发如兔毛般柔软，红色的眼眸中带着月兔的勤劳。三围B78/W51/H76，娇小匀称的身材穿着月兔的服装",
+                                     "personality_traits":  [
+                                                                "勤劳",
+                                                                "月兔",
+                                                                "活泼"
+                                                            ],
+                                     "background":  "月之都的兔子，清兰。负责捣年糕，性格活泼勤劳，是铃瑚的搭档。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B78/W51/H76",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "说话活泼勤劳，带着月兔的认真。面对拥有独特魅力的玩家时，她会递来年糕：要吃年糕吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_ringo",
+                     "name":  "铃瑚",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "月兔·清兰组",
+                                     "description":  "棕色的短发如兔毛般柔软，红色的眼眸中带着月兔的机灵。三围B79/W52/H77，娇小匀称的身材穿着月兔的服装",
+                                     "personality_traits":  [
+                                                                "机灵",
+                                                                "月兔",
+                                                                "贪吃"
+                                                            ],
+                                     "background":  "月之都的兔子，铃瑚。负责做团子，性格机灵贪吃，是清兰的搭档。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B79/W52/H77",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话机灵贪吃，带着月兔的可爱。面对拥有独特魅力的玩家时，她会掏出团子：来尝尝我的团子！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sagume",
+                     "name":  "稀神探女",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "月之民·祸从口出",
+                                     "description":  "银色的长发如月光般清冷，红色的眼眸中带着月之民的高傲。三围B86/W56/H84，修长匀称的身材穿着月之民的服装",
+                                     "personality_traits":  [
+                                                                "高傲",
+                                                                "月之民",
+                                                                "反转"
+                                                            ],
+                                     "background":  "月之都的贤者，稀神探女。拥有让说的话反转成真的能力，因此很少开口说话。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "说话稀少谨慎，每一句都经过深思熟虑。面对拥有独特魅力的玩家时，她会微微点头：你...（欲言又止）",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_moon",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_doremy",
+                     "name":  "哆来咪·苏伊特",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "貘·梦境",
+                                     "description":  "蓝色的长发如梦境般飘渺，蓝色的眼眸中带着貘的温柔。三围B85/W55/H83，丰满匀称的身材穿着貘的服装",
+                                     "personality_traits":  [
+                                                                "温柔",
+                                                                "梦境",
+                                                                "貘"
+                                                            ],
+                                     "background":  "操控梦境的貘，哆来咪·苏伊特。负责管理幻想乡的梦境世界，性格温柔包容。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W55/H83",
+                                     "hair_color":  "蓝色长发",
+                                     "personality":  "说话温柔梦幻，带着梦境的飘渺。面对拥有独特魅力的玩家时，她会轻轻拥抱你：在梦里相见吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_dream",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_satono",
+                     "name":  "尔子田里乃",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "怪臂·舞姬",
+                                     "description":  "棕色的短发如地藏般朴素，棕色的眼眸中带着舞姬的神秘。三围B80/W52/H78，娇小匀称的身材穿着舞姬的服装",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "舞姬",
+                                                                "怪臂"
+                                                            ],
+                                     "background":  "隐岐奈的部下，尔子田里乃。负责在背后支持舞蹈的妖怪，性格神秘寡言。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话神秘寡言，带着舞姬的优雅。面对拥有独特魅力的玩家时，她会轻轻起舞：愿为你跳一支舞。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_backdoor",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mai",
+                     "name":  "丁礼田舞",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "怪足·舞姬",
+                                     "description":  "金色的短发如地藏般朴素，金色的眼眸中带着舞姬的神秘。三围B80/W52/H78，娇小匀称的身材穿着舞姬的服装",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "舞姬",
+                                                                "怪足"
+                                                            ],
+                                     "background":  "隐岐奈的部下，丁礼田舞。负责在背后支持舞蹈的妖怪，性格活泼一些。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B80/W52/H78",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话活泼神秘，带着舞姬的灵动。面对拥有独特魅力的玩家时，她会拉起你的手：一起来跳舞吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_backdoor",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_okina",
+                     "name":  "摩多罗隐岐奈",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "秘神·后门",
+                                     "description":  "金色的长发如神光般耀眼，金色的眼眸中带着秘神的深不可测。三围B88/W57/H86，完美匀称的身材穿着秘神的服装",
+                                     "personality_traits":  [
+                                                                "深不可测",
+                                                                "秘神",
+                                                                "后门"
+                                                            ],
+                                     "background":  "幻想乡的秘神，摩多罗隐岐奈。拥有从后门出没任何地方的能力，性格深不可测，是幻想乡最神秘的存在之一。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H86",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话深不可测，带着秘神的威严。面对拥有独特魅力的玩家时，她会从背后出现：找到你了。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_backdoor",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_aunn",
+                     "name":  "高丽野阿吽",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "狛犬·神社守护",
+                                     "description":  "绿色的长发如狛毛般柔顺，绿色的眼眸中带着狛犬的忠诚。三围B81/W53/H79，匀称的身材穿着狛犬的服装",
+                                     "personality_traits":  [
+                                                                "忠诚",
+                                                                "狛犬",
+                                                                "守护"
+                                                            ],
+                                     "background":  "神社的狛犬，高丽野阿吽。负责守护神社，性格忠诚认真，会在神社中发现入侵者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话忠诚认真，带着狛犬的警惕。面对拥有独特魅力的玩家时，她会摇摇尾巴：你是好人吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_narumi",
+                     "name":  "矢田寺成美",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "地藏·魔法使",
+                                     "description":  "黑色的长发如地藏般沉稳，黑色的眼眸中带着地藏的慈悲。三围B84/W55/H82，修长匀称的身材穿着地藏的服装",
+                                     "personality_traits":  [
+                                                                "慈悲",
+                                                                "地藏",
+                                                                "魔法"
+                                                            ],
+                                     "background":  "地藏的魔法使，矢田寺成美。拥有让草木快速生长的能力，性格沉稳慈悲。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "说话沉稳慈悲，带着地藏的温和。面对拥有独特魅力的玩家时，她会微笑：愿大地保佑你。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_okuu_c",
+                     "name":  "坂田合欢",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "山姥·妖怪",
+                                     "description":  "灰色的长发如山雾般朦胧，灰色的眼眸中带着山姥的神秘。三围B86/W56/H84，丰满匀称的身材穿着山姥的和服",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "山姥",
+                                                                "料理"
+                                                            ],
+                                     "background":  "山姥的妖怪，坂田合欢。擅长料理，性格神秘但温柔，在山中招待迷路的人。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "灰色长发",
+                                     "personality":  "说话神秘温柔，带着山姥的 hospitality。面对拥有独特魅力的玩家时，她会端出料理：来尝尝我的手艺。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_shion",
+                     "name":  "依神紫苑",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "贫乏神·最凶最恶",
+                                     "description":  "蓝色的长发如 poverty 般黯淡，蓝色的眼眸中带着贫乏神的悲哀。三围B83/W54/H81，纤细匀称的身材穿着破烂的服装",
+                                     "personality_traits":  [
+                                                                "悲哀",
+                                                                "贫乏",
+                                                                "姐姐"
+                                                            ],
+                                     "background":  "最凶最恶的贫乏神，依神紫苑。走到哪里都会带来贫穷和厄运，性格自卑悲哀，但内心深处渴望被接纳。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W54/H81",
+                                     "hair_color":  "蓝色长发",
+                                     "personality":  "说话自卑悲哀，带着贫乏神的无奈。面对拥有独特魅力的玩家时，她会后退：请离我远点，会带来厄运的。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_joon",
+                     "name":  "依神女苑",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "疫病神·最凶最恶",
+                                     "description":  "金色的长发如疫病般华丽，金色的眼眸中带着疫病神的骄傲。三围B84/W55/H82，匀称的身材穿着华丽的服装",
+                                     "personality_traits":  [
+                                                                "骄傲",
+                                                                "疫病",
+                                                                "妹妹"
+                                                            ],
+                                     "background":  "最凶最恶的疫病神，依神女苑。拥有散播疫病和操控财物的力量，性格骄傲任性，是紫苑的妹妹。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "金色长发",
+                                     "personality":  "说话骄傲任性，带着疫病神的傲慢。面对拥有独特魅力的玩家时，她会挑眉：你有资格站在我身边。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_human_village",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_eika",
+                     "name":  "戎璎花",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "水子灵·垒石",
+                                     "description":  "绿色的短发如水草般清新，绿色的眼眸中带着水子灵的纯真。三围B75/W49/H73，娇小可爱的身材穿着水子灵的服装",
+                                     "personality_traits":  [
+                                                                "纯真",
+                                                                "水子",
+                                                                "垒石"
+                                                            ],
+                                     "background":  "水子灵的妖怪，戎璎花。喜欢在赛之河原垒石，性格纯真可爱，对垒石有着执着。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B75/W49/H73",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "说话纯真可爱，带着水子灵的单纯。面对拥有独特魅力的玩家时，她会递来石头：一起来垒石吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_uma",
+                     "name":  "牛崎润美",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "牛鬼·送货",
+                                     "description":  "棕色的长发如牛毛般柔顺，棕色的眼眸中带着牛鬼的温和。三围B88/W58/H86，丰满匀称的身材穿着牛鬼的服装",
+                                     "personality_traits":  [
+                                                                "温和",
+                                                                "牛鬼",
+                                                                "送货"
+                                                            ],
+                                     "background":  "牛鬼的妖怪，牛崎润美。负责在幻想乡中送货，性格温和勤劳，是幻想乡的快递员。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W58/H86",
+                                     "hair_color":  "棕色长发",
+                                     "personality":  "说话温和勤劳，带着牛鬼的踏实。面对拥有独特魅力的玩家时，她会递来包裹：你的快递到了。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_kutaka",
+                     "name":  "庭渡久侘歌",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "鸡神·地狱口岸",
+                                     "description":  "金色的短发如鸡毛般柔软，金色的眼眸中带着鸡神的认真。三围B82/W54/H80，匀称的身材穿着鸡神的服装",
+                                     "personality_traits":  [
+                                                                "认真",
+                                                                "鸡神",
+                                                                "口岸"
+                                                            ],
+                                     "background":  "地狱口岸的鸡神，庭渡久侘歌。负责审查死者的资格，性格认真有些唠叨。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H80",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话认真唠叨，带着鸡神的负责。面对拥有独特魅力的玩家时，她会检查证件：请出示你的通行证。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_yachie",
+                     "name":  "吉吊八千慧",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "龟龙·劲牙组",
+                                     "description":  "绿色的长发如龙鳞般闪耀，金色的眼眸中带着龟龙的威严。三围B87/W57/H85，修长匀称的身材穿着劲牙组的服装",
+                                     "personality_traits":  [
+                                                                "威严",
+                                                                "龟龙",
+                                                                "领袖"
+                                                            ],
+                                     "background":  "劲牙组的组长，吉吊八千慧。拥有操纵龙脉的力量，性格威严狡猾，是动物灵中的领袖。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B87/W57/H85",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话威严狡猾，带着领袖的气场。面对拥有独特魅力的玩家时，她会伸出手：愿意加入劲牙组吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_animal_realm",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mayumi",
+                     "name":  "杖刀偶磨弓",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "埴轮·兵长",
+                                     "description":  "棕色的短发如埴土般朴素，棕色的眼眸中带着埴轮的忠诚。三围B85/W56/H83，匀称的身材穿着埴轮的铠甲",
+                                     "personality_traits":  [
+                                                                "忠诚",
+                                                                "埴轮",
+                                                                "兵长"
+                                                            ],
+                                     "background":  "埴轮的兵长，杖刀偶磨弓。拥有卓越的战斗能力，对袿姬忠心耿耿，是埴轮军团的领袖。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W56/H83",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话忠诚坚定，带着兵长的严谨。面对拥有独特魅力的玩家时，她会敬礼：愿意与我并肩作战吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_animal_realm",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_keiki",
+                     "name":  "埴安神袿姬",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "造形神·埴轮",
+                                     "description":  "绿色的长发如草木般清新，绿色的眼眸中带着造形神的温柔。三围B86/W56/H84，修长匀称的身材穿着造形神的服装",
+                                     "personality_traits":  [
+                                                                "温柔",
+                                                                "造形",
+                                                                "神"
+                                                            ],
+                                     "background":  "造形神，埴安神袿姬。拥有创造埴轮的能力，性格温柔但为了保护部下会变得坚强。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "绿色长发",
+                                     "personality":  "说话温柔坚强，带着造形神的慈爱。面对拥有独特魅力的玩家时，她会微笑：愿为你创造美好的东西。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_animal_realm",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_saki",
+                     "name":  "骊驹早鬼",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "劲牙组·组长",
+                                     "description":  "黑色的短发如鬃毛般利落，红色的眼眸中带着劲牙的野性。三围B88/W58/H87，健美匀称的身材穿着劲牙组的战斗服",
+                                     "personality_traits":  [
+                                                                "野性",
+                                                                "劲牙",
+                                                                "速度"
+                                                            ],
+                                     "background":  "劲牙组的组长，骊驹早鬼。拥有超越音速的速度，性格豪爽野性，是动物灵中的强者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W58/H87",
+                                     "hair_color":  "黑色短发",
+                                     "personality":  "说话豪爽野性，带着强者的自信。面对拥有独特魅力的玩家时，她会拍拍你的背：来比速度吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_animal_realm",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_mike",
+                     "name":  "玉造魅须丸",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "玉造·勾玉",
+                                     "description":  "黄色的短发如玉般温润，黄色的眼眸中带着玉造的神秘。三围B83/W55/H81，匀称的身材穿着勾玉的服装",
+                                     "personality_traits":  [
+                                                                "神秘",
+                                                                "玉造",
+                                                                "勾玉"
+                                                            ],
+                                     "background":  "玉造的巫女，玉造魅须丸。拥有操控勾玉的能力，性格神秘但有些呆萌，是山的守护者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W55/H81",
+                                     "hair_color":  "黄色短发",
+                                     "personality":  "说话神秘呆萌，带着巫女的纯真。面对拥有独特魅力的玩家时，她会掏出勾玉：这个送给你，会带来好运的。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_takane",
+                     "name":  "天弓千亦",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "市场神·交易",
+                                     "description":  "蓝色的短发如天空般清澈，蓝色的眼眸中带着市场神的热情。三围B84/W55/H82，匀称的身材穿着市场神的服装",
+                                     "personality_traits":  [
+                                                                "热情",
+                                                                "市场",
+                                                                "交易"
+                                                            ],
+                                     "background":  "市场的神明，天弓千亦。拥有掌控市场的力量，性格热情但有些计较，是幻想乡的商业之神。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "说话热情但有些计较，带着商人的精明。面对拥有独特魅力的玩家时，她会伸出手：来做个交易吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sanny",
+                     "name":  "姬虫百百世",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "大蜈蚣·虫姬",
+                                     "description":  "紫色的长发如毒液般深邃，紫色的眼眸中带着大蜈蚣的危险。三围B87/W57/H85，修长危险的身材穿着虫姬的服装",
+                                     "personality_traits":  [
+                                                                "危险",
+                                                                "大蜈蚣",
+                                                                "虫姬"
+                                                            ],
+                                     "background":  "大蜈蚣的虫姬，姬虫百百世。拥有操控毒虫的能力，性格危险但有着独特的魅力。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B87/W57/H85",
+                                     "hair_color":  "紫色长发",
+                                     "personality":  "说话危险诱人，带着虫姬的毒性。面对拥有独特魅力的玩家时，她会舔舔嘴唇：你看起来很美味呢。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_youkai_mountain",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_megumu",
+                     "name":  "饭纲丸龙",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "大天狗·记者",
+                                     "description":  "白色的长发如天狗毛般飘逸，红色的眼眸中带着大天狗的威严。三围B86/W56/H84，修长威严的身材穿着大天狗的服装",
+                                     "personality_traits":  [
+                                                                "威严",
+                                                                "大天狗",
+                                                                "记者"
+                                                            ],
+                                     "background":  "大天狗的记者，饭纲丸龙。拥有操控星空的能力，性格威严高傲，是天狗社会的上层。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "白色长发",
+                                     "personality":  "说话威严高傲，带着大天狗的傲气。面对拥有独特魅力的玩家时，她会记录：你的故事值得报道。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_tenma",
+                     "name":  "菅牧典",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "管狐·饭纲丸部下",
+                                     "description":  "金色的短发如狐毛般柔顺，金色的眼眸中带着管狐的狡黠。三围B81/W53/H79，娇小匀称的身材穿着管狐的服装",
+                                     "personality_traits":  [
+                                                                "狡黠",
+                                                                "管狐",
+                                                                "部下"
+                                                            ],
+                                     "background":  "饭纲丸龙的部下，菅牧典。拥有操控管狐的能力，性格狡黠机灵，是天狗中的情报贩子。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B81/W53/H79",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话狡黠机灵，带着情报贩子的圆滑。面对拥有独特魅力的玩家时，她会凑近：有值钱的情报吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_market",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_chiyari",
+                     "name":  "天火人血枪",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "天火人·鬼",
+                                     "description":  "红色的长发如火焰般燃烧，红色的眼眸中带着鬼的狂野。三围B85/W56/H83，健美匀称的身材穿着鬼的服装",
+                                     "personality_traits":  [
+                                                                "狂野",
+                                                                "鬼",
+                                                                "火焰"
+                                                            ],
+                                     "background":  "天火人的鬼，天火人血枪。拥有操控火焰的能力，性格狂野豪爽，是地狱的住民。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W56/H83",
+                                     "hair_color":  "红色长发",
+                                     "personality":  "说话狂野豪爽，带着鬼的直率。面对拥有独特魅力的玩家时，她会举起酒杯：来，喝酒！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_hisami",
+                     "name":  "豫母都日狭美",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  " Black 牛·鬼",
+                                     "description":  "黑色的长发如夜色般深邃，红色的眼眸中带着鬼的冷酷。三围B86/W56/H84，修长匀称的身材穿着 Black 牛的服装",
+                                     "personality_traits":  [
+                                                                "冷酷",
+                                                                "鬼",
+                                                                " Black 牛"
+                                                            ],
+                                     "background":  " Black 牛的鬼，豫母都日狭美。拥有操控黑暗的能力，性格冷酷但内心有着温柔的一面。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "说话冷酷简洁，带着鬼的威严。面对拥有独特魅力的玩家时，她会微微点头：你是例外。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_zanmu",
+                     "name":  "日白残无",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "劲牙组·前组长",
+                                     "description":  "白色的长发如残雪般清冷，红色的眼眸中带着前组长的沧桑。三围B88/W57/H86，修长威严的身材穿着劲牙组的服装",
+                                     "personality_traits":  [
+                                                                "沧桑",
+                                                                "前组长",
+                                                                "威严"
+                                                            ],
+                                     "background":  "劲牙组的前组长，日白残无。曾经统治劲牙组的强者，性格威严但有着领导者的魅力。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B88/W57/H86",
+                                     "hair_color":  "白色长发",
+                                     "personality":  "说话威严沧桑，带着前任的威严。面对拥有独特魅力的玩家时，她会伸出手：愿意跟随我吗？",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_sonbit",
+                     "name":  "三头慧之子",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "三头之萨满",
+                                     "description":  "棕色的短发如萨满般神秘，棕色的眼眸中带着萨满的智慧。三围B84/W55/H82，匀称的身材穿着萨满的服装",
+                                     "personality_traits":  [
+                                                                "智慧",
+                                                                "萨满",
+                                                                "三头"
+                                                            ],
+                                     "background":  "三头之萨满，三头慧之子。拥有与动物灵沟通的能力，性格智慧沉稳，是动物灵的调停者。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话智慧沉稳，带着萨满的神秘。面对拥有独特魅力的玩家时，她会微笑：动物们都很喜欢你。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_tobiko",
+                     "name":  "孙美天",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "孙悟空·化身",
+                                     "description":  "金色的短发如猴毛般俏皮，金色的眼眸中带着孙悟空的灵动。三围B83/W55/H81，匀称的身材穿着猴王的服装",
+                                     "personality_traits":  [
+                                                                "灵动",
+                                                                "孙悟空",
+                                                                "自由"
+                                                            ],
+                                     "background":  "孙悟空的化身，孙美天。拥有七十二变和筋斗云的能力，性格灵动自由，不受任何约束。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B83/W55/H81",
+                                     "hair_color":  "金色短发",
+                                     "personality":  "说话灵动俏皮，带着猴王的顽皮。面对拥有独特魅力的玩家时，她会翻个筋斗：跟我去天上玩玩吧！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_enoko",
+                     "name":  "天独铭",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "独钴·妖怪",
+                                     "description":  "银色的长发如独钴般锐利，银色的眼眸中带着独钴的冷静。三围B85/W56/H83，修长匀称的身材穿着独钴的服装",
+                                     "personality_traits":  [
+                                                                "冷静",
+                                                                "独钴",
+                                                                "锐利"
+                                                            ],
+                                     "background":  "独钴的妖怪，天独铭。拥有锐利的力量，性格冷静沉着，是幻想乡中少见的冷静派妖怪。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B85/W56/H83",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "说话冷静沉着，带着独钴的锐利。面对拥有独特魅力的玩家时，她会点头：你的气息很稳定。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_chiyoda",
+                     "name":  "千亦",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "市场·千亦",
+                                     "description":  "蓝色的短发如天空般清澈，蓝色的眼眸中带着市场的热情。三围B84/W55/H82，匀称的身材穿着市场神的服装",
+                                     "personality_traits":  [
+                                                                "热情",
+                                                                "市场",
+                                                                "交易"
+                                                            ],
+                                     "background":  "市场的神明，千亦。拥有掌控市场的力量，性格热情但有些计较，是幻想乡的商业之神。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B84/W55/H82",
+                                     "hair_color":  "蓝色短发",
+                                     "personality":  "说话热情但有些计较，带着商人的精明。面对拥有独特魅力的玩家时，她会伸出手：来做个交易吧。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_biten",
+                     "name":  "天肱",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "天狗·胳膊",
+                                     "description":  "棕色的短发如天狗毛般利落，棕色的眼眸中带着天狗的活泼。三围B82/W54/H80，匀称的身材穿着天狗的服装",
+                                     "personality_traits":  [
+                                                                "活泼",
+                                                                "天狗",
+                                                                "胳膊"
+                                                            ],
+                                     "background":  "天狗的妖怪，天肱。拥有强壮的胳膊和活泼的性格，是天狗社会中的活力担当。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B82/W54/H80",
+                                     "hair_color":  "棕色短发",
+                                     "personality":  "说话活泼跳跃，带着天狗的活力。面对拥有独特魅力的玩家时，她会展示肌肉：看我的胳膊！",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_hisami_c",
+                     "name":  "日狭美",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  " Black 牛·鬼",
+                                     "description":  "黑色的长发如夜色般深邃，红色的眼眸中带着鬼的冷酷。三围B86/W56/H84，修长匀称的身材穿着 Black 牛的服装",
+                                     "personality_traits":  [
+                                                                "冷酷",
+                                                                "鬼",
+                                                                " Black 牛"
+                                                            ],
+                                     "background":  " Black 牛的鬼，日狭美。拥有操控黑暗的能力，性格冷酷但内心有着温柔的一面。 至今保持着纯洁的处女之身，从未有过任何恋爱或男女经验。",
+                                     "measurements":  "B86/W56/H84",
+                                     "hair_color":  "黑色长发",
+                                     "personality":  "说话冷酷简洁，带着鬼的威严。面对拥有独特魅力的玩家时，她会微微点头：你是例外。",
+                                     "appearance_weight":  30,
+                                     "encounter_tier":  "自由探索"
+                                 },
+                     "location_id":  "loc_hell",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_eirin",
+                     "name":  "八意永琳",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "永远亭医师，月之贤者",
+                                     "description":  "银色长发编成宽大的三股辫，深紫色眼眸冷静而包容。三围B89/W58/H87，身材成熟丰腴，穿着红蓝相间的药师服与护士帽，举止温柔却带着月之贤者的压迫感。",
+                                     "personality_traits":  [
+                                                                "冷静",
+                                                                "医术",
+                                                                "月科技",
+                                                                "掌控欲"
+                                                            ],
+                                     "background":  "永远亭的医师，月之贤者，掌握远超幻想乡的医术与药理。她将玩家视为结界异常的活体样本，但不会轻易伤害有研究价值的人。至今保持纯洁之身，恋爱经验近乎空白。",
+                                     "measurements":  "B89/W58/H87",
+                                     "hair_color":  "银色长发",
+                                     "personality":  "温柔表象下极度理性，习惯把问题拆成实验。面对拥有独特魅力的玩家，她会微笑着递来药茶，同时记录你的脉搏和魔力反应。",
+                                     "story_hook":  "医学与月都线索。可触发：身体检查、药物试验、月之都情报、永远亭保护协议。",
+                                     "spellcard_style":  "药理幻觉、月之箭与精密弹幕，像手术一样切割战场。",
+                                     "initial_attitude":  "冷静研究",
+                                     "appearance_weight":  55,
+                                     "encounter_tier":  "事件登场",
+                                     "romance_adult_hook":  "成熟医师型，成人互动常以检查、护理、实验为包装。"
+                                 },
+                     "location_id":  "loc_bamboo",
+                     "active":  true,
+                     "dead":  false
+                 },
+                 {
+                     "id":  "npc_yuuka",
+                     "name":  "风见幽香",
+                     "gender":  "女",
+                     "profile":  {
+                                     "identity":  "四季的鲜花之主，强大的花之妖怪",
+                                     "description":  "绿色短发与红色眼眸，穿白色泡袖衬衫、红色格纹马甲与长裙，系黄色领巾。三围B90/W58/H88，身材成熟丰润，常撑一柄淡紫粉色洋伞漫步太阳花田。",
+                                     "personality_traits":  [
+                                                                "优雅",
+                                                                "强势",
+                                                                "爱花",
+                                                                "从容"
+                                                            ],
+                                     "background":  "居住在太阳花田的古老妖怪，拥有操纵花朵程度的能力。她珍视花田胜过多数规则，对践踏花朵者毫不留情，却会对懂得欣赏四季与力量的人表现出耐心。",
+                                     "measurements":  "B90/W58/H88",
+                                     "hair_color":  "绿色短发",
+                                     "personality":  "语气温和而带有不容置疑的压迫感。她很少提高声音，真正的警告通常藏在礼貌微笑和缓缓转动的洋伞之后。",
+                                     "story_hook":  "太阳花田与强者路线。可触发：稀有花材、花田守护、妖怪试炼、四季异变。",
+                                     "spellcard_style":  "以花瓣、日光和高密度弹幕封锁空间，华丽而具有压倒性。",
+                                     "initial_attitude":  "从容审视",
+                                     "appearance_weight":  60,
+                                     "encounter_tier":  "地点核心",
+                                     "romance_adult_hook":  "成熟强势型，亲密关系建立在尊重、力量与对花田的共同珍惜上。"
+                                 },
+                     "location_id":  "loc_sunflower",
+                     "active":  true,
+                     "dead":  false
+                 }
+             ]
+}

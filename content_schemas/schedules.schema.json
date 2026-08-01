@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "touhou-npc-schedules",
+  "type": "object",
+  "required": ["periods", "schedules"],
+  "properties": {
+    "periods": {"type": "object"},
+    "schedules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["morning", "day", "evening", "night"],
+        "properties": {
+          "morning": {"type": "string", "minLength": 1},
+          "day": {"type": "string", "minLength": 1},
+          "evening": {"type": "string", "minLength": 1},
+          "night": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

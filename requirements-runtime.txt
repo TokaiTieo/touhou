@@ -1,0 +1,8 @@
+fastapi==0.136.3
+langgraph==1.2.10
+langgraph-checkpoint-sqlite==3.1.0
+openai==2.38.0
+pydantic==2.13.4
+python-dotenv==1.2.2
+pywebview==6.2.1
+uvicorn==0.48.0

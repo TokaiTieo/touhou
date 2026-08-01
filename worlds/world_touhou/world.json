@@ -1,0 +1,22 @@
+{
+  "world_id": "world_touhou",
+  "name": "幻想乡",
+  "description": "《东方Project》世界，被博丽大结界隔离的幻想乡",
+  "version": "1.0",
+  "author": "User",
+  "created_at": "2026-05-30",
+  "tags": [
+    "奇幻",
+    "弹幕",
+    "妖怪",
+    "乐园"
+  ],
+  "recommended_chars": [
+    "博丽灵梦",
+    "雾雨魔理沙",
+    "十六夜咲夜",
+    "蕾米莉亚",
+    "魂魄妖梦"
+  ],
+  "starting_location": "loc_hakurei"
+}

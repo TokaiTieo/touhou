@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "content_version": 6,
+  "incidents": [
+    {
+      "id": "touhou_rift",
+      "title": "结界裂隙异变",
+      "completion_task_id": "main_touhou_rift_01",
+      "task_name": "稳定博丽大结界的裂隙",
+      "task_description": "调查裂隙来源，并用交涉、符卡或其他自由方式让结界恢复稳定。",
+      "rumor": "博丽神社附近出现了不规则的结界波纹。",
+      "base_hours": 72,
+      "related_locations": ["博丽神社", "人间之里", "魔法之森"],
+      "related_npcs": ["博丽灵梦", "雾雨魔理沙", "八云紫"],
+      "resolution_summary": "大结界的裂隙已经稳定。",
+      "resolution_paths": {
+        "negotiation": {"title": "共同修复", "summary": "你说服相关人物共同分担结界压力，以合作结束了裂隙异变。"},
+        "spellcard": {"title": "弹幕压制", "summary": "你以符卡击散失控灵力，再由巫女完成最后的稳定。"},
+        "ritual": {"title": "结界仪式", "summary": "你通过仪式重新编织裂隙边缘，让大结界恢复连续。"},
+        "investigation": {"title": "追根溯源", "summary": "你找出裂隙形成的真正原因，从源头消除了异常。"},
+        "freeform": {"title": "自由解决", "summary": "你以不受既定路线约束的方式稳定了大结界。"}
+      },
+      "aftermaths": ["博丽神社开始整理异变记录，新的传闻也在幻想乡各处缓慢聚集。"],
+      "rewards": {"灵力": 10, "结界共鸣": 10, "弹幕熟练度": 5, "异变污染": -15}
+    },
+    {
+      "id": "scarlet_mist_echo",
+      "title": "红雾残响异变",
+      "completion_task_id": "main_scarlet_mist_echo_01",
+      "task_name": "追查雾之湖的红雾残响",
+      "task_description": "红雾并未封锁道路。你可以从湖畔、红魔馆或其他任意方向调查其来源。",
+      "rumor": "雾之湖在午夜泛起带有旧日气息的淡红薄雾。",
+      "base_hours": 96,
+      "related_locations": ["雾之湖", "红魔馆", "博丽神社"],
+      "related_npcs": ["蕾米莉亚", "十六夜咲夜", "帕秋莉"],
+      "resolution_summary": "红雾残响已经消散。",
+      "resolution_paths": {
+        "negotiation": {"title": "馆内协定", "summary": "你让红魔馆与湖畔居民达成处置红雾的临时协定。"},
+        "spellcard": {"title": "红雾符卡战", "summary": "你在红雾中完成符卡对决，击碎了维持残响的魔力核心。"},
+        "ritual": {"title": "雾湖净化", "summary": "你借湖水与月光完成净化，令红雾失去依附。"},
+        "investigation": {"title": "魔法溯源", "summary": "你从魔法痕迹中找到了残响源头并将其解除。"},
+        "freeform": {"title": "自由解决", "summary": "你用自己的方法让红雾重新成为普通的湖雾。"}
+      },
+      "aftermaths": ["红魔馆对你的态度出现变化，雾之湖周边也流传起新的版本。"],
+      "rewards": {"灵力": 8, "结界共鸣": 6, "弹幕熟练度": 7, "异变污染": -10}
+    },
+    {
+      "id": "eternal_night_fragment",
+      "title": "永夜碎片异变",
+      "completion_task_id": "main_eternal_night_fragment_01",
+      "task_name": "辨认迷途竹林中的永夜碎片",
+      "task_description": "月光出现不连续的停滞。可自由寻找永远亭、慧音、妹红或任何可能的知情者。",
+      "rumor": "迷途竹林上空的一段月光似乎停止了流动。",
+      "base_hours": 120,
+      "related_locations": ["迷途竹林", "永远亭", "人间之里"],
+      "related_npcs": ["八意永琳", "蓬莱山辉夜", "上白泽慧音", "藤原妹红"],
+      "resolution_summary": "停滞的月光重新开始流动。",
+      "resolution_paths": {
+        "negotiation": {"title": "竹林停战", "summary": "你促成知情者交换线索，共同解除永夜碎片。"},
+        "spellcard": {"title": "破夜之战", "summary": "你以符卡贯穿停滞月光，使碎片无法继续维持永夜。"},
+        "ritual": {"title": "月光校准", "summary": "你完成月光与地上时间的校准仪式，修复了断裂的夜晚。"},
+        "investigation": {"title": "历史还原", "summary": "你还原永夜碎片的来历，并切断它与当前时间的联系。"},
+        "freeform": {"title": "自由解决", "summary": "你以自己的选择让竹林重新迎来连续的月光。"}
+      },
+      "aftermaths": ["竹林中的时间恢复正常，但永远亭与人间之里都记住了你的介入。"],
+      "rewards": {"灵力": 12, "结界共鸣": 8, "弹幕熟练度": 6, "异变污染": -12}
+    },
+    {
+      "id":"phantom_spring_echo","title":"反季樱花异变","completion_task_id":"main_phantom_spring_01","task_name":"追查幻想乡的反季樱花","task_description":"樱花在多个地点同时开放。可自由询问冥界、人里或任何了解季节的人。","rumor":"不属于当前季节的花瓣越过生死边界飘进幻想乡。","base_hours":108,"related_locations":["白玉楼","人间之里","博丽神社"],"related_npcs":["西行寺幽幽子","魂魄妖梦","博丽灵梦"],"resolution_summary":"错位的樱花回到了应有的季节。","resolution_paths":{"negotiation":{"title":"生死协定","summary":"你让冥界与地上共同梳理越界花瓣。"},"spellcard":{"title":"花吹雪对决","summary":"你以符卡击散牵引季节的灵力。"},"ritual":{"title":"送春仪式","summary":"你将错位春意送回原本时间。"},"investigation":{"title":"季节溯源","summary":"你找到花瓣越界的源头。"},"freeform":{"title":"自由解决","summary":"你用自己的方法让季节重新连续。"}},"aftermaths":["白玉楼保留了一册本次花期记录。"],"rewards":{"灵力":8,"结界共鸣":8,"调查熟练度":5,"异变污染":-10}
+    },
+    {
+      "id":"moriya_faith_storm","title":"信仰风暴异变","completion_task_id":"main_faith_storm_01","task_name":"平息妖怪之山的信仰风暴","task_description":"异常风暴让愿望化为杂乱奇迹。可从守矢、天狗、河童或自选方向调查。","rumor":"妖怪之山上空出现会回应人心愿望的雷云。","base_hours":120,"related_locations":["守矢神社","妖怪之山","人间之里"],"related_npcs":["东风谷早苗","八坂神奈子","洩矢诹访子","射命丸文"],"resolution_summary":"失控奇迹重新化为普通风雨。","resolution_paths":{"negotiation":{"title":"信仰分流","summary":"你协调各方引导混乱愿望。"},"spellcard":{"title":"风神弹幕","summary":"你在雷云中切断风暴核心。"},"ritual":{"title":"御柱镇风","summary":"你重新固定信仰流向。"},"investigation":{"title":"愿望追踪","summary":"你辨认出第一份异常愿望。"},"freeform":{"title":"自由解决","summary":"你让山风恢复平静。"}},"aftermaths":["山中的新闻与神社记录给出不同评价。"],"rewards":{"灵力":10,"结界共鸣":7,"交涉熟练度":6,"异变污染":-10}
+    },
+    {
+      "id":"underground_false_sun","title":"地底伪日异变","completion_task_id":"main_false_sun_01","task_name":"确认旧地狱上空的第二太阳","task_description":"地底出现不稳定光球。可直接前往地灵殿，也可从地上观察影响。","rumor":"旧地狱的夜空升起一颗不该存在的微型太阳。","base_hours":132,"related_locations":["地灵殿","旧地狱","博丽神社"],"related_npcs":["古明地觉","火焰猫燐","灵乌路空"],"resolution_summary":"地底伪日已经熄灭。","resolution_paths":{"negotiation":{"title":"地灵殿协作","summary":"你让地底成员共同执行安全停炉。"},"spellcard":{"title":"核热制御战","summary":"你以符卡削去失控能量。"},"ritual":{"title":"地火封炉","summary":"你重新封合地火边界。"},"investigation":{"title":"控制棒校准","summary":"你校正了错误能量指令。"},"freeform":{"title":"自由解决","summary":"你安置了第二太阳。"}},"aftermaths":["地底居民开始讨论你的处理方式。"],"rewards":{"灵力":14,"生存熟练度":6,"弹幕熟练度":6,"异变污染":-14}
+    },
+    {
+      "id":"dream_leak","title":"清醒梦泄漏异变","completion_task_id":"main_dream_leak_01","task_name":"分辨正在渗入现实的梦境","task_description":"梦境片段在各地显现。可进入梦境，也可留在现实调查异常者。","rumor":"有人醒来后发现梦中的物品仍留在手中。","base_hours":144,"related_locations":["梦境世界","人间之里","月之都"],"related_npcs":["哆来咪·苏伊特","宇佐见堇子","铃仙"],"resolution_summary":"现实与梦境重新分层。","resolution_paths":{"negotiation":{"title":"梦境共识","summary":"做梦者主动放下维持泄漏的愿望。"},"spellcard":{"title":"梦魂弹幕","summary":"你击散了固化意象。"},"ritual":{"title":"醒梦仪式","summary":"你建立稳定的醒来路径。"},"investigation":{"title":"梦主追踪","summary":"你找到最初把梦带入现实的人。"},"freeform":{"title":"自由解决","summary":"你自行恢复现实与梦的边界。"}},"aftermaths":["梦中约定仍成为当事人的真实记忆。"],"rewards":{"灵力":9,"调查熟练度":8,"交涉熟练度":5,"异变污染":-12}
+    },
+    {
+      "id":"hope_mask_resonance","title":"希望面共鸣异变","completion_task_id":"main_hope_mask_01","task_name":"寻找扩散情绪的希望之面回声","task_description":"人里的情绪突然同步。可询问秦心、宗教势力或直接观察群众。","rumor":"人间之里的笑与哭开始像潮水一样同时出现。","base_hours":96,"related_locations":["人间之里","命莲寺","神灵庙"],"related_npcs":["秦心","圣白莲","丰聪耳神子"],"resolution_summary":"众人重新拥有自己的感受。","resolution_paths":{"negotiation":{"title":"情绪剧场","summary":"当事人通过演出说出真实感受。"},"spellcard":{"title":"面灵气对决","summary":"你打破复制情绪的波纹。"},"ritual":{"title":"六十六面归位","summary":"面具回到各自位置。"},"investigation":{"title":"希望回声","summary":"你辨认出共鸣路径。"},"freeform":{"title":"自由解决","summary":"你让集体情绪恢复独立。"}},"aftermaths":["秦心记住了你面对情绪时的选择。"],"rewards":{"交涉熟练度":8,"结界共鸣":6,"灵力":6,"异变污染":-8}
+    },
+    {
+      "id":"market_ownership","title":"无主之物异变","completion_task_id":"main_market_ownership_01","task_name":"处理失去所有权的能力卡","task_description":"物品与主人之间的联系正在消失。可交易、归还、调查或提出新规则。","rumor":"虹龙洞集市的能力卡开始忘记自己的主人。","base_hours":108,"related_locations":["虹龙洞集市","妖怪之山","人间之里"],"related_npcs":["天弓千亦","姬虫百百世","饭纲丸龙"],"resolution_summary":"物品与持有者的关系重新得到承认。","resolution_paths":{"negotiation":{"title":"公开交易","summary":"你主持了公开透明的重新确认交易。"},"spellcard":{"title":"市场弹幕","summary":"你赢得决定归属的符卡较量。"},"ritual":{"title":"所有权见证","summary":"交换成为重新连接的仪式。"},"investigation":{"title":"首张无主卡","summary":"你追查到第一张异常卡牌。"},"freeform":{"title":"自由解决","summary":"你实行自己的归属方案。"}},"aftermaths":["玩家声望会影响后续交易信任。"],"rewards":{"交涉熟练度":7,"调查熟练度":5,"灵力":8,"异变污染":-8}
+    },
+    {
+      "id":"animal_spirit_crossing","title":"动物灵越界异变","completion_task_id":"main_animal_crossing_01","task_name":"厘清进入幻想乡的动物灵队伍","task_description":"多个组织同时来到地上。玩家可与任何一方合作、对抗或保持独立。","rumor":"成群动物灵沿不稳定通道进入幻想乡。","base_hours":144,"related_locations":["畜生界","地狱","人间之里"],"related_npcs":["吉吊八千慧","骊驹早鬼","埴安神袿姬"],"resolution_summary":"越界队伍停止扩张。","resolution_paths":{"negotiation":{"title":"三方停火","summary":"竞争组织暂时承认共同边界。"},"spellcard":{"title":"组织首领战","summary":"连续符卡迫使各方停止推进。"},"ritual":{"title":"灵道重绘","summary":"你重新标记世界通道。"},"investigation":{"title":"目标真相","summary":"你查明动物灵真正目标。"},"freeform":{"title":"自由解决","summary":"你不依附组织解决问题。"}},"aftermaths":["各组织根据你的选择形成长期评价。"],"rewards":{"生存熟练度":7,"交涉熟练度":7,"弹幕熟练度":5,"异变污染":-12}
+    },
+    {
+      "id":"backdoor_stage","title":"后户舞台异变","completion_task_id":"main_backdoor_stage_01","task_name":"辨认遍布幻想乡的错误后门","task_description":"任何地点都可能出现后门。可进入后户、观察规律或询问秘神。","rumor":"普通房门后会短暂出现完全不同的风景。","base_hours":132,"related_locations":["后户之国","博丽神社","妖怪之山"],"related_npcs":["摩多罗隐岐奈","尔子田里乃","丁礼田舞"],"resolution_summary":"错误后门停止扩散。","resolution_paths":{"negotiation":{"title":"秘神问答","summary":"你明确了试炼边界。"},"spellcard":{"title":"后户试炼","summary":"你在换景舞台完成符卡试炼。"},"ritual":{"title":"门扉归位","summary":"错误后门重获正确背面。"},"investigation":{"title":"舞台追踪","summary":"你找到后门扩散规律。"},"freeform":{"title":"自由解决","summary":"你把舞台改写成自己的答案。"}},"aftermaths":["隐岐奈记住你如何面对试探。"],"rewards":{"结界共鸣":12,"调查熟练度":7,"生存熟练度":5,"异变污染":-10}
+    },
+    {
+      "id":"four_season_bloom","title":"四季同花异变","completion_task_id":"main_four_season_01","task_name":"调查太阳花田的四季同开","task_description":"不同季节的花同时开放。可赏花、采样、询问幽香或从别处追查。","rumor":"太阳花田同时出现春樱、夏葵、秋桔梗与冬梅。","base_hours":120,"related_locations":["太阳花田","魔法之森","后户之国"],"related_npcs":["风见幽香","摩多罗隐岐奈","琪露诺"],"resolution_summary":"花朵各自回到合适节律。","resolution_paths":{"negotiation":{"title":"花田约定","summary":"相关力量尊重每种花的节律。"},"spellcard":{"title":"四季花弹幕","summary":"你在不伤花朵的前提下完成裁定。"},"ritual":{"title":"季节轮转","summary":"四种花组成完整轮转。"},"investigation":{"title":"花期记录","summary":"你查明季节重叠源头。"},"freeform":{"title":"自由解决","summary":"你保全花田并恢复四季。"}},"aftermaths":["幽香会依据你是否珍惜花朵形成印象。"],"rewards":{"生存熟练度":6,"调查熟练度":6,"灵力":8,"异变污染":-10}
+    }
+  ]
+}

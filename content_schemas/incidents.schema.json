@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "touhou-incidents",
+  "type": "object",
+  "required": ["incidents"],
+  "properties": {
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "completion_task_id", "task_name", "related_locations", "related_npcs", "resolution_paths"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "completion_task_id": {"type": "string", "minLength": 1},
+          "task_name": {"type": "string", "minLength": 1},
+          "related_locations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "related_npcs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "resolution_paths": {"type": "object"}
+        }
+      }
+    }
+  }
+}

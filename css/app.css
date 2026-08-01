@@ -1,0 +1,1461 @@
+:root {
+    color-scheme: dark;
+    --app-ink: #151116;
+    --app-ink-soft: #211a21;
+    --app-panel: #261e26;
+    --app-panel-raised: #302630;
+    --app-paper: #f2e7d6;
+    --app-paper-muted: #b9aa9d;
+    --app-vermilion: #a92439;
+    --app-vermilion-bright: #d13d52;
+    --app-gold: #d1a24e;
+    --app-moss: #557866;
+    --app-lake: #47798c;
+    --app-line: rgba(242, 231, 214, 0.14);
+    --app-shadow: 0 24px 70px rgba(0, 0, 0, 0.44);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body,
+#app,
+.touhou-vue-shell {
+    width: 100%;
+    min-width: 320px;
+    height: 100%;
+    min-height: 100%;
+}
+
+html,
+body {
+    overflow: hidden;
+}
+
+body {
+    background: #0f0c10;
+    color: var(--app-paper);
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    letter-spacing: 0;
+}
+
+button,
+label.file-command,
+label.file-drop {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+label.file-command:focus-within,
+label.file-drop:focus-within {
+    outline: 2px solid #f0c66d;
+    outline-offset: 2px;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.touhou-vue-shell {
+    display: grid;
+    grid-template-rows: 54px minmax(0, 1fr);
+    background: var(--app-ink);
+}
+
+.app-chrome {
+    position: relative;
+    z-index: 20;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(209, 162, 78, 0.34);
+    background: rgba(17, 13, 18, 0.98);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.app-brand,
+.app-brand-copy,
+.app-chrome-actions {
+    display: flex;
+    align-items: center;
+}
+
+.app-brand {
+    min-width: 0;
+    gap: 9px;
+}
+
+.app-brand-mark {
+    width: 30px;
+    height: 30px;
+}
+
+.app-brand-copy {
+    align-items: flex-start;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.app-brand-copy strong {
+    color: #fff4e3;
+    font-family: "Yu Mincho", "MS Mincho", "SimSun", serif;
+    font-size: 0.94rem;
+}
+
+.app-brand-copy small {
+    margin-top: 4px;
+    color: #8f8178;
+    font-size: 0.57rem;
+}
+
+.app-game-toolbar {
+    min-width: 0;
+}
+
+.app-chrome-actions {
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.icon-button {
+    width: 31px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(242, 231, 214, 0.18);
+    border-radius: 4px;
+    background: #302631;
+    color: #dfd1c4;
+    cursor: pointer;
+}
+
+.icon-button:hover {
+    border-color: rgba(209, 162, 78, 0.56);
+    color: #ffe3ad;
+}
+
+.app-runtime-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 7px;
+    border: 1px solid rgba(71, 121, 140, 0.4);
+    color: #9cc7d8;
+    font: 0.58rem Consolas, monospace;
+}
+
+.app-runtime-badge i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #72b88e;
+}
+
+.game-view {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.vue-boot-fallback,
+.vue-boot-state,
+.vue-error-state {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 14px;
+    background: var(--app-ink);
+    color: var(--app-paper-muted);
+}
+
+.vue-boot-mark {
+    width: 64px;
+    height: 64px;
+}
+
+.vue-error-state strong {
+    color: #f2c4c9;
+    font: 700 1.1rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.vue-error-state p {
+    max-width: 560px;
+    color: #bcaeb1;
+    line-height: 1.7;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(242, 231, 214, 0.16);
+    border-top-color: var(--app-vermilion-bright);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.character-screen {
+    height: 100%;
+    overflow-y: auto;
+    background: #131014;
+    scrollbar-color: rgba(209, 162, 78, 0.42) transparent;
+}
+
+.screen-bar {
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 9px clamp(18px, 4vw, 64px);
+    border-bottom: 1px solid var(--app-line);
+    background: #1c161c;
+}
+
+.screen-context {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.screen-context-mark {
+    width: 32px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-top: 6px solid var(--app-vermilion);
+    background: var(--app-paper);
+    color: #6f2330;
+    font: 800 0.74rem "Yu Mincho", serif;
+}
+
+.screen-context > span:last-child {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.screen-context strong {
+    color: #f4e8d8;
+    font: 700 0.88rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.screen-context small {
+    margin-top: 3px;
+    color: #90837b;
+    font-size: 0.62rem;
+}
+
+.menu-tools {
+    display: flex;
+    gap: 7px;
+}
+
+.ghost-btn,
+.action-btn,
+.character-card-actions button,
+.dialog-command-row button,
+.snapshot-actions button,
+.primary-command,
+.helper-command-strip button,
+.pending-task button,
+.producer-block button,
+.save-btn,
+.cancel-btn {
+    min-height: 32px;
+    padding: 5px 11px;
+    border: 1px solid rgba(242, 231, 214, 0.17);
+    border-radius: 4px;
+    background: #302630;
+    color: #ddd0c2;
+    cursor: pointer;
+}
+
+.ghost-btn:hover,
+.action-btn:hover,
+.character-card-actions button:hover,
+.dialog-command-row button:hover,
+.snapshot-actions button:hover,
+.helper-command-strip button:hover,
+.pending-task button:hover,
+.producer-block button:hover {
+    border-color: rgba(209, 162, 78, 0.52);
+    color: #ffe2a9;
+}
+
+.touhou-hero {
+    position: relative;
+    min-height: 238px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    padding: 36px clamp(22px, 6vw, 88px);
+    border-bottom: 2px solid var(--app-vermilion);
+    background: url("/static/static/hakurei-shrine-hero-v1.png") center 44% / cover;
+}
+
+.touhou-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 10, 14, 0.48);
+}
+
+.touhou-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 72px;
+    background: rgba(15, 12, 16, 0.72);
+}
+
+.touhou-hero-content,
+.touhou-hero-seal {
+    position: relative;
+    z-index: 1;
+}
+
+.touhou-hero-content {
+    max-width: 690px;
+}
+
+.touhou-hero-kicker {
+    margin-bottom: 7px;
+    color: #f1c66f;
+    font-size: 0.7rem;
+}
+
+.touhou-hero h1 {
+    color: #fff5e7;
+    font: 800 2rem "Yu Mincho", "MS Mincho", "SimSun", serif;
+}
+
+.touhou-hero p {
+    max-width: 620px;
+    margin-top: 10px;
+    color: #ddd0c3;
+    font-size: 0.82rem;
+    line-height: 1.7;
+}
+
+.touhou-hero-seal {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+}
+
+.touhou-hero-seal span {
+    width: 38px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 244, 223, 0.48);
+    background: rgba(142, 30, 49, 0.9);
+    color: #fff3dc;
+    font: 800 1rem "Yu Mincho", serif;
+}
+
+.character-records {
+    width: min(1180px, calc(100% - 36px));
+    margin: 0 auto;
+    padding: 24px 0 54px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.section-title > span {
+    width: 29px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    background: var(--app-vermilion);
+    color: white;
+    font: 800 0.7rem "Yu Mincho", serif;
+}
+
+.section-title strong {
+    color: #f1e5d5;
+    font: 700 0.9rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.touhou-world-info {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 11px;
+    border: 1px solid rgba(71, 121, 140, 0.26);
+    background: rgba(71, 121, 140, 0.08);
+    color: #a9c6d0;
+    font-size: 0.68rem;
+}
+
+.world-info-label {
+    color: #7fabbc;
+}
+
+.world-info-name {
+    color: #e3eef0;
+    font-weight: 700;
+}
+
+.world-info-note {
+    margin-left: auto;
+    color: #91857c;
+}
+
+.empty-character-state {
+    padding: 34px 16px;
+    border: 1px dashed rgba(209, 162, 78, 0.28);
+    color: #9f9187;
+    line-height: 1.7;
+    text-align: center;
+}
+
+.vue-character-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.character-card {
+    position: relative;
+    min-height: 76px;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    border: 1px solid var(--app-line);
+    border-left: 3px solid var(--app-moss);
+    border-radius: 4px;
+    background: #211a21;
+}
+
+.character-card:hover {
+    border-color: rgba(209, 162, 78, 0.34);
+    background: #282028;
+}
+
+.character-card.dead {
+    border-left-color: var(--app-vermilion);
+    opacity: 0.76;
+}
+
+.character-record-seal {
+    width: 35px;
+    height: 39px;
+    display: grid;
+    place-items: center;
+    border-top: 6px solid var(--app-vermilion);
+    background: var(--app-paper);
+    color: #6c2430;
+    font: 800 0.66rem Consolas, monospace;
+}
+
+.character-card-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.character-card-info strong {
+    color: #f3e7d7;
+    font: 700 0.86rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.character-card-info span {
+    margin-top: 3px;
+    color: #b8a99e;
+    font-size: 0.68rem;
+}
+
+.character-card-info small {
+    margin-top: 4px;
+    color: #7f747a;
+    font-size: 0.6rem;
+}
+
+.character-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.character-card-actions button {
+    min-height: 29px;
+    padding: 4px 8px;
+    font-size: 0.64rem;
+}
+
+.character-card-actions .character-play-btn {
+    border-color: rgba(209, 162, 78, 0.42);
+    background: #7d2434;
+    color: #fff4e3;
+}
+
+.character-card-actions .character-delete-btn {
+    color: #d8959c;
+}
+
+.character-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--app-line);
+}
+
+.action-btn.primary,
+.primary-command,
+.save-btn {
+    border-color: rgba(255, 228, 181, 0.3);
+    background: var(--app-vermilion);
+    color: #fff6e8;
+}
+
+.vue-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(8, 6, 9, 0.78);
+    backdrop-filter: blur(4px);
+}
+
+.record-dialog,
+.vue-snapshot-dialog,
+.api-key-dialog,
+.producer-console-dialog {
+    width: min(820px, 96vw);
+    max-height: min(860px, 92vh);
+    overflow: hidden;
+    border: 1px solid rgba(209, 162, 78, 0.34);
+    border-radius: 6px;
+    background: #1c171d;
+    box-shadow: var(--app-shadow);
+}
+
+.compact-dialog {
+    width: min(620px, 96vw);
+}
+
+.record-dialog__header,
+.vue-snapshot-dialog > header,
+.dialog-header {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 14px 10px 18px;
+    border-bottom: 1px solid rgba(209, 162, 78, 0.24);
+    background: #251d24;
+}
+
+.record-dialog__header > div,
+.vue-snapshot-dialog > header > div,
+.dialog-header > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.record-dialog__header small,
+.vue-snapshot-dialog > header small,
+.dialog-header small {
+    color: #9f8d80;
+    font-size: 0.58rem;
+}
+
+.record-dialog__header strong,
+.vue-snapshot-dialog > header strong,
+.dialog-header strong {
+    margin-top: 3px;
+    color: #f3e5d2;
+    font: 700 0.9rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.record-dialog__body,
+.dialog-content {
+    max-height: calc(92vh - 60px);
+    overflow-y: auto;
+    padding: 18px;
+    scrollbar-color: rgba(209, 162, 78, 0.42) transparent;
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin-bottom: 16px;
+}
+
+.template-grid button {
+    min-height: 40px;
+    padding: 7px 9px;
+    border: 1px solid rgba(242, 231, 214, 0.14);
+    border-radius: 4px;
+    background: #2a222a;
+    color: #cfc0b5;
+    cursor: pointer;
+    font-size: 0.68rem;
+}
+
+.template-grid button:hover,
+.template-grid button.active {
+    border-color: rgba(209, 162, 78, 0.56);
+    background: #3a2b32;
+    color: #ffe4af;
+}
+
+.field-stack,
+.profile-form label,
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.field-stack > span,
+.profile-form label > span,
+.form-group > label {
+    color: #d7c6b8;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.field-stack input,
+.field-stack textarea,
+.profile-form input,
+.profile-form textarea,
+.form-group input,
+.form-group select,
+.producer-block input,
+.producer-block select,
+.producer-block textarea,
+.snapshot-branch-name input {
+    width: 100%;
+    border: 1px solid rgba(242, 231, 214, 0.16);
+    border-radius: 4px;
+    outline: 0;
+    background: #110e12;
+    color: #f1e6d8;
+}
+
+.field-stack input,
+.profile-form input,
+.form-group input,
+.form-group select,
+.producer-block input,
+.producer-block select,
+.snapshot-branch-name input {
+    min-height: 36px;
+    padding: 7px 9px;
+}
+
+.field-stack textarea,
+.profile-form textarea,
+.producer-block textarea {
+    resize: vertical;
+    padding: 9px 10px;
+    line-height: 1.65;
+}
+
+.field-stack input:focus,
+.field-stack textarea:focus,
+.profile-form input:focus,
+.profile-form textarea:focus,
+.form-group input:focus,
+.form-group select:focus,
+.producer-block input:focus,
+.producer-block select:focus,
+.producer-block textarea:focus {
+    border-color: rgba(209, 162, 78, 0.65);
+}
+
+.profile-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.profile-form .wide {
+    grid-column: 1 / -1;
+}
+
+.dialog-command-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.dialog-command-row.is-single {
+    justify-content: center;
+}
+
+.dialog-status {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border: 1px solid rgba(169, 36, 57, 0.38);
+    background: rgba(169, 36, 57, 0.1);
+    color: #efafb7;
+    font-size: 0.68rem;
+}
+
+.file-command,
+.file-drop {
+    position: relative;
+    min-height: 34px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px dashed rgba(209, 162, 78, 0.42);
+    border-radius: 4px;
+    background: #282128;
+    color: #dbc7ad;
+    cursor: pointer;
+    font-size: 0.68rem;
+}
+
+.file-command {
+    padding: 5px 11px;
+}
+
+.file-drop {
+    min-height: 82px;
+    padding: 14px;
+}
+
+.file-command input,
+.file-drop input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.import-preview,
+.record-subject {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px;
+    margin-bottom: 14px;
+    border-left: 3px solid var(--app-vermilion);
+    background: #282028;
+}
+
+.import-preview strong,
+.record-subject strong {
+    color: #f1e3d1;
+    font: 700 0.92rem "Yu Mincho", "Microsoft YaHei", serif;
+}
+
+.import-preview span,
+.record-subject span {
+    color: #9f9187;
+    font-size: 0.65rem;
+}
+
+.import-preview p {
+    color: #b9aaa0;
+    font-size: 0.7rem;
+    line-height: 1.6;
+}
+
+.record-rows {
+    display: grid;
+    grid-template-columns: minmax(92px, 0.22fr) minmax(0, 1fr);
+    border-top: 1px solid var(--app-line);
+}
+
+.record-rows dt,
+.record-rows dd {
+    min-width: 0;
+    padding: 11px 10px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.record-rows dt {
+    color: #d0aa66;
+    font-size: 0.66rem;
+}
+
+.record-rows dd {
+    color: #cec0b5;
+    font-size: 0.72rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.record-list-item + .record-list-item {
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(242, 231, 214, 0.1);
+}
+
+.record-note {
+    margin-top: 12px;
+    padding: 9px 10px;
+    border: 1px solid rgba(71, 121, 140, 0.28);
+    background: rgba(71, 121, 140, 0.08);
+    color: #a9c2cb;
+    font-size: 0.68rem;
+    line-height: 1.6;
+}
+
+.relationship-ledger {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.relationship-ledger > div {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--app-line);
+    background: #251e25;
+}
+
+.relationship-ledger strong {
+    color: #eadcca;
+    font-size: 0.72rem;
+}
+
+.relationship-ledger span {
+    color: #e1b966;
+    font-size: 0.68rem;
+    text-align: right;
+}
+
+.relationship-latest,
+.dialog-empty {
+    margin-top: 12px;
+    color: #95877e;
+    font-size: 0.66rem;
+    line-height: 1.6;
+}
+
+.helper-command-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+.helper-answer {
+    margin-top: 14px;
+    padding: 14px;
+    border-left: 3px solid var(--app-lake);
+    background: #242127;
+    color: #d5c9bf;
+    font-size: 0.74rem;
+    line-height: 1.7;
+}
+
+.helper-answer p + p {
+    margin-top: 0.7em;
+}
+
+.helper-submit {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.pending-task {
+    margin-top: 12px;
+    padding: 13px;
+    border: 1px solid rgba(209, 162, 78, 0.32);
+    background: rgba(209, 162, 78, 0.07);
+}
+
+.pending-task small,
+.pending-task strong {
+    display: block;
+}
+
+.pending-task small {
+    color: #9d8f85;
+    font-size: 0.58rem;
+}
+
+.pending-task strong {
+    margin-top: 4px;
+    color: #f0d497;
+    font-size: 0.76rem;
+}
+
+.pending-task p {
+    margin: 8px 0 12px;
+    color: #b9aba1;
+    font-size: 0.68rem;
+    line-height: 1.6;
+}
+
+.pending-task > div {
+    display: flex;
+    gap: 7px;
+}
+
+.snapshot-branch-name {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.snapshot-branch-name label {
+    display: block;
+    margin-bottom: 6px;
+    color: #ad9e93;
+    font-size: 0.62rem;
+}
+
+.snapshot-list {
+    max-height: min(570px, 65vh);
+    overflow-y: auto;
+    padding: 12px 16px 16px;
+}
+
+.snapshot-item {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 10px;
+    border: 1px solid var(--app-line);
+    background: #251e25;
+}
+
+.snapshot-item + .snapshot-item {
+    margin-top: 7px;
+}
+
+.snapshot-item > div:first-child {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.snapshot-item strong {
+    color: #eadccc;
+    font-size: 0.72rem;
+}
+
+.snapshot-item span {
+    margin-top: 4px;
+    color: #8f8179;
+    font-size: 0.6rem;
+}
+
+.snapshot-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 5px;
+}
+
+.snapshot-empty {
+    padding: 34px 16px;
+    color: #8d8078;
+    text-align: center;
+}
+
+.form-group + .form-group,
+.usage-diagnostics,
+.api-key-status {
+    margin-top: 13px;
+}
+
+.form-hint {
+    color: #847980;
+    font-size: 0.61rem;
+    line-height: 1.55;
+}
+
+.api-key-status {
+    padding: 8px 10px;
+    border: 1px solid rgba(71, 121, 140, 0.32);
+    background: rgba(71, 121, 140, 0.08);
+    color: #a8c4cf;
+    font-size: 0.68rem;
+}
+
+.api-key-status.ok,
+.api-key-status.success {
+    border-color: rgba(85, 120, 102, 0.45);
+    color: #a9d2ba;
+}
+
+.api-key-status.error {
+    border-color: rgba(169, 36, 57, 0.44);
+    color: #eba7af;
+}
+
+.usage-diagnostics {
+    padding: 12px;
+    border: 1px solid var(--app-line);
+    background: #231c23;
+}
+
+.usage-diagnostics__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #eadccc;
+    font-size: 0.7rem;
+}
+
+.usage-diagnostics__heading span,
+.usage-diagnostics p,
+.usage-diagnostics small {
+    color: #8e8280;
+    font-size: 0.61rem;
+}
+
+.usage-diagnostics__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.usage-diagnostics__grid span {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px;
+    background: #171317;
+    color: #8e8280;
+    font-size: 0.57rem;
+}
+
+.usage-diagnostics__grid strong {
+    color: #dfc17d;
+    font-size: 0.68rem;
+    overflow-wrap: anywhere;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.producer-console-dialog {
+    width: min(1120px, 97vw);
+}
+
+.producer-console-note {
+    padding: 9px 10px;
+    border: 1px solid rgba(169, 36, 57, 0.32);
+    background: rgba(169, 36, 57, 0.08);
+    color: #deb8bc;
+    font-size: 0.66rem;
+}
+
+.producer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 10px;
+}
+
+.producer-block {
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid var(--app-line);
+    background: #241d24;
+}
+
+.producer-wide {
+    margin-top: 9px;
+}
+
+.producer-block h3 {
+    margin-bottom: 8px;
+    color: #dfc27f;
+    font-size: 0.7rem;
+}
+
+.producer-block input,
+.producer-block select,
+.producer-block textarea,
+.producer-block button {
+    margin-top: 6px;
+}
+
+.producer-state-preview {
+    margin-top: 8px;
+    padding: 8px;
+    overflow-wrap: anywhere;
+    background: #151115;
+    color: #9e9189;
+    font: 0.61rem/1.6 Consolas, "Microsoft YaHei", sans-serif;
+}
+
+.producer-pair {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.producer-pair + .producer-pair {
+    margin-top: 4px;
+}
+
+.producer-pair strong {
+    color: #d5c7bb;
+    text-align: right;
+}
+
+.producer-memory-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.producer-memory-npc + .producer-memory-npc {
+    margin-top: 8px;
+}
+
+.producer-memory-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 7px;
+    margin-top: 4px;
+}
+
+.producer-memory-item code {
+    color: #84b6c7;
+}
+
+.vue-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    display: grid;
+    place-items: center;
+    background: rgba(8, 6, 9, 0.7);
+    backdrop-filter: blur(3px);
+}
+
+.vue-loading-card {
+    min-width: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid rgba(209, 162, 78, 0.36);
+    border-radius: 6px;
+    background: #211a21;
+    box-shadow: var(--app-shadow);
+    color: #e3d6c8;
+    font-size: 0.72rem;
+}
+
+.vue-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    z-index: 160;
+    max-width: min(520px, calc(100vw - 32px));
+    padding: 9px 14px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(209, 162, 78, 0.35);
+    border-radius: 4px;
+    background: #2a2229;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+    color: #f1e5d6;
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+.vue-toast.is-success {
+    border-color: rgba(85, 120, 102, 0.58);
+}
+
+.vue-toast.is-error {
+    border-color: rgba(209, 61, 82, 0.62);
+    color: #f3b8bf;
+}
+
+.toast-enter-active,
+.toast-leave-active,
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+body.light-theme {
+    color-scheme: light;
+    background: #e9e1d8;
+}
+
+body.light-theme .touhou-vue-shell,
+body.light-theme .character-screen {
+    background: #eee7de;
+}
+
+body.light-theme .app-chrome {
+    background: rgba(50, 38, 45, 0.98);
+}
+
+body.light-theme .screen-bar,
+body.light-theme .character-records {
+    color: #3b2b32;
+}
+
+body.light-theme .screen-bar {
+    background: #e3dad0;
+}
+
+body.light-theme .screen-context strong,
+body.light-theme .section-title strong {
+    color: #4a3038;
+}
+
+body.light-theme .character-card,
+body.light-theme .record-dialog,
+body.light-theme .vue-snapshot-dialog,
+body.light-theme .api-key-dialog {
+    background: #fffaf4;
+    color: #3e2c34;
+}
+
+body.light-theme .character-card-info strong,
+body.light-theme .record-rows dd,
+body.light-theme .record-subject strong {
+    color: #432d35;
+}
+
+@media (max-width: 900px) {
+    .app-chrome {
+        gap: 9px;
+        padding: 0 10px;
+    }
+
+    .app-brand-copy small,
+    .app-runtime-badge {
+        display: none;
+    }
+
+    .touhou-hero {
+        min-height: 214px;
+    }
+
+    .template-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .producer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .touhou-vue-shell {
+        grid-template-rows: 50px minmax(0, 1fr);
+    }
+
+    .app-chrome {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .app-brand-copy {
+        display: none;
+    }
+
+    .app-brand-mark {
+        width: 28px;
+        height: 28px;
+    }
+
+    .app-chrome-actions {
+        gap: 4px;
+    }
+
+    .app-chrome-actions .icon-button {
+        width: 29px;
+        height: 29px;
+    }
+
+    .screen-bar {
+        align-items: flex-start;
+        padding: 9px 12px;
+    }
+
+    .screen-context small {
+        display: none;
+    }
+
+    .menu-tools {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .ghost-btn {
+        min-height: 29px;
+        padding: 4px 7px;
+        font-size: 0.62rem;
+    }
+
+    .touhou-hero {
+        min-height: 188px;
+        padding: 24px 18px;
+    }
+
+    .touhou-hero h1 {
+        font-size: 1.45rem;
+    }
+
+    .touhou-hero p {
+        font-size: 0.72rem;
+    }
+
+    .touhou-hero-seal {
+        display: none;
+    }
+
+    .character-records {
+        width: calc(100% - 24px);
+        padding-top: 18px;
+    }
+
+    .touhou-world-info {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .world-info-note {
+        margin-left: 0;
+    }
+
+    .character-card {
+        grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .character-card-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-top: 8px;
+        border-top: 1px solid var(--app-line);
+    }
+
+    .template-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .profile-form,
+    .producer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-form .wide {
+        grid-column: auto;
+    }
+
+    .record-rows {
+        grid-template-columns: 1fr;
+    }
+
+    .record-rows dt {
+        padding-bottom: 3px;
+        border-bottom: 0;
+    }
+
+    .record-rows dd {
+        padding-top: 3px;
+    }
+
+    .usage-diagnostics__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .snapshot-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 420px) {
+    .template-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .character-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .dialog-command-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

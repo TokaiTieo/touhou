@@ -1,0 +1,15 @@
+{
+  "save_version": 5,
+  "character_id": "fixture-v5",
+  "world_id": "world_touhou",
+  "profile": {"name": "第五代旧档", "identity": "符卡使"},
+  "status": {"is_dead": false, "health": 76, "current_scene": "雾之湖"},
+  "skill_experience": {"弹幕熟练度": 45},
+  "incident_state": {
+    "id": "touhou_rift",
+    "status": "resolved",
+    "resolution_path": "spellcard"
+  },
+  "migration_history": [{"version": 5, "summary": "既有第五版记录"}],
+  "legacy_custom": {"source": "v5", "keep": true}
+}

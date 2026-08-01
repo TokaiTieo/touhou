@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "rest_recovers_state",
+      "title": "休息应恢复疲劳与伤势",
+      "kind": "environment",
+      "action_text": "在博丽神社喝茶休息并治疗伤势",
+      "character": {
+        "player_state": {
+          "疲劳": 70,
+          "受伤": 24,
+          "灵力": 30
+        }
+      },
+      "model_response": {
+        "description": "你在神社安静休息，呼吸逐渐平稳。",
+        "time_cost": 0.25,
+        "is_dead": false,
+        "task_updates": [],
+        "memory_updates": []
+      },
+      "assertions": [
+        {"path": "character.player_state.疲劳", "op": "lt", "value": 70},
+        {"path": "character.player_state.受伤", "op": "lt", "value": 24},
+        {"path": "character.player_state.灵力", "op": "gt", "value": 30},
+        {"path": "result.time_cost", "op": "gte", "value": 0.5}
+      ]
+    },
+    {
+      "id": "investigation_advances",
+      "title": "调查行动应推进能力与异变调查",
+      "kind": "environment",
+      "action_text": "调查结界裂隙并搜索残留线索",
+      "model_response": {
+        "description": "你辨认出结界波纹的流向。",
+        "time_cost": 1,
+        "is_dead": false,
+        "task_updates": [],
+        "memory_updates": []
+      },
+      "assertions": [
+        {"path": "result.skill_progress_delta.调查熟练度.experience_gained", "op": "gt", "value": 0},
+        {"path": "result.incident_state.investigation_progress", "op": "gt", "value": 0},
+        {"path": "character.player_state.疲劳", "op": "gt", "value": 10}
+      ]
+    },
+    {
+      "id": "battle_ruling_wins_over_model",
+      "title": "符卡确定性裁定不得被模型反转",
+      "kind": "environment",
+      "action_text": "使用符卡「结界星屑」向博丽灵梦发起挑战",
+      "scene_npcs": [
+        {
+          "name": "博丽灵梦",
+          "profile": {"encounter_tier": "高危"}
+        }
+      ],
+      "model_response": {
+        "description": "模型尝试自由描述战斗。",
+        "time_cost": 1,
+        "is_dead": false,
+        "spellcard_result": {
+          "opponent": "博丽灵梦",
+          "spellcard_name": "结界星屑",
+          "outcome": "模型自定结果"
+        },
+        "task_updates": [],
+        "memory_updates": []
+      },
+      "assertions": [
+        {"path": "result.spellcard_result.rule_source", "op": "eq", "value": "deterministic_v2"},
+        {"path": "result.spellcard_result.mastery.experience_gained", "op": "gt", "value": 0},
+        {"path": "character.opponent_adaptation.博丽灵梦.battles", "op": "eq", "value": 1}
+      ]
+    },
+    {
+      "id": "producer_absolute_advantage",
+      "title": "制作人模式保持绝对优势",
+      "kind": "environment",
+      "action_text": "使用符卡「制作人终章」挑战八云紫",
+      "npc_name": "八云紫",
+      "character": {
+        "gm_mode": true
+      },
+      "model_response": {
+        "description": "战斗结束。",
+        "time_cost": 1,
+        "is_dead": true,
+        "task_updates": [],
+        "memory_updates": []
+      },
+      "assertions": [
+        {"path": "result.is_dead", "op": "eq", "value": false},
+        {"path": "result.spellcard_result.outcome", "op": "eq", "value": "轻松胜利"},
+        {"path": "result.spellcard_result.metrics.accuracy", "op": "eq", "value": 100.0},
+        {"path": "character.spellcard_mastery.制作人终章.level", "op": "eq", "value": 999999}
+      ]
+    },
+    {
+      "id": "resolved_incident_waits",
+      "title": "已解决异变不再推进倒计时",
+      "kind": "environment",
+      "action_text": "在神社自由散步",
+      "character": {
+        "time": {
+          "chapter_time_remaining": 40,
+          "chapter_status": "resolved",
+          "anomaly_state": "waiting"
+        },
+        "incident_state": {
+          "id": "main_touhou_rift_01",
+          "status": "resolved",
+          "stage": "aftermath",
+          "investigation_progress": 100,
+          "threat_progress": 0,
+          "rewards_claimed": true,
+          "sequence_index": 0
+        }
+      },
+      "tasks": {
+        "active_tasks": [],
+        "completed_tasks": [{"id": "main_touhou_rift_01"}],
+        "applied_turn_ids": []
+      },
+      "model_response": {
+        "description": "神社周围暂时平静。",
+        "time_cost": 2,
+        "is_dead": false,
+        "task_updates": [],
+        "memory_updates": []
+      },
+      "assertions": [
+        {"path": "character.time.chapter_time_remaining", "op": "eq", "value": 40},
+        {"path": "character.time.anomaly_state", "op": "eq", "value": "waiting"},
+        {"path": "result.incident_state.status", "op": "eq", "value": "resolved"}
+      ]
+    },
+    {
+      "id": "invalid_contract_has_no_resolution",
+      "title": "非法模型响应不能修改游戏状态",
+      "kind": "environment",
+      "action_text": "调查结界",
+      "model_response": "这不是 JSON",
+      "assertions": [
+        {"path": "result.contract_valid", "op": "eq", "value": false},
+        {"path": "character.player_state.疲劳", "op": "eq", "value": 10},
+        {"path": "character.time.chapter_time_remaining", "op": "eq", "value": 72}
+      ]
+    }
+  ]
+}

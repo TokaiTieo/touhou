@@ -1,0 +1,43 @@
+{
+  "timeline": {
+    "era": "幻想历",
+    "year": 2026,
+    "current_period": "异变时代",
+    "period_description": "幻想乡不断发生异变，博丽灵梦和伙伴们用弹幕解决一切",
+    "history_events": [
+      {
+        "id": "e1",
+        "year": 1885,
+        "title": "博丽大结界建立",
+        "description": "博丽大结界将幻想乡与外界隔离"
+      },
+      {
+        "id": "e2",
+        "year": 2002,
+        "title": "红魔乡异变",
+        "description": "红雾笼罩幻想乡"
+      },
+      {
+        "id": "e3",
+        "year": 2026,
+        "title": "玩家降临",
+        "description": "玩家降临幻想乡"
+      }
+    ],
+    "current_events": [
+      {
+        "id": "c1",
+        "title": "新异变",
+        "description": "新的异变即将发生",
+        "importance": "high"
+      }
+    ],
+    "future_events": [
+      {
+        "id": "f1",
+        "title": "大异变",
+        "description": "危及幻想乡存亡的异变"
+      }
+    ]
+  }
+}

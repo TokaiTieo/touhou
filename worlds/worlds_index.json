@@ -1,0 +1,13 @@
+{
+  "worlds": [
+    {
+      "id": "world_touhou",
+      "name": "幻想乡 - 东方Project",
+      "description": "《东方Project》世界，被博丽大结界隔离的幻想乡",
+      "created_at": "2026-05-31T13:47:09.398480",
+      "last_played": null
+    }
+  ],
+  "current_world": "world_touhou",
+  "version": "1.0"
+}

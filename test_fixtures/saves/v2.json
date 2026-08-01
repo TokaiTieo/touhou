@@ -1,0 +1,10 @@
+{
+  "save_version": 2,
+  "character_id": "fixture-v2",
+  "world_id": "world_touhou",
+  "profile": {"name": "第二代旧档", "identity": "人间之里居民"},
+  "status": {"is_dead": false, "health": 83, "current_scene": "人间之里"},
+  "time": {"current_day": 3, "current_hour": 14},
+  "resources": {"灵石": 7, "道具": ["旧御守"]},
+  "legacy_custom": {"source": "v2", "keep": true}
+}
