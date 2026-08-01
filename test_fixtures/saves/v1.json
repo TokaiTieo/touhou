@@ -1,0 +1,7 @@
+{
+  "character_id": "fixture-v1",
+  "profile": {"name": "初代旧档", "identity": "外界来访者"},
+  "status": {"current_scene": "博丽神社"},
+  "relationships": {"博丽灵梦": "初识"},
+  "legacy_custom": {"source": "v1", "keep": true}
+}

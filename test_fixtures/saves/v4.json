@@ -1,0 +1,10 @@
+{
+  "save_version": 4,
+  "character_id": "fixture-v4",
+  "world_id": "world_touhou",
+  "profile": {"name": "第四代旧档", "identity": "结界调查者"},
+  "status": {"is_dead": false, "health": 92, "current_scene": "博丽神社"},
+  "player_state": {"灵力": 62, "弹幕熟练度": 18, "疲劳": 11},
+  "incident_state": {"id": "touhou_rift", "status": "active"},
+  "legacy_custom": {"source": "v4", "keep": true}
+}

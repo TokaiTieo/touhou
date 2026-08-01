@@ -1,0 +1,14 @@
+{
+  "save_version": 6,
+  "character_id": "fixture-v6",
+  "world_id": "world_touhou",
+  "profile": {"name": "第六代旧档", "identity": "幻想乡旅行者"},
+  "status": {"is_dead": false, "health": 100, "current_scene": "守矢神社"},
+  "story_summary": {
+    "version": 1,
+    "summary": "已经抵达守矢神社。",
+    "facts": []
+  },
+  "usage_stats": {"requests": 9},
+  "legacy_custom": {"source": "v6", "keep": true}
+}

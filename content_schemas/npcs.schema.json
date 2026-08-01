@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "touhou-npcs",
+  "type": "object",
+  "required": ["npcs"],
+  "properties": {
+    "aliases": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}},
+    "npcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "profile", "location_id", "active", "dead"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "profile": {
+            "type": "object",
+            "required": ["identity", "description"],
+            "properties": {
+              "identity": {"type": "string", "minLength": 1},
+              "description": {"type": "string", "minLength": 1}
+            }
+          },
+          "location_id": {"type": "string", "minLength": 1},
+          "active": {"type": "boolean"},
+          "dead": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

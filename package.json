@@ -1,0 +1,23 @@
+{
+  "name": "touhou-ai-adventure-ui",
+  "private": true,
+  "type": "module",
+  "version": "0.12.0",
+  "description": "Vue 3 frontend shell for TouHou - 东方异变录",
+  "scripts": {
+    "vendor:vue": "node scripts/copy-vue-runtime.mjs",
+    "check:js": "node scripts/check-js.mjs",
+    "check:python": "python -m compileall -q backend",
+    "check:content": "python scripts/validate-content.py",
+    "check": "npm run check:js && npm run check:python && npm run check:content",
+    "test:python": "python -m unittest discover -p \"test_*.py\" -v",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test": "npm run check && npm run test:python && npm run test:e2e"
+  },
+  "dependencies": {
+    "vue": "3.5.17"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

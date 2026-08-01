@@ -1,0 +1,239 @@
+{
+    "aliases":  {
+                    "迷途竹林":  "永远亭",
+                    "旧地狱":  "地灵殿"
+                },
+    "aliases":  {
+                    "迷途竹林":  "永远亭",
+                    "旧地狱":  "地灵殿"
+                },
+    "regions":  [
+                    {
+                        "id":  "gensokyo_r",
+                        "name":  "幻想乡",
+                        "description":  "世界主要区域"
+                    }
+                ],
+    "locations":  [
+                      {
+                          "id":  "loc_hakurei",
+                          "name":  "博丽神社",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "博丽灵梦守护的边境神社，大结界最薄弱处，也是外界与幻想乡的连接点。境内有塞钱箱、本殿与灵梦偷懒用的走廊。",
+                          "icon":  "⛩️",
+                          "danger_level":  "安全",
+                          "danger_note":  "异变起点，适合向灵梦确认现状。",
+                          "main_rewards":  "主线线索、符卡基础、灵梦关系"
+                      },
+                      {
+                          "id":  "loc_human_village",
+                          "name":  "人间之里",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "幻想乡最大的人类聚居地，商铺、酒肆、私塾林立。上白泽慧音在此教授历史，稗田阿求记录《幻想乡缘起》。",
+                          "icon":  "🏘️",
+                          "danger_level":  "安全",
+                          "danger_note":  "人类聚居地，白天最适合打听传闻。",
+                          "main_rewards":  "补给、情报、普通委托"
+                      },
+                      {
+                          "id":  "loc_scarlet",
+                          "name":  "红魔馆",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "矗立于雾之湖畔的深红色洋馆，吸血鬼蕾米莉亚与芙兰朵露的居城。由完美潇洒的女仆长咲夜管理，馆内有巨大图书馆与地下封印室。",
+                          "icon":  "🏰",
+                          "danger_level":  "高危",
+                          "danger_note":  "红魔馆欢迎客人，也会审视猎物。",
+                          "main_rewards":  "红魔馆线索、图书馆、夜茶会"
+                      },
+                      {
+                          "id":  "loc_kirisame",
+                          "name":  "雾雨魔法店",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "雾雨魔理沙位于魔法之森边缘的住兼店，堆满了魔法书与森林采集的蘑菇。爱丽丝是这里的常客。",
+                          "icon":  "🔮",
+                          "danger_level":  "注意",
+                          "danger_note":  "魔理沙的家兼店铺，稀奇物容易被借走。",
+                          "main_rewards":  "魔法研究、素材、魔理沙路线"
+                      },
+                      {
+                          "id":  "loc_forest",
+                          "name":  "魔法之森",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "充满瘴气与蘑菇孢子的茂密森林，妖精们嬉戏的乐园。雾雨魔法店位于森林边缘，深处居住着各种魔法生物。",
+                          "icon":  "🌲",
+                          "danger_level":  "危险",
+                          "danger_note":  "瘴气与妖精恶作剧并存，适合探索但别大意。",
+                          "main_rewards":  "蘑菇素材、人偶线索、妖精遭遇"
+                      },
+                      {
+                          "id":  "loc_bamboo",
+                          "name":  "永远亭",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "隐藏在迷途竹林深处的古代日式建筑，月之公主辉夜与医师永琳的居所。掌握着月科技与不老不死的仙药。",
+                          "icon":  "🎋",
+                          "danger_level":  "危险",
+                          "danger_note":  "迷途竹林容易迷路，夜晚更诡异。",
+                          "main_rewards":  "永远亭、月都线索、妹红遭遇"
+                      },
+                      {
+                          "id":  "loc_hakugyokurou",
+                          "name":  "白玉楼",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "位于冥界的日式庭园大宅，亡灵公主西行寺幽幽子与剑士魂魄妖梦共同管理。后方有封印幽幽子前世遗骸的妖樱西行妖。",
+                          "icon":  "🌸",
+                          "danger_level":  "高危",
+                          "danger_note":  "冥界庭院优雅安静，但生死边界很薄。",
+                          "main_rewards":  "灵魂线索、妖梦训练、幽幽子剧情"
+                      },
+                      {
+                          "id":  "loc_moriya",
+                          "name":  "守矢神社",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "位于妖怪之山山顶的现代风格神社，风神八坂神奈子、山神洩矢诹访子与风祝东风谷早苗在此经营。",
+                          "icon":  "⛩️",
+                          "danger_level":  "注意",
+                          "danger_note":  "山顶神社热情招待，也会顺手推广信仰。",
+                          "main_rewards":  "守矢路线、奇迹线索、山中情报"
+                      },
+                      {
+                          "id":  "loc_underground",
+                          "name":  "地灵殿",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "位于地底的古明地觉与古明地恋的居所，管理着灼热地狱遗址与众多怨灵。火焰猫燐与灵乌路空是这里的宠物。",
+                          "icon":  "🔥",
+                          "danger_level":  "高危",
+                          "danger_note":  "地底怨灵与灼热地狱遗址仍有余火。",
+                          "main_rewards":  "地灵殿线索、怨灵事件、觉/恋剧情"
+                      },
+                      {
+                          "id":  "loc_lake",
+                          "name":  "雾之湖",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "红魔馆前方的湖泊，常年被浓雾笼罩。琪露诺自称这里的老大，湖边是妖精们嬉戏的场所。",
+                          "icon":  "💧",
+                          "danger_level":  "注意",
+                          "danger_note":  "雾气遮蔽视线，妖精喜欢突然挑战。",
+                          "main_rewards":  "新手弹幕、红魔馆入口、琪露诺支线"
+                      },
+                      {
+                          "id":  "loc_myoren",
+                          "name":  "命莲寺",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "由圣白莲主持的佛教寺院，接纳各种妖怪皈依佛门。寺内有寅丸星、封兽鵺等妖怪僧侣修行。",
+                          "icon":  "🛕",
+                          "danger_level":  "注意",
+                          "danger_note":  "妖怪寺院相对友善，但信仰立场复杂。",
+                          "main_rewards":  "命莲寺委托、妖怪调停、宗教线索"
+                      },
+                      {
+                          "id":  "loc_youkai_mountain",
+                          "name":  "妖怪之山",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "幻想乡最大的山脉，天狗与河童的聚居地。射命丸文在此发行《文花帖》，河童们建立着古怪的发明工坊。",
+                          "icon":  "🗻",
+                          "danger_level":  "危险",
+                          "danger_note":  "天狗巡逻与河童机关很多，但情报价值极高。",
+                          "main_rewards":  "天狗新闻、河童发明、守矢路线"
+                      },
+                      {
+                          "id":  "loc_moon",
+                          "name":  "月之都",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "位于月亮上的仙人都市，纯狐、赫卡提亚等月之住民偶尔通过梦境或间隙降临幻想乡。",
+                          "icon":  "🌙",
+                          "danger_level":  "极危",
+                          "danger_note":  "月之都秩序严苛，任何异常都会被记录。",
+                          "main_rewards":  "月都真相、永琳/辉夜高阶剧情"
+                      },
+                      {
+                          "id":  "loc_hell",
+                          "name":  "地狱",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "审判亡灵的冥界深处，四季映姬在此裁决善恶，小野冢小町负责摆渡亡魂。",
+                          "icon":  "😈",
+                          "danger_level":  "极危",
+                          "danger_note":  "地狱不会阻止你进入，但会让鲁莽付出代价。",
+                          "main_rewards":  "审判线索、鬼族遭遇、死亡边界剧情"
+                      },
+                      {
+                          "id":  "loc_sunflower",
+                          "name":  "太阳花田",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "位于魔法之森与妖怪之山之间的广阔花田，四季盛放着向日葵。花田之主风见幽香是幻想乡最强妖怪之一。",
+                          "icon":  "🌻",
+                          "danger_level":  "极危",
+                          "danger_note":  "风见幽香的花田，美丽本身就是警告。",
+                          "main_rewards":  "高风险会面、强者试炼、稀有花材"
+                      },
+                      {
+                          "id":  "loc_temple_miko",
+                          "name":  "神灵庙",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "古代圣德太子——丰聪耳神子的道场，物部布都与苏我屠自古作为其部下侍奉左右。",
+                          "icon":  "🏛️",
+                          "danger_level":  "危险",
+                          "danger_note":  "古代豪族与道教力量盘踞之处。",
+                          "main_rewards":  "神灵庙支线、历史谜题、道术线索"
+                      },
+                      {
+                          "id":  "loc_backdoor",
+                          "name":  "后户之国",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "摩多罗隐岐奈的秘神领域，位于万物背后的暗之国度。尔子田里乃与丁礼田舞是这里的舞者。",
+                          "icon":  "🚪",
+                          "danger_level":  "极危",
+                          "danger_note":  "秘神领域位于万物背后，规则可能被改写。",
+                          "main_rewards":  "隐藏路线、后户试炼、秘神线索"
+                      },
+                      {
+                          "id":  "loc_animal_realm",
+                          "name":  "畜生界",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "畜生灵统治的异次元领域，吉吊八千慧、骊驹早鬼、埴安神袿姬等强者割据一方。",
+                          "icon":  "🐾",
+                          "danger_level":  "极危",
+                          "danger_note":  "动物灵势力割据，强者逻辑直接。",
+                          "main_rewards":  "畜生界势力、组织交易、后期冲突"
+                      },
+                      {
+                          "id":  "loc_market",
+                          "name":  "虹龙洞集市",
+                          "type":  "outdoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "山中的集市与虹龙洞周边，天弓千亦掌管交易之神权，饭纲丸龙发行《东方文果真报》。",
+                          "icon":  "🏪",
+                          "danger_level":  "注意",
+                          "danger_note":  "交易之神注视市场，一切都可交换。",
+                          "main_rewards":  "交易、道具、新闻与卡牌线索"
+                      },
+                      {
+                          "id":  "loc_dream",
+                          "name":  "梦境世界",
+                          "type":  "indoor",
+                          "parent":  "gensokyo_r",
+                          "description":  "哆来咪·苏伊特管辖的梦境世界，连接所有生物的梦境，也是前往月之都的通道之一。",
+                          "icon":  "💤",
+                          "danger_level":  "高危",
+                          "danger_note":  "梦境会回应欲望，也会暴露秘密。",
+                          "main_rewards":  "月都通道、梦境情报、心理试炼"
+                      }
+                  ]
+}

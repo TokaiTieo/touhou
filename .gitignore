@@ -1,0 +1,63 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!.env.template
+config/api_key.dat
+
+# JavaScript dependencies
+node_modules/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+
+# Build and packaged release outputs
+build/
+dist/
+release/
+*.exe
+
+# Runtime state and logs
+runtime/
+runtime.json
+logs/
+*.log
+*.log.*
+
+# Player saves, migrations, snapshots, and local backups
+worlds/*/sessions/
+sessions/
+data/
+backup_*/
+config/*.dat
+
+# Test output and browser caches
+test-results/
+playwright-report/
+blob-report/
+.nyc_output/
+coverage/
+
+# Temporary and editor files
+.tmp/
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini

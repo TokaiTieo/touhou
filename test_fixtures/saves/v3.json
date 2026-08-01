@@ -1,0 +1,12 @@
+{
+  "save_version": 3,
+  "character_id": "fixture-v3",
+  "world_id": "world_touhou",
+  "profile": {"name": "第三代旧档", "identity": "见习魔法使"},
+  "status": {"is_dead": false, "health": 100, "current_scene": "魔法之森"},
+  "conversation_history": [
+    {"speaker": "player", "content": "调查森林里的魔力波动"}
+  ],
+  "npc_memories": {"雾雨魔理沙": ["曾一起调查魔法之森"]},
+  "legacy_custom": {"source": "v3", "keep": true}
+}
