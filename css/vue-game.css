@@ -521,16 +521,10 @@
 
 .th-mobile-side-toggle { display: none; }
 
-body.light-theme .th-game::after { background: rgba(238, 230, 218, 0.72); }
-body.light-theme .th-story-stage { background: rgba(245, 239, 231, 0.84); }
-body.light-theme .th-side { background: rgba(244, 237, 227, 0.98); }
-body.light-theme .th-message-body { background: rgba(255, 250, 243, 0.97); color: #35262e; }
-body.light-theme .th-message-content { color: #3c2a31; }
-body.light-theme .th-message.is-player .th-message-body { background: #8f3040; }
-body.light-theme .th-message.is-player .th-message-content { color: #fff7ed; }
-body.light-theme .th-composer { background: #f1e9df; }
-body.light-theme .th-composer-fields label { background: #fffaf4; }
-body.light-theme .th-composer textarea { color: #33232b; }
+/* 晴日变体:默认已是薄樱浅色,light-theme 仅轻微提亮 */
+body.light-theme .th-story-stage { background: rgba(255, 253, 249, 0.9); }
+body.light-theme .th-side { background: rgba(255, 253, 249, 0.98); }
+body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 
 @media (max-width: 1080px) {
     .th-game { grid-template-columns: minmax(0, 1fr) 340px; }
@@ -568,4 +562,842 @@ body.light-theme .th-composer textarea { color: #33232b; }
 
 @media (prefers-reduced-motion: reduce) {
     .th-side, .th-message-tools { transition: none; }
+}
+
+
+/* ==========================================================================
+   东方异变录 · 唯美主题覆写层(游戏主界面)
+   设计令牌(--washi/--sakura/--kin/--tsuki/--fuji/--ink 等)定义于 app.css。
+   只追加、不删改上方规则;同选择器后者层叠生效。模板与契约零改动。
+   ========================================================================== */
+
+/* ---------- 舞台:场景画 + 薄雾 + 樱瓣雪 ---------- */
+
+.th-game {
+    background: var(--washi);
+}
+
+.th-game::before {
+    opacity: 0.38;
+    filter: saturate(0.92) brightness(1.04);
+}
+
+.th-game::after {
+    background:
+        radial-gradient(closest-side, rgba(248, 196, 213, 0.4), transparent) 0 0 / 300px 300px,
+        radial-gradient(closest-side, rgba(168, 216, 232, 0.3), transparent) 130px 170px / 400px 400px,
+        linear-gradient(180deg, rgba(251, 248, 241, 0.62), rgba(251, 246, 244, 0.44) 45%, rgba(248, 240, 244, 0.62));
+    animation: th-petal-drift 56s linear infinite;
+}
+
+@keyframes th-petal-drift {
+    to { background-position: 70px 300px, -60px 570px, 0 0; }
+}
+
+.th-story-stage {
+    border-top: 1px solid var(--kin-line);
+    background: rgba(253, 250, 245, 0.6);
+}
+
+.th-chat-scroll {
+    padding: 44px clamp(26px, 5vw, 84px) 52px;
+    scrollbar-color: rgba(183, 143, 69, 0.4) transparent;
+}
+
+.th-opening {
+    color: var(--ink-faint);
+}
+
+.th-opening > span {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    background: linear-gradient(160deg, var(--shu), #A84655);
+    color: #FFF6EC;
+    box-shadow: 0 10px 26px rgba(192, 90, 104, 0.3);
+}
+
+.th-opening strong {
+    color: var(--ink);
+    letter-spacing: 0.14em;
+}
+
+.th-opening small {
+    color: var(--ink-faint);
+}
+
+/* ---------- 对话流:和纸气泡 + 樱印 ---------- */
+
+.th-message {
+    margin-bottom: 26px;
+    color: var(--ink);
+}
+
+.th-message-rail span {
+    border: 1px solid var(--sakura-deep);
+    border-radius: 50%;
+    background: #FFFDF9;
+    color: var(--shu);
+    box-shadow: 0 3px 10px rgba(223, 137, 165, 0.26);
+}
+
+.th-message-body {
+    padding: 16px 20px 14px;
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-left: 3px solid var(--kin);
+    border-radius: 4px var(--radius-l) var(--radius-l) var(--radius-l);
+    background: rgba(255, 253, 249, 0.96);
+    box-shadow: var(--shadow-soft);
+}
+
+.th-message.is-player .th-message-body {
+    border-right: 3px solid var(--sakura-deep);
+    border-left: 1px solid rgba(223, 137, 165, 0.3);
+    border-radius: var(--radius-l) 4px var(--radius-l) var(--radius-l);
+    background: linear-gradient(140deg, #FBD9E4, #F4B9CC);
+    box-shadow: 0 10px 30px rgba(223, 137, 165, 0.28);
+}
+
+.th-message.is-dialogue .th-message-body {
+    border-left-color: var(--tsuki-deep);
+    background: rgba(244, 251, 253, 0.96);
+}
+
+.th-message.is-system .th-message-body {
+    border: 1px solid rgba(138, 114, 180, 0.32);
+    border-radius: 999px;
+    background: rgba(177, 156, 216, 0.12);
+    text-align: center;
+}
+
+.th-message-body > header {
+    margin-bottom: 9px;
+    color: var(--kin);
+    letter-spacing: 0.1em;
+}
+
+.th-message.is-player .th-message-body > header {
+    color: #9E3A4E;
+}
+
+.th-streaming {
+    color: var(--tsuki-deep);
+}
+
+.th-message-content {
+    color: var(--ink-soft);
+    line-height: 1.9;
+}
+
+.th-message.is-player .th-message-content {
+    color: #5A2433;
+}
+
+.th-message-content h1,
+.th-message-content h2,
+.th-message-content h3 {
+    color: var(--kin);
+    letter-spacing: 0.08em;
+}
+
+.th-message-content code {
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(168, 216, 232, 0.22);
+    color: var(--tsuki-deep);
+    font-family: Consolas, "Courier New", monospace;
+}
+
+/* 气泡内工具与改写候选:弱化视觉权重,功能保留 */
+
+.th-rewrite-variants {
+    gap: 7px;
+    border-top: 1px dashed rgba(183, 143, 69, 0.24);
+}
+
+.th-rewrite-variants button {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink-faint);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        background 0.3s var(--ease-drift);
+}
+
+.th-rewrite-variants button:hover,
+.th-rewrite-variants button.active {
+    border-color: var(--sakura-deep);
+    background: #FFF3F7;
+    color: var(--shu);
+}
+
+.th-message-tools {
+    transition: opacity 0.3s var(--ease-drift);
+}
+
+.th-message-tools button,
+.th-dialogue-continue {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink-faint);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift);
+}
+
+.th-message-tools button:hover,
+.th-message-tools button.active {
+    border-color: var(--kin);
+    color: var(--kin);
+}
+
+.th-message-tools button.is-danger:hover {
+    border-color: var(--shu);
+    color: var(--shu);
+}
+
+.th-dialogue-continue {
+    border-color: rgba(94, 150, 172, 0.45);
+    color: var(--tsuki-deep);
+}
+
+.th-dialogue-continue:hover {
+    border-color: var(--tsuki-deep);
+    color: var(--tsuki-deep);
+}
+
+.th-end-dialogue {
+    margin: 14px auto;
+    padding: 9px 22px;
+    border: 1px solid var(--kin-line);
+    border-radius: 999px;
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--ink-faint);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        box-shadow 0.3s var(--ease-drift);
+}
+
+.th-end-dialogue:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+    box-shadow: 0 6px 16px rgba(223, 137, 165, 0.22);
+}
+
+/* ---------- 输入区:云间书简 ---------- */
+
+.th-composer {
+    gap: 12px 14px;
+    padding: 16px clamp(18px, 2.4vw, 32px) 18px;
+    border-top: 1px solid var(--kin-line);
+    background: rgba(255, 253, 249, 0.94);
+    box-shadow: 0 -14px 36px rgba(122, 92, 104, 0.1);
+    backdrop-filter: blur(6px);
+}
+
+.th-suggestions button {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 999px;
+    background: #FFFDF9;
+    color: var(--ink-soft);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        box-shadow 0.3s var(--ease-drift);
+}
+
+.th-suggestions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+    box-shadow: 0 4px 12px rgba(223, 137, 165, 0.2);
+}
+
+.th-suggestions button span {
+    border-radius: 50%;
+    background: linear-gradient(160deg, var(--shu), #A84655);
+    color: #FFF6EC;
+}
+
+.th-composer-fields label {
+    border: 1px solid rgba(183, 143, 69, 0.28);
+    border-radius: var(--radius-m);
+    background: #FFFFFF;
+    overflow: hidden;
+    transition: border-color 0.3s var(--ease-drift), box-shadow 0.3s var(--ease-drift);
+}
+
+.th-composer-fields label:focus-within {
+    border-color: var(--sakura-deep);
+    box-shadow: 0 0 0 3px rgba(248, 196, 213, 0.32);
+}
+
+.th-composer-fields label > span {
+    border-right: 1px solid rgba(183, 143, 69, 0.2);
+    color: var(--kin);
+}
+
+.th-composer textarea {
+    color: var(--ink);
+    font: 0.86rem/1.7 var(--font-mincho);
+    letter-spacing: 0.03em;
+}
+
+.th-composer textarea::placeholder {
+    color: #B8A9AE;
+}
+
+.th-voice {
+    border: 1px solid rgba(94, 150, 172, 0.4);
+    border-radius: 50%;
+    background: rgba(168, 216, 232, 0.2);
+    color: var(--tsuki-deep);
+}
+
+.th-send {
+    border: 1px solid rgba(255, 241, 246, 0.6);
+    border-radius: var(--radius-m);
+    background: linear-gradient(140deg, var(--sakura-deep), var(--shu));
+    color: #FFFBF7;
+    box-shadow: 0 10px 24px rgba(192, 90, 104, 0.3);
+    transition: box-shadow 0.32s var(--ease-drift), transform 0.32s var(--ease-drift),
+        filter 0.32s var(--ease-drift);
+}
+
+.th-send:hover:not(:disabled) {
+    background: linear-gradient(140deg, #E89AB2, #C96474);
+    box-shadow: 0 14px 30px rgba(192, 90, 104, 0.4);
+    transform: translateY(-1px);
+}
+
+.th-send.cancel {
+    background: linear-gradient(140deg, #B9A8C6, var(--fuji-deep));
+}
+
+.th-send span {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+}
+
+.th-send strong {
+    letter-spacing: 0.2em;
+}
+
+/* ---------- 侧栏:四页签(人物/地图/线索/状态) ---------- */
+
+.th-side {
+    border-top: 1px solid var(--kin-line);
+    border-left: 1px solid rgba(183, 143, 69, 0.24);
+    background: rgba(255, 253, 249, 0.95);
+    transition: transform 0.38s var(--ease-drift);
+}
+
+.th-side-tabs {
+    border-bottom: 1px solid rgba(183, 143, 69, 0.2);
+}
+
+.th-side-tabs button {
+    border: 0;
+    border-right: 1px solid rgba(183, 143, 69, 0.12);
+    background: transparent;
+    color: var(--ink-faint);
+    letter-spacing: 0.16em;
+    transition: color 0.3s var(--ease-drift), background 0.3s var(--ease-drift);
+}
+
+.th-side-tabs button:hover {
+    color: var(--ink-soft);
+    background: rgba(248, 196, 213, 0.14);
+}
+
+.th-side-tabs button.active {
+    background: rgba(248, 196, 213, 0.22);
+    color: var(--shu);
+    box-shadow: inset 0 -2px var(--sakura-deep);
+}
+
+.th-side-panel {
+    padding: 24px 18px 30px;
+}
+
+.th-side-panel > header {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(183, 143, 69, 0.22);
+}
+
+.th-side-panel > header > span {
+    border-top: 5px solid var(--shu);
+    border-radius: 5px;
+    background: #FFFDF9;
+    color: var(--shu);
+    box-shadow: 0 4px 12px rgba(192, 90, 104, 0.16);
+}
+
+.th-side-panel > header strong {
+    color: var(--ink);
+    letter-spacing: 0.12em;
+}
+
+.th-side-panel > header small {
+    color: var(--ink-faint);
+}
+
+/* 通用小札卡片 */
+
+.th-helper-record,
+.th-npc,
+.th-location,
+.th-task {
+    border: 1px solid rgba(183, 143, 69, 0.2);
+    border-radius: var(--radius-m);
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--ink);
+    box-shadow: 0 4px 14px rgba(122, 92, 104, 0.07);
+    transition: border-color 0.3s var(--ease-drift), box-shadow 0.3s var(--ease-drift),
+        transform 0.3s var(--ease-drift);
+}
+
+.th-helper-record:hover,
+.th-npc:hover,
+.th-location:hover,
+.th-task:hover {
+    border-color: var(--kin-line);
+    box-shadow: var(--shadow-soft);
+    transform: translateY(-1px);
+}
+
+.th-helper-record > span:first-child {
+    border: 1px solid var(--kin-line);
+    border-radius: 50%;
+    background: rgba(230, 205, 148, 0.2);
+    color: var(--kin);
+}
+
+.th-helper-record strong,
+.th-npc-copy strong {
+    color: var(--ink);
+}
+
+.th-helper-record small,
+.th-npc-copy small {
+    color: var(--ink-faint);
+}
+
+.th-helper-record i {
+    color: var(--kin);
+}
+
+/* NPC:圆形头像 + 缘分描边 */
+
+.th-npc {
+    border-left: 3px solid var(--npc-accent);
+}
+
+.th-npc-avatar {
+    border: 2px solid var(--npc-accent);
+    border-radius: 50%;
+    background: #FFF3F7;
+    box-shadow: 0 4px 12px rgba(122, 92, 104, 0.14);
+}
+
+.th-npc-avatar span {
+    color: var(--shu);
+}
+
+.th-npc-actions button {
+    border: 1px solid rgba(183, 143, 69, 0.24);
+    border-radius: 50%;
+    background: #FFFDF9;
+    color: var(--ink-faint);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift);
+}
+
+.th-npc-actions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+}
+
+.th-npc-actions button.primary {
+    border-color: transparent;
+    background: var(--npc-accent);
+    color: #FFFDF9;
+}
+
+.th-add-npc {
+    border: 1px dashed var(--kin-line);
+    border-radius: var(--radius-m);
+    color: var(--ink-faint);
+}
+
+.th-add-npc:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+}
+
+/* ---------- 地图:境界札 ---------- */
+
+.th-map-region h4 {
+    color: var(--ink-soft);
+    letter-spacing: 0.12em;
+}
+
+.th-map-region h4 span {
+    color: var(--kin);
+}
+
+.th-location.current {
+    border-left: 3px solid var(--sakura-deep);
+    background: linear-gradient(90deg, rgba(248, 196, 213, 0.24), rgba(255, 253, 249, 0.92));
+}
+
+.th-location-mark {
+    color: var(--kin);
+}
+
+.th-location-copy strong {
+    color: var(--ink);
+}
+
+.th-location-copy small {
+    color: var(--ink-faint);
+}
+
+.th-danger {
+    border: 1px solid #CBB9BE;
+    border-radius: 999px;
+    color: var(--ink-faint);
+}
+
+.th-danger.safe { border-color: #8FC9A8; color: #4E8267; }
+.th-danger.watch { border-color: var(--kin); color: var(--kin); }
+.th-danger.danger, .th-danger.extreme { border-color: var(--shu); color: var(--shu); }
+
+.th-current {
+    color: var(--sakura-deep);
+}
+
+.th-detail-link {
+    border: 1px solid rgba(183, 143, 69, 0.24);
+    border-radius: 50%;
+    color: var(--ink-faint);
+}
+
+/* ---------- 线索/任务:符札 ---------- */
+
+.th-chapter-note {
+    border: 1px solid rgba(192, 90, 104, 0.3);
+    border-radius: var(--radius-m);
+    background: rgba(248, 196, 213, 0.16);
+}
+
+.th-chapter-note > span {
+    border-radius: 5px;
+    background: linear-gradient(160deg, var(--shu), #A84655);
+    color: #FFF6EC;
+}
+
+.th-chapter-note strong {
+    color: var(--ink);
+}
+
+.th-chapter-note small {
+    color: var(--ink-faint);
+}
+
+.th-task.urgent {
+    border-left: 3px solid var(--sakura-deep);
+}
+
+.th-task-pin {
+    border-radius: 50%;
+    background: rgba(230, 205, 148, 0.22);
+    color: var(--kin);
+}
+
+.th-task strong {
+    color: var(--ink);
+}
+
+.th-task p,
+.th-task-archive p {
+    color: var(--ink-soft);
+}
+
+.th-task small {
+    color: var(--ink-faint);
+}
+
+.th-task > button {
+    color: var(--ink-faint);
+}
+
+.th-task > button:hover {
+    color: var(--shu);
+}
+
+.th-archive-toggle {
+    border-top: 1px solid rgba(183, 143, 69, 0.18);
+    color: var(--ink-faint);
+}
+
+.th-archive-toggle span {
+    color: var(--kin);
+}
+
+.th-task-archive article {
+    border-bottom: 1px solid rgba(183, 143, 69, 0.12);
+}
+
+.th-task-archive strong {
+    color: var(--ink-faint);
+}
+
+/* ---------- 状态:异变雾计 ---------- */
+
+.th-anomaly {
+    padding: 16px;
+    border: 1px solid rgba(192, 90, 104, 0.26);
+    border-radius: var(--radius-m);
+    background: rgba(255, 253, 249, 0.92);
+    box-shadow: var(--shadow-soft);
+}
+
+.th-anomaly > div {
+    color: var(--ink-soft);
+}
+
+.th-anomaly > div span {
+    color: var(--kin);
+}
+
+.th-anomaly i {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(183, 143, 69, 0.14);
+}
+
+.th-anomaly b {
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sakura), var(--sakura-deep));
+}
+
+.th-anomaly i.is-threat b {
+    background: linear-gradient(90deg, var(--kin-bright), var(--kin));
+}
+
+.th-anomaly small {
+    color: var(--ink-faint);
+}
+
+.th-state-list {
+    border-top: 1px solid rgba(183, 143, 69, 0.18);
+}
+
+.th-state-list > div {
+    border-bottom: 1px solid rgba(183, 143, 69, 0.12);
+    color: var(--ink-faint);
+}
+
+.th-state-list strong {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.th-record-actions button {
+    border: 1px solid var(--kin-line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--ink-soft);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift);
+}
+
+.th-record-actions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+}
+
+.th-empty {
+    color: var(--ink-faint);
+    line-height: 1.9;
+}
+
+/* ---------- 游戏内工具栏 ---------- */
+
+.th-player-seal {
+    border-top: 5px solid var(--shu);
+    border-radius: 5px;
+    background: #FFFDF9;
+    color: var(--shu);
+    box-shadow: 0 3px 10px rgba(192, 90, 104, 0.16);
+}
+
+.th-player-copy strong {
+    color: var(--ink);
+}
+
+.th-player-copy small {
+    color: var(--ink-faint);
+}
+
+.th-toolbar-divider {
+    background: rgba(183, 143, 69, 0.28);
+}
+
+.th-scene-name {
+    color: var(--tsuki-deep);
+    letter-spacing: 0.08em;
+}
+
+.th-life-state,
+.th-gm-badge {
+    border: 1px solid rgba(120, 168, 138, 0.5);
+    border-radius: 999px;
+    color: #4E8267;
+}
+
+.th-life-state.is-dead {
+    border-color: rgba(192, 90, 104, 0.5);
+    color: var(--shu);
+}
+
+.th-gm-badge {
+    border-color: var(--kin-line);
+    color: var(--kin);
+}
+
+.th-time-summary strong {
+    color: var(--ink);
+}
+
+.th-time-summary span {
+    color: var(--ink-faint);
+}
+
+.th-time-summary small {
+    color: var(--kin);
+}
+
+.th-toolbar-actions button {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--ink-soft);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        box-shadow 0.3s var(--ease-drift);
+}
+
+.th-toolbar-actions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+    box-shadow: 0 4px 12px rgba(223, 137, 165, 0.22);
+}
+
+/* ---------- 移动端 ---------- */
+
+@media (max-width: 820px) {
+    .th-side {
+        box-shadow: -18px 0 42px rgba(122, 92, 104, 0.24);
+    }
+
+    .th-mobile-side-toggle {
+        border: 1px solid rgba(255, 241, 246, 0.6);
+        border-radius: 999px;
+        background: linear-gradient(140deg, var(--sakura-deep), var(--shu));
+        color: #FFFBF7;
+    }
+}
+
+/* ==========================================================================
+   唯美打磨 · 第二幕:朱文印 + 磨砂玻璃(游戏主界面)
+   清除旧 UI 的红色实底印章痕迹;仅追加覆写,结构与契约不变。
+   ========================================================================== */
+
+/* ---------- 朱文印:白底朱字,细描边 ---------- */
+
+.th-side-panel > header > span,
+.th-player-seal,
+.th-opening > span,
+.th-chapter-note > span {
+    border: 1px solid rgba(192, 90, 104, 0.5);
+    border-radius: 7px;
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--shu);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75),
+        0 4px 12px rgba(122, 92, 104, 0.12);
+}
+
+.th-opening > span {
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+}
+
+/* 快捷建议的小圆印也改为朱文 */
+
+.th-suggestions button span {
+    border: 1px solid rgba(192, 90, 104, 0.5);
+    border-radius: 50%;
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--shu);
+}
+
+/* 发送按钮内印章:玻璃质感 */
+
+.th-send span {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(2px);
+}
+
+/* ---------- 磨砂玻璃舞台(技术层面现代化) ---------- */
+
+.th-story-stage {
+    backdrop-filter: blur(12px) saturate(1.04);
+}
+
+.th-side {
+    backdrop-filter: blur(12px) saturate(1.04);
+}
+
+.th-message-body {
+    backdrop-filter: blur(6px);
+}
+
+/* ---------- 细滚动条 ---------- */
+
+.th-chat-scroll::-webkit-scrollbar,
+.th-side-scroll::-webkit-scrollbar,
+.th-suggestions::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.th-chat-scroll::-webkit-scrollbar-thumb,
+.th-side-scroll::-webkit-scrollbar-thumb,
+.th-suggestions::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(183, 143, 69, 0.28);
+}
+
+.th-chat-scroll::-webkit-scrollbar-thumb:hover,
+.th-side-scroll::-webkit-scrollbar-thumb:hover,
+.th-suggestions::-webkit-scrollbar-thumb:hover {
+    background: rgba(223, 137, 165, 0.45);
+}
+
+.th-chat-scroll::-webkit-scrollbar-track,
+.th-side-scroll::-webkit-scrollbar-track,
+.th-suggestions::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 发送按钮文案单行化修正 */
+.th-send {
+    min-width: 112px;
+}
+
+.th-send strong {
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+    .th-send strong {
+        letter-spacing: 0.04em;
+    }
 }
