@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from backend.services.save_health_service import inspect_character_file, inspect_character_payload
 from backend.world_manager import (
     StaleTurnError,
     get_turn_receipt,
@@ -99,6 +100,44 @@ class SaveTransactionTests(unittest.TestCase):
             )
             self.assertEqual(world_data["locations"][0]["id"], "dynamic-test")
             self.assertFalse((characters / "_transactions/test.json").exists())
+
+
+    def test_repairable_type_damage_is_preserved_before_normalization(self):
+        from backend.services.save_health_service import repair_character_payload_types
+
+        payload = {
+            "profile": {"name": "旧档案"},
+            "status": ["旧状态"],
+            "conversation_history": "旧对话",
+            "unknown_mod_field": {"keep": True},
+        }
+        result = repair_character_payload_types(payload)
+        self.assertEqual(set(result["repaired_fields"]), {"status", "conversation_history"})
+        self.assertEqual(payload["status"], {})
+        self.assertEqual(payload["conversation_history"], [])
+        self.assertEqual(payload["recovered_invalid_fields"]["status"], ["旧状态"])
+        self.assertEqual(payload["unknown_mod_field"], {"keep": True})
+
+    def test_save_health_distinguishes_legacy_and_corrupt_payloads(self):
+        legacy = {"profile": {"name": "旧档"}, "conversation_history": []}
+        report = inspect_character_payload(legacy)
+        self.assertEqual(report["status"], "warning")
+        self.assertTrue(report["repairable"])
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "broken.json"
+            path.write_text("{broken", encoding="utf-8")
+            broken = inspect_character_file(path)
+        self.assertEqual(broken["status"], "critical")
+        self.assertFalse(broken["repairable"])
+
+    def test_save_health_preserves_unknown_fields(self):
+        payload = {
+            "character_id": "health", "save_version": 7,
+            "profile": {"name": "健康档"}, "custom_mod": {"keep": True},
+        }
+        report = inspect_character_payload(payload)
+        self.assertNotEqual(report["status"], "critical")
+        self.assertEqual(payload["custom_mod"], {"keep": True})
 
 
 if __name__ == "__main__":

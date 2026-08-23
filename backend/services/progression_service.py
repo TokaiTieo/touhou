@@ -33,6 +33,87 @@ def _item_name(value) -> str:
     return str(value or "").strip()
 
 
+REPUTATION_TIERS = ((80, "敬仰"), (50, "信赖"), (20, "友善"), (-19, "中立"), (-49, "疏远"), (-100, "敌视"))
+
+
+def ensure_progression_profile(character: Dict) -> Dict:
+    loadout = character.setdefault("spellcard_loadout", [])
+    if not isinstance(loadout, list):
+        loadout = []
+        character["spellcard_loadout"] = loadout
+    character["spellcard_loadout"] = list(dict.fromkeys(
+        str(name).strip() for name in loadout if str(name).strip()
+    ))[:6]
+    milestones = character.setdefault("progression_milestones", {})
+    if not isinstance(milestones, dict):
+        milestones = {}
+        character["progression_milestones"] = milestones
+    return {"loadout": character["spellcard_loadout"], "milestones": milestones}
+
+
+def _reputation_tier(value: float) -> str:
+    for threshold, title in REPUTATION_TIERS:
+        if value >= threshold:
+            return title
+    return "敌视"
+
+
+def _milestone(character: Dict, key: str, title: str, detail: str, notifications: List[Dict]) -> None:
+    milestones = ensure_progression_profile(character)["milestones"]
+    if key in milestones:
+        return
+    entry = {"key": key, "title": title, "detail": detail, "unlocked_at": datetime.now().isoformat()}
+    milestones[key] = entry
+    notifications.append({"type": "milestone", **entry})
+
+
+def collect_progression_feedback(character: Dict, result: Dict, progression: Dict) -> List[Dict]:
+    state = ensure_progression_profile(character)
+    notifications = []
+    for key, progress in (result.get("skill_progress_delta") or {}).items():
+        if not isinstance(progress, dict) or not progress.get("experience_gained"):
+            continue
+        level_gain = _number((result.get("player_state_delta") or {}).get(key), 0)
+        if level_gain > 0:
+            level = int(_number(character.get("player_state", {}).get(key), 0))
+            title = f"{key}提升至 {level}"
+            notifications.append({"type": "level_up", "title": title, "detail": f"当前阶段：{progress.get('tier', '成长中')}"})
+            _milestone(character, f"skill:{key}:{level}", title, f"通过实际行动获得 {progress['experience_gained']} 点经验", notifications)
+
+    mastery = result.get("spellcard_mastery_delta") or {}
+    spell_name = str(mastery.get("spellcard_name") or "").strip()
+    if spell_name:
+        loadout = state["loadout"]
+        if spell_name not in loadout and len(loadout) < 6:
+            loadout.append(spell_name)
+        before = int(_number(mastery.get("level_before"), mastery.get("level", 1)))
+        level = int(_number(mastery.get("level"), before))
+        detail = (
+            f"{mastery.get('tier', '熟练')} Lv.{level} · "
+            f"熟练经验 +{mastery.get('experience_gained', 0)}"
+        )
+        if mastery.get("new_traits"):
+            detail += " · 新特性：" + "、".join(mastery["new_traits"])
+        notifications.append({"type": "spellcard", "title": f"符卡成长：{spell_name}", "detail": detail})
+        _milestone(character, f"spell:first:{spell_name}", f"首次使用：{spell_name}", detail, notifications)
+        if level > before or mastery.get("new_traits"):
+            _milestone(character, f"spell:{spell_name}:{level}", f"掌握 {spell_name} Lv.{level}", detail, notifications)
+
+    for item in progression.get("inventory", []):
+        if item.get("action") == "add":
+            _milestone(character, f"item:{item.get('name')}", f"首次获得：{item.get('name')}", f"数量 {item.get('quantity', 1)}", notifications)
+    for item in progression.get("reputation", []):
+        old_value = _number(item.get("value"), 0) - _number(item.get("delta"), 0)
+        old_tier = _reputation_tier(old_value)
+        new_tier = _reputation_tier(_number(item.get("value"), 0))
+        if old_tier != new_tier:
+            _milestone(character, f"reputation:{item.get('faction')}:{new_tier}", f"{item.get('faction')}声望：{new_tier}", item.get("reason") or "行动改变了当地评价", notifications)
+    result["progression_notifications"] = notifications
+    progression["notifications"] = notifications
+    progression["spellcard_loadout"] = list(state["loadout"])
+    return notifications
+
+
 def ensure_inventory_state(character: Dict) -> Dict:
     state = character.setdefault("inventory_state", {"items": [], "capacity": 30, "currency": 0})
     if not isinstance(state, dict):
@@ -141,6 +222,7 @@ def _change_reputation(character: Dict, faction: str, delta: float, reason: str,
 
 def apply_progression_updates(character: Dict, result: Dict, scene: str, action_text: str) -> Dict:
     """Validate and apply model updates plus a small deterministic local reputation effect."""
+    ensure_progression_profile(character)
     inventory_delta = _apply_inventory_updates(character, result.get("inventory_updates", []), result)
     reputation_delta = []
     for update in result.get("reputation_updates", []) or []:
@@ -167,6 +249,7 @@ def apply_progression_updates(character: Dict, result: Dict, scene: str, action_
         reputation_delta.append(_change_reputation(character, faction, deterministic, reason, "deterministic"))
 
     progression = {"inventory": inventory_delta, "reputation": reputation_delta}
+    collect_progression_feedback(character, result, progression)
     result["progression_delta"] = progression
     return progression
 
@@ -180,6 +263,7 @@ def format_progression_for_ai(character: Dict) -> str:
     reputation = character.get("reputation", {}) or {}
     relation_progress = character.get("relationship_progress", {}) or {}
     spellcards = character.get("spellcard_mastery", {}) or {}
+    loadout = ensure_progression_profile(character)["loadout"]
     relations = [
         f"{name}:{value.get('stage', '未定')}({value.get('score', 0)})"
         for name, value in list(relation_progress.items())[-10:] if isinstance(value, dict)
@@ -188,6 +272,7 @@ def format_progression_for_ai(character: Dict) -> str:
         "持有物品：" + ("、".join(item_lines) if item_lines else "无"),
         "势力声望：" + ("、".join(f"{name}:{value}" for name, value in reputation.items()) if reputation else "尚未建立"),
         "关系阶段：" + ("、".join(relations) if relations else "尚未建立"),
+        "常用符卡栏：" + ("、".join(loadout) if loadout else "尚未配置；临场使用不受限制"),
         "符卡熟练：" + (
             "、".join(
                 f"{name}:{value.get('tier', '初学')}Lv.{value.get('level', 1)}"

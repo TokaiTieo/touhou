@@ -44,6 +44,8 @@ class VueArchitectureTests(unittest.TestCase):
         for path in (
             "backend/services/turn_resolution_service.py",
             "backend/services/turn_prompt_service.py",
+            "backend/services/turn_context_service.py",
+            "backend/services/snapshot_service.py",
             "backend/services/npc_memory_service.py",
             "backend/routes/producer.py",
         ):
@@ -96,6 +98,27 @@ class VueArchitectureTests(unittest.TestCase):
             header = asset_path.read_bytes()[:24]
             self.assertEqual(header[:8], b"\x89PNG\r\n\x1a\n", asset_name)
             self.assertEqual(struct.unpack(">II", header[16:24]), (1672, 941), asset_name)
+
+    def test_theme_overrides_have_one_canonical_owner(self):
+        app_css = (ROOT / "css/app.css").read_text(encoding="utf-8")
+        game_css = (ROOT / "css/vue-game.css").read_text(encoding="utf-8")
+        self.assertNotIn("唯美主题覆写层", app_css)
+        self.assertEqual(game_css.count("东方异变录 · 统一主题层"), 1)
+        self.assertGreater(game_css.find("东方异变录 · 统一主题层"), len(game_css) // 4)
+        self.assertNotRegex(game_css, r"(?m)^\+")
+
+    def test_accessibility_settings_and_local_tts_are_vue_owned(self):
+        main = (ROOT / "js/main.js").read_text(encoding="utf-8")
+        settings = (ROOT / "js/vue/settings-dialog.js").read_text(encoding="utf-8")
+        game = (ROOT / "js/vue/game-screen.js").read_text(encoding="utf-8")
+        accessibility = (ROOT / "js/vue/accessibility.js").read_text(encoding="utf-8")
+        self.assertIn("applyAccessibilitySettings", main)
+        self.assertIn('type="range"', settings)
+        self.assertIn("本地朗读", settings)
+        self.assertIn("speechSynthesis", accessibility)
+        self.assertIn("SpeechSynthesisUtterance", accessibility)
+        self.assertNotIn('class="th-chat-scroll" aria-live=', game)
+        self.assertIn('role="status" aria-live="polite"', game)
 
 
 if __name__ == "__main__":

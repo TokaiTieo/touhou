@@ -4,8 +4,6 @@ import os
 import sys
 import json
 import shutil
-import hashlib
-import uuid
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -17,6 +15,12 @@ from typing import Optional, Dict, List, Any
 from backend.config import BASE_DIR, WORLDS_DIR, DATA_DIR, DEFAULT_WORLD_ID as CONFIG_DEFAULT_WORLD_ID
 from backend.services.save_migrations import LATEST_SAVE_VERSION, migrate_save_schema
 from backend.services.save_upgrade_service import write_upgrade_artifacts
+from backend.services.snapshot_service import (
+    create_snapshot,
+    list_snapshots,
+    load_snapshot,
+    prepare_restore_payload,
+)
 
 WORLDS_INDEX_FILE = WORLDS_DIR / "worlds_index.json"
 
@@ -116,33 +120,8 @@ def get_character_snapshots_dir(character_id: str, world_id: str = None) -> Path
     return path
 
 
-def _snapshot_signature(data: Dict) -> str:
-    history = data.get("conversation_history", []) or []
-    status = data.get("status", {}) or {}
-    marker = {
-        "history_count": len(history),
-        "last_message": history[-1] if history else None,
-        "scene": status.get("current_scene"),
-        "is_dead": status.get("is_dead")
-    }
-    raw = json.dumps(marker, ensure_ascii=False, sort_keys=True, default=str)
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
-
-
 def create_character_snapshot(character_id: str, data: Dict, world_id: str = None, label: str = None, force: bool = False):
     snapshots_dir = get_character_snapshots_dir(character_id, world_id)
-    signature = _snapshot_signature(data)
-    existing = sorted(snapshots_dir.glob("*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
-    if existing and not force:
-        try:
-            with open(existing[0], "r", encoding="utf-8") as handle:
-                if json.load(handle).get("metadata", {}).get("signature") == signature:
-                    return None
-        except (OSError, json.JSONDecodeError):
-            pass
-
-    now = datetime.now()
-    snapshot_id = now.strftime("%Y%m%d_%H%M%S_%f")
     tasks_path = get_tasks_path(character_id, world_id)
     tasks = get_default_tasks()
     if tasks_path.exists():
@@ -151,62 +130,38 @@ def create_character_snapshot(character_id: str, data: Dict, world_id: str = Non
                 tasks = json.load(handle)
         except (OSError, json.JSONDecodeError):
             pass
-    history = data.get("conversation_history", []) or []
-    payload = {
-        "metadata": {
-            "snapshot_id": snapshot_id,
-            "character_id": character_id,
-            "created_at": now.isoformat(),
-            "label": label or f"对话节点 {len(history)}",
-            "history_count": len(history),
-            "scene": data.get("status", {}).get("current_scene", "未知"),
-            "signature": signature,
-            "save_version": data.get("save_version", CURRENT_SAVE_VERSION)
-        },
-        "character": data,
-        "tasks": tasks
-    }
-    _atomic_json_write(snapshots_dir / f"{snapshot_id}.json", payload)
-    for old_path in existing[MAX_CHARACTER_SNAPSHOTS - 1:]:
-        try:
-            old_path.unlink()
-        except OSError:
-            pass
-    return payload["metadata"]
+    return create_snapshot(
+        character_id,
+        data,
+        snapshots_dir,
+        tasks,
+        _atomic_json_write,
+        save_version=CURRENT_SAVE_VERSION,
+        max_snapshots=MAX_CHARACTER_SNAPSHOTS,
+        label=label,
+        force=force,
+    )
 
 
 def list_character_snapshots(character_id: str, world_id: str = None) -> List[Dict]:
-    snapshots = []
-    for path in get_character_snapshots_dir(character_id, world_id).glob("*.json"):
-        try:
-            with open(path, "r", encoding="utf-8") as handle:
-                metadata = json.load(handle).get("metadata", {})
-            if metadata:
-                snapshots.append(metadata)
-        except (OSError, json.JSONDecodeError):
-            continue
-    return sorted(snapshots, key=lambda item: item.get("created_at", ""), reverse=True)
+    return list_snapshots(get_character_snapshots_dir(character_id, world_id))
 
 
 def restore_character_snapshot(character_id: str, snapshot_id: str, branch: bool = False, branch_name: str = None, world_id: str = None) -> Dict:
-    snapshot_path = get_character_snapshots_dir(character_id, world_id) / f"{snapshot_id}.json"
-    if not snapshot_path.exists():
-        raise FileNotFoundError("存档快照不存在")
-    with open(snapshot_path, "r", encoding="utf-8") as handle:
-        payload = json.load(handle)
-    character = ensure_character_fields(payload.get("character", {}))
-    tasks = payload.get("tasks") or get_default_tasks()
-    target_id = character_id
-    if branch:
-        target_id = str(uuid.uuid4())
-        character["character_id"] = target_id
-        profile = character.setdefault("profile", {})
-        profile["name"] = str(branch_name or f"{profile.get('name', '角色')} · 分支").strip()
-        character["created_at"] = datetime.now().isoformat()
-        character["branch_origin"] = {"character_id": character_id, "snapshot_id": snapshot_id}
-    character.pop("_migrated", None)
+    payload = load_snapshot(get_character_snapshots_dir(character_id, world_id), snapshot_id)
+    restored = prepare_restore_payload(
+        character_id,
+        payload,
+        ensure_character_fields,
+        get_default_tasks,
+        branch=branch,
+        branch_name=branch_name,
+        snapshot_id=snapshot_id,
+    )
+    target_id = restored["target_id"]
+    character = restored["character"]
+    tasks = restored["tasks"]
     _atomic_json_write(get_characters_dir(world_id) / f"{target_id}.json", character)
-    tasks["last_updated"] = datetime.now().isoformat()
     _atomic_json_write(get_tasks_path(target_id, world_id), tasks)
     create_character_snapshot(target_id, character, world_id, label="分支起点" if branch else "恢复点", force=True)
     return {"character_id": target_id, "branched": branch, "profile": character.get("profile", {})}
@@ -762,6 +717,9 @@ def ensure_character_fields(character: Dict) -> Dict:
             if "used_count" not in item:
                 item["used_count"] = 0
                 migrated = True
+    from backend.services.npc_memory_service import upgrade_npc_memory_metadata
+    if upgrade_npc_memory_metadata(character):
+        migrated = True
 
     if "open_events" not in character:
         character["open_events"] = []

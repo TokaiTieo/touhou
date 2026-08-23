@@ -51,11 +51,18 @@ export async function openPlayerJournal() {
     const progress = Object.fromEntries(Object.entries(journal.relationship_progress || {}).map(
         ([name, value]) => [name, `${value.stage || '相识'} · ${value.score ?? 0}`]
     ));
+    const availableSpellcards = [...new Set([
+        ...Object.keys(journal.spellcard_mastery || {}),
+        ...(journal.spellcard_loadout || [])
+    ])];
     openAppModal('detail', {
         kicker: '角色记录',
         title: '玩家档案',
         name: profile.name || '玩家',
         subtitle: `${profile.identity || '旅行者'}${journal.gm_mode ? ' · 高权限模式' : ''}`,
+        spellcardEditor: true,
+        availableSpellcards,
+        spellcardLoadout: journal.spellcard_loadout || [],
         rows: [
             { label: '外貌', value: profile.appearance },
             { label: '性格', value: profile.personality },
@@ -68,8 +75,11 @@ export async function openPlayerJournal() {
             { label: '关系进展', value: progress },
             { label: '关系边界', value: Object.fromEntries(Object.entries(journal.relationship_boundaries || {}).map(([name, value]) => [name, value.romance === 'closed' ? '保持普通交往' : value.romance === 'open' ? '愿意自然发展' : '尚未明确'])) },
             { label: '长期剧情摘要', value: [journal.story_summary?.recent_arc, ...(journal.story_summary?.key_events || []).slice(-6)].filter(Boolean) },
+            { label: '叙事焦点', value: [journal.story_director?.current_arc?.title, journal.story_director?.current_arc?.focus, ...(journal.story_director?.suggested_focus || [])].filter(Boolean) },
             { label: '自由探索事件', value: (journal.open_events || []).slice(-8).map(item => `${item.scene || '未知地点'} · ${item.title}：${item.description}`) },
             { label: '符卡与战斗', value: (journal.spellcard_history || []).slice(-8).map(item => `${item.spellcard_name || '无名符卡'} · ${item.opponent || '未知对手'} · ${item.outcome || '未裁定'}${item.metrics?.accuracy !== undefined ? ` · 命中${item.metrics.accuracy}% · 擦弹${item.metrics.graze_count || 0}` : ''}`) },
+            { label: '常用符卡栏', value: (journal.spellcard_loadout || []).length ? journal.spellcard_loadout : '尚未配置；不影响临场使用其他符卡' },
+            { label: '成长里程碑', value: Object.values(journal.progression_milestones || {}).slice(-10).map(item => `${item.title} · ${item.detail}`) },
             { label: '符卡熟练', value: Object.entries(journal.spellcard_mastery || {}).map(([name, item]) => `${name} · ${item.tier || '初学'} Lv.${item.level || 1} · 使用${item.uses || 0}次 · 最佳连胜${item.best_streak || 0}${(item.traits || []).length ? ` · ${(item.traits || []).join('、')}` : ''}`) },
             { label: '世界回响', value: (journal.consequence_log || []).slice(-8).map(item => `${item.scene || '幻想乡'} · ${(item.summary || []).join('；') || item.cause}`) },
             { label: '后续动向', value: (journal.deferred_consequences || []).filter(item => item.status === 'pending').slice(-6).map(item => item.effect) },

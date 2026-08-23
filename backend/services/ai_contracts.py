@@ -42,6 +42,11 @@ class MemoryUpdate(ContractModel):
     tags: List[str] = Field(default_factory=list)
     importance: int = Field(default=5, ge=1, le=10)
     emotion: str = Field(default="中性", max_length=40)
+    knowledge_type: Literal["direct", "reported", "inferred", "system"] = "direct"
+    source_npc: Optional[str] = Field(default=None, max_length=120)
+    confidence: float = Field(default=0.85, ge=0, le=1)
+    truth_status: Literal["accepted", "disputed", "superseded"] = "accepted"
+    fact_key: Optional[str] = Field(default=None, max_length=180)
 
 
 class SpellcardResult(ContractModel):

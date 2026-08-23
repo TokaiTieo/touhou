@@ -5,7 +5,8 @@ import {
     getAllNPCs,
     getLocationByName,
     systemHelper,
-    validateCharacter
+    validateCharacter,
+    setSpellcardLoadout
 } from '../api.js';
 import { state } from '../ghost/core/state.js';
 import { CURRENT_CHAPTER_INDEX } from '../ghost/core/constants.js';
@@ -29,7 +30,27 @@ export const DetailDialog = defineComponent({
         const rows = computed(() => (detail.value.rows || [])
             .filter(row => row.value !== undefined && row.value !== null && row.value !== '')
             .map(row => ({ ...row, display: displayValue(row.value) })));
-        return { closeAppModal, detail, rows };
+        const selectedSpellcards = ref([...(appUi.modalPayload?.spellcardLoadout || [])]);
+        const loadoutBusy = ref(false);
+        const loadoutMessage = ref('');
+        function toggleSpellcard(name) {
+            const index = selectedSpellcards.value.indexOf(name);
+            if (index >= 0) selectedSpellcards.value.splice(index, 1);
+            else if (selectedSpellcards.value.length < 6) selectedSpellcards.value.push(name);
+        }
+        async function saveLoadout() {
+            loadoutBusy.value = true;
+            loadoutMessage.value = '';
+            try {
+                await setSpellcardLoadout(state.currentSession.characterId, selectedSpellcards.value);
+                loadoutMessage.value = '常用符卡栏已更新';
+            } catch (error) {
+                loadoutMessage.value = error.message || '符卡栏保存失败';
+            } finally {
+                loadoutBusy.value = false;
+            }
+        }
+        return { closeAppModal, detail, loadoutBusy, loadoutMessage, rows, saveLoadout, selectedSpellcards, toggleSpellcard };
     },
     template: `
         <div class="vue-modal-backdrop" @click.self="closeAppModal">
@@ -53,6 +74,16 @@ export const DetailDialog = defineComponent({
                             </dd>
                         </template>
                     </dl>
+                    <section v-if="detail.spellcardEditor" class="spellcard-loadout-editor">
+                        <div class="spellcard-loadout-heading"><strong>配置常用符卡</strong><span>{{ selectedSpellcards.length }}/6</span></div>
+                        <p>仅影响叙事优先参考，不限制临场使用其他符卡。</p>
+                        <div v-if="detail.availableSpellcards?.length" class="spellcard-loadout-options">
+                            <button v-for="name in detail.availableSpellcards" :key="name" type="button" :class="{ 'is-selected': selectedSpellcards.includes(name) }" :aria-pressed="selectedSpellcards.includes(name)" @click="toggleSpellcard(name)">{{ name }}</button>
+                        </div>
+                        <div v-else class="dialog-empty">完成一次符卡战后，可在这里配置常用符卡。</div>
+                        <div class="dialog-command-row"><button class="primary-command" type="button" :disabled="loadoutBusy" @click="saveLoadout">{{ loadoutBusy ? '正在保存...' : '保存符卡栏' }}</button></div>
+                        <p v-if="loadoutMessage" class="dialog-status">{{ loadoutMessage }}</p>
+                    </section>
                     <p v-if="detail.note" class="record-note">{{ detail.note }}</p>
                 </div>
             </section>

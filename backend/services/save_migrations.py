@@ -102,10 +102,11 @@ def migrate_save_schema(character: Dict) -> bool:
 
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
-    from backend.services.story_summary_service import default_story_summary
+    from backend.services.story_summary_service import default_story_director, default_story_summary
     v6_defaults = {
         "state_revision": 0,
         "story_summary": default_story_summary(),
+        "story_director": default_story_director(),
         "inventory_state": {"items": [], "capacity": 30, "currency": 0},
         "reputation_history": [],
         "relationship_progress": {},
@@ -129,6 +130,8 @@ def migrate_save_schema(character: Dict) -> bool:
         "semantic_memory_index": {},
         "model_runtime": {},
         "spellcard_mastery": {},
+        "spellcard_loadout": [],
+        "progression_milestones": {},
         "opponent_adaptation": {},
         "npc_simulation": {"last_simulated_hour": 0, "events": []},
         "relationship_turn_receipts": [],

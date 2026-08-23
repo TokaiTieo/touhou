@@ -14,16 +14,23 @@ from openai import OpenAI
 from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, DEFAULT_TEMPERATURE
 from backend.utils.ai_json import clean_json_response, safe_json_loads
 from backend.services.ai_diagnostics_service import classify_ai_error, missing_key_error
+from backend.services.ai_provider_service import (
+    DEFAULT_MODELS,
+    normalize_base_url,
+    normalize_models,
+    provider_descriptor,
+)
 
 # AI 调用超时（秒）
 AI_TIMEOUT = 60
 E2E_MOCK_AI = os.environ.get("TOUHOU_E2E_MOCK_AI", "").lower() in ("1", "true", "yes")
 
-# 支持的模型列表
-AVAILABLE_MODELS = [
-    "deepseek-v4-flash",
-    "deepseek-v4-pro"
-]
+# 支持默认列表与本地配置的兼容模型
+_configured_models = os.environ.get("TOUHOU_AI_MODELS", "").strip()
+AVAILABLE_MODELS = normalize_models(
+    _configured_models.split(",") if _configured_models else DEFAULT_MODELS,
+    DEEPSEEK_MODEL,
+)
 
 
 @dataclass
@@ -124,17 +131,12 @@ class AIService:
         self._usage_local = local()
         self._error_local = local()
         self._runtime_local = local()
-        self._has_key = bool(DEEPSEEK_API_KEY)
-        if self._has_key:
-            self.client = OpenAI(
-                api_key=DEEPSEEK_API_KEY,
-                base_url=DEEPSEEK_BASE_URL,
-                timeout=AI_TIMEOUT,
-                max_retries=0
-            )
-        else:
-            self.client = None
-        self._model = DEEPSEEK_MODEL
+        self._api_key = DEEPSEEK_API_KEY
+        self._has_key = bool(self._api_key)
+        self._base_url = normalize_base_url(DEEPSEEK_BASE_URL)
+        self._available_models = list(AVAILABLE_MODELS)
+        self.client = self._make_client()
+        self._model = DEEPSEEK_MODEL if DEEPSEEK_MODEL in self._available_models else self._available_models[0]
 
     @property
     def last_usage(self):
@@ -164,29 +166,59 @@ class AIService:
     def _remember_runtime(self, runtime=None):
         self._runtime_local.value = dict(runtime or {})
     
+    def _make_client(self):
+        if not self._has_key:
+            return None
+        return OpenAI(
+            api_key=self._api_key,
+            base_url=self._base_url,
+            timeout=AI_TIMEOUT,
+            max_retries=0,
+        )
+
     @property
     def model(self):
         return self._model
-    
+
+    @property
+    def base_url(self):
+        return getattr(self, "_base_url", normalize_base_url(DEEPSEEK_BASE_URL))
+
+    @property
+    def available_models(self):
+        return list(getattr(self, "_available_models", AVAILABLE_MODELS))
+
+    @property
+    def provider(self):
+        return provider_descriptor(self.base_url, self.available_models, self.model)
+
+    def set_provider(self, base_url: str, models, model_name: str = "") -> bool:
+        normalized_url = normalize_base_url(base_url)
+        normalized_models = normalize_models(models, model_name or self.model)
+        selected = str(model_name or self.model).strip()
+        if selected not in normalized_models:
+            selected = normalized_models[0]
+        self._base_url = normalized_url
+        self._available_models = normalized_models
+        self._model = selected
+        self.client = self._make_client()
+        return True
+
     def set_model(self, model_name: str) -> bool:
         """动态切换模型"""
-        if model_name in AVAILABLE_MODELS:
+        if model_name in self.available_models:
             self._model = model_name
             print(f"🔄 AI 模型已切换为: {model_name}")
             return True
-        print(f"⚠️ 不支持的模型: {model_name}，可用模型: {AVAILABLE_MODELS}")
+        print(f"⚠️ 不支持的模型: {model_name}，可用模型: {self.available_models}")
         return False
     
     def set_api_key(self, api_key: str) -> bool:
         """动态设置 API Key"""
         if api_key:
-            self.client = OpenAI(
-                api_key=api_key,
-                base_url=DEEPSEEK_BASE_URL,
-                timeout=AI_TIMEOUT,
-                max_retries=0
-            )
+            self._api_key = api_key
             self._has_key = True
+            self.client = self._make_client()
             print("🔄 API Key 已更新")
             return True
         return False
@@ -220,8 +252,8 @@ class AIService:
         compacted, compression = compress_prompt(prompt)
         requested_model = self.model
         configured_fallback = os.environ.get("DEEPSEEK_FALLBACK_MODEL", "").strip()
-        fallbacks = [configured_fallback] if configured_fallback in AVAILABLE_MODELS else []
-        fallbacks.extend(model for model in AVAILABLE_MODELS if model != requested_model and model not in fallbacks)
+        fallbacks = [configured_fallback] if configured_fallback in self.available_models else []
+        fallbacks.extend(model for model in self.available_models if model != requested_model and model not in fallbacks)
         models = [requested_model] + fallbacks
         max_attempts = max(1, min(4, int(os.environ.get("TOUHOU_AI_MAX_ATTEMPTS", "2") or 2)))
         attempts = []
@@ -316,8 +348,8 @@ class AIService:
         compacted, compression = compress_prompt(prompt)
         requested_model = self.model
         configured_fallback = os.environ.get("DEEPSEEK_FALLBACK_MODEL", "").strip()
-        fallbacks = [configured_fallback] if configured_fallback in AVAILABLE_MODELS else []
-        fallbacks.extend(model for model in AVAILABLE_MODELS if model != requested_model and model not in fallbacks)
+        fallbacks = [configured_fallback] if configured_fallback in self.available_models else []
+        fallbacks.extend(model for model in self.available_models if model != requested_model and model not in fallbacks)
         models = [requested_model] + fallbacks
         max_attempts = max(1, min(4, int(os.environ.get("TOUHOU_AI_MAX_ATTEMPTS", "2") or 2)))
         attempts = []

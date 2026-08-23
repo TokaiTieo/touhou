@@ -411,6 +411,10 @@ function buildTurnSummary(response, userInput) {
     if (response.dynamic_event) {
         parts.push(`新见闻：${response.dynamic_event.title || '地点偶遇'}`);
     }
+    const progressionNotices = response.progression_notifications || response.progression_delta?.notifications || [];
+    if (progressionNotices.length) {
+        parts.push(`成长：${progressionNotices.map(item => item.detail ? `${item.title}（${item.detail}）` : item.title).join('，')}`);
+    }
     const inventoryDelta = response.progression_delta?.inventory || [];
     const inventoryText = inventoryDelta
         .filter(item => item.action !== 'rejected')

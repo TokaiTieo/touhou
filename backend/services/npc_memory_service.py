@@ -15,8 +15,92 @@ def _number(value, default=0):
         return default
 
 
+KNOWLEDGE_LABELS = {
+    "direct": "亲历",
+    "reported": "听闻",
+    "inferred": "推测",
+    "system": "既定事实",
+}
+TRUTH_LABELS = {"accepted": "有效", "disputed": "存疑", "superseded": "已更新"}
+
+
+def _default_knowledge_type(source: str, source_npc: str = None) -> str:
+    source = str(source or "")
+    if source.startswith(("producer", "system", "migration")):
+        return "system"
+    if source_npc:
+        return "reported"
+    if source.startswith("inference"):
+        return "inferred"
+    return "direct"
+
+
+def _default_confidence(knowledge_type: str) -> float:
+    return {"direct": 0.9, "reported": 0.62, "inferred": 0.45, "system": 0.98}.get(knowledge_type, 0.75)
+
+
+def upgrade_npc_memory_metadata(character: Dict) -> bool:
+    """Add provenance metadata to old memories without replacing their content."""
+    changed = False
+    memories = character.get("npc_memories", {})
+    if not isinstance(memories, dict):
+        return False
+    for items in memories.values():
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            knowledge_type = item.get("knowledge_type") or _default_knowledge_type(
+                item.get("source", "migrated"), item.get("source_npc")
+            )
+            defaults = {
+                "knowledge_type": knowledge_type,
+                "source_npc": None,
+                "confidence": _default_confidence(knowledge_type),
+                "truth_status": "accepted",
+                "fact_key": None,
+                "superseded_by": None,
+            }
+            for key, value in defaults.items():
+                if key not in item:
+                    item[key] = value
+                    changed = True
+    return changed
+
+
+def _memory_line(item: Dict) -> str:
+    kind = KNOWLEDGE_LABELS.get(item.get("knowledge_type"), "记忆")
+    status = TRUTH_LABELS.get(item.get("truth_status"), "有效")
+    confidence = round(max(0, min(1, float(item.get("confidence", 0.85) or 0.85))) * 100)
+    source_npc = f"·来自{item.get('source_npc')}" if item.get("source_npc") else ""
+    return f"- [{kind}{source_npc}·可信{confidence}%·{status}] {item.get('summary', '')}"
+
+
+def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
+    fact_key = new_entry.get("fact_key")
+    if not fact_key:
+        return
+    new_confidence = float(new_entry.get("confidence", 0.75) or 0.75)
+    for previous in bucket:
+        if not isinstance(previous, dict) or previous.get("fact_key") != fact_key:
+            continue
+        if previous.get("truth_status", "accepted") == "superseded":
+            continue
+        old_confidence = float(previous.get("confidence", 0.75) or 0.75)
+        if abs(new_confidence - old_confidence) <= 0.15:
+            previous["truth_status"] = "disputed"
+            new_entry["truth_status"] = "disputed"
+        elif new_confidence > old_confidence:
+            previous["truth_status"] = "superseded"
+            previous["superseded_by"] = new_entry.get("id")
+        else:
+            new_entry["truth_status"] = "disputed"
+
+
 def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, query: str = "") -> str:
     memories = character.setdefault("npc_memories", {})
+    upgrade_npc_memory_metadata(character)
     summaries = character.setdefault("npc_memory_summaries", {})
     index_root = character.setdefault("semantic_memory_index", {})
     meta_root = character.setdefault("memory_index_meta", {})
@@ -42,7 +126,7 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
         character["_last_memory_retrieval"] = retrieval_diagnostics
         touch(selected)
         lines = [f"长期印象：{summaries[npc_name]}"] if summaries.get(npc_name) else []
-        lines.extend(f"- {item.get('summary', '')}" for item in selected)
+        lines.extend(_memory_line(item) for item in selected)
         return "\n".join(lines) if lines else f"{npc_name}: 暂无关键记忆"
     lines = []
     for name, items in memories.items():
@@ -58,7 +142,7 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
         for item in retrieval_diagnostics[diagnostics_start:]:
             item["npc_name"] = name
         touch(selected)
-        recent = [item.get("summary", "") for item in selected if item.get("summary")]
+        recent = [_memory_line(item).removeprefix("- ") for item in selected if item.get("summary")]
         if summaries.get(name):
             recent.insert(0, f"长期印象：{summaries[name]}")
         if recent:
@@ -139,15 +223,25 @@ def record_npc_memories(
             for entry in bucket if isinstance(entry, dict)
         ):
             continue
-        bucket.append({
+        source_name = str(item.get("source", source))
+        knowledge_type = item.get("knowledge_type") or _default_knowledge_type(source_name, item.get("source_npc"))
+        entry = {
             "id": item.get("id") or f"mem_{int(datetime.now().timestamp() * 1000)}_{len(bucket)}",
-            "summary": summary[:300], "tags": tags, "source": item.get("source", source),
-            "importance": estimate_memory_importance(summary, tags, item.get("source", source), item.get("importance")),
+            "summary": summary[:300], "tags": tags, "source": source_name,
+            "importance": estimate_memory_importance(summary, tags, source_name, item.get("importance")),
             "emotion": item.get("emotion") or infer_memory_emotion(summary, tags),
             "created_at": item.get("created_at") or now, "last_used_at": item.get("last_used_at"),
             "used_count": _number(item.get("used_count"), 0),
-            "source_turn_id": turn_id,
-        })
+            "source_turn_id": turn_id or item.get("source_turn_id"),
+            "knowledge_type": knowledge_type,
+            "source_npc": item.get("source_npc"),
+            "confidence": max(0, min(1, float(item.get("confidence", _default_confidence(knowledge_type))))),
+            "truth_status": item.get("truth_status", "accepted"),
+            "fact_key": item.get("fact_key"),
+            "superseded_by": item.get("superseded_by"),
+        }
+        _resolve_fact_conflicts(bucket, entry)
+        bucket.append(entry)
         compress_npc_memory_bucket(character, name)
         changed = True
     return changed
@@ -174,13 +268,13 @@ def build_auto_memory_updates(character: Dict, result: Dict, user_input_text: st
     if not targets:
         targets.extend([npc.get("name") for npc in (scene_npcs or [])[:2] if npc.get("name")])
 
-    def add(target, summary, tags, importance):
+    def add(target, summary, tags, importance, fact_key=None):
         if target and summary:
-            updates.append({"npc_name": target, "summary": summary[:300], "tags": tags, "importance": importance, "source": source})
+            updates.append({"npc_name": target, "summary": summary[:300], "tags": tags, "importance": importance, "source": source, "knowledge_type": "direct", "confidence": 0.9, "fact_key": fact_key})
 
     if relationship_update:
         for name in _relationship_names(relationship_update):
-            add(name, f"关系变化记录：{relationship_update}", ["关系"], 8)
+            add(name, f"关系变化记录：{relationship_update}", ["关系"], 8, f"relationship:{name}")
     battle = result.get("spellcard_result")
     if isinstance(battle, dict) and any(battle.get(key) for key in ("opponent", "outcome", "summary", "spellcard_name")):
         target = str(battle.get("opponent") or npc_name or (targets[0] if targets else ""))

@@ -10,6 +10,9 @@
     "check:python": "python -m compileall -q backend",
     "check:content": "python scripts/validate-content.py",
     "check": "npm run check:js && npm run check:python && npm run check:content",
+    "check:ruff": "python -m ruff check backend evaluate_narrative.py",
+    "test:narrative": "python evaluate_narrative.py",
+    "quality": "npm run check && npm run check:ruff && npm run test:narrative && npm run test:python",
     "test:python": "python -m unittest discover -p \"test_*.py\" -v",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test": "npm run check && npm run test:python && npm run test:e2e"

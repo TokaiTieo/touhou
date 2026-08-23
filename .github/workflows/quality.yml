@@ -1,0 +1,73 @@
+name: TouHou Quality Gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          npm ci
+      - name: Static checks, content validation and tests
+        run: npm run quality
+      - name: Browser regression
+        run: npm run test:e2e
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: test-results/playwright-artifacts
+          if-no-files-found: ignore
+
+  release-build:
+    needs: quality
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Prepare clean bundled world
+        shell: powershell
+        run: scripts/sync-release-worlds.ps1
+      - name: Build executable
+        run: python -m PyInstaller --noconfirm --clean api_release.spec
+      - name: Packaged smoke test
+        shell: powershell
+        run: scripts/smoke-exe.ps1 -ExePath .\dist\touhou.exe
+      - name: Build clean test package
+        shell: powershell
+        run: scripts/package-test.ps1 -OutputPath release\touhou-test-package.zip
+      - name: Upload verified release candidates
+        uses: actions/upload-artifact@v4
+        with:
+          name: touhou-windows-verified
+          path: |
+            dist/touhou.exe
+            release/touhou-test-package.zip

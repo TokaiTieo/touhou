@@ -1,6 +1,7 @@
 import unittest
 
 from backend.services.game_rules import preview_turn_ruling, resolve_turn_rules
+from backend.services.progression_service import apply_progression_updates, ensure_progression_profile
 
 
 def make_character(gm=False):
@@ -96,6 +97,32 @@ class GameRulesTests(unittest.TestCase):
         self.assertIn("绝对压制", mastery["traits"])
         self.assertEqual(result["spellcard_result"]["metrics"]["accuracy"], 100.0)
         self.assertEqual(result["spellcard_result"]["cost"]["灵力"], 0)
+
+
+    def test_progression_feedback_adds_loadout_and_milestones(self):
+        character = make_character()
+        result = {"description": "交战", "time_cost": 1, "spellcard_result": {"spellcard_name": "梦符「结界星屑」"}}
+        resolve_turn_rules(character, result, "使用符卡「结界星屑」进行弹幕决斗", [])
+        apply_progression_updates(character, result, "博丽神社", "完成调查并帮助灵梦")
+        self.assertIn("结界星屑", "".join(character["spellcard_loadout"]))
+        self.assertTrue(character["progression_milestones"])
+        self.assertTrue(result["progression_notifications"])
+
+    def test_reputation_tier_crossing_is_reported_once(self):
+        character = make_character()
+        character["reputation"] = {"博丽神社": 19}
+        result = {"inventory_updates": [], "reputation_updates": [{"faction": "博丽神社", "delta": 2, "reason": "协助修复结界"}]}
+        apply_progression_updates(character, result, "博丽神社", "帮助修复结界")
+        titles = [item["title"] for item in result["progression_notifications"]]
+        self.assertIn("博丽神社声望：友善", titles)
+        second = {"inventory_updates": [], "reputation_updates": []}
+        apply_progression_updates(character, second, "博丽神社", "休息")
+        self.assertEqual(second["progression_notifications"], [])
+
+    def test_loadout_is_additive_limited_and_deduplicated(self):
+        character = {"spellcard_loadout": ["梦符", "梦符", "灵符", "A", "B", "C", "D"]}
+        ensure_progression_profile(character)
+        self.assertEqual(character["spellcard_loadout"], ["梦符", "灵符", "A", "B", "C", "D"])
 
 
 if __name__ == "__main__":

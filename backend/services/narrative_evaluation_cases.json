@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reimu_persona_and_continuity",
+      "title": "灵梦回应应承接地点与角色锚点",
+      "response": "灵梦把御币搭在肩上，扫了一眼博丽神社上空尚未消散的结界波纹。你要去哪里调查是你的自由。",
+      "expected_terms": ["灵梦", "御币", "博丽神社"],
+      "required_facts": ["结界波纹"],
+      "minimum_score": 90
+    },
+    {
+      "id": "internal_id_is_rejected",
+      "title": "内部线索编号不得出现",
+      "response": "你推进了 main_touhou_rift_01，task_updates 已写入。",
+      "expected_pass": false,
+      "required_issue_codes": ["internal_id", "system_leak"]
+    },
+    {
+      "id": "free_exploration_is_preserved",
+      "title": "剧情提示不得封锁自由探索",
+      "response": "你必须立刻前往博丽神社，无法前往其他地点，这是唯一选择。",
+      "required_issue_codes": ["agency_restricted"]
+    },
+    {
+      "id": "repeated_prose_is_penalized",
+      "title": "重复句应被识别",
+      "response": "风吹过石阶。风吹过石阶。风吹过石阶。灵梦没有回答。",
+      "required_issue_codes": ["repetition"]
+    },
+    {
+      "id": "existing_battle_fact_is_kept",
+      "title": "战斗结果必须承接既有事实",
+      "response": "魔理沙收起八卦炉，承认这场符卡战由你获胜。夜空中的星屑随后慢慢熄灭。",
+      "required_facts": ["你获胜"],
+      "forbidden_terms": ["你失败"],
+      "minimum_score": 90
+    }
+  ]
+}
