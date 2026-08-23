@@ -120,6 +120,18 @@ class APIIntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("api_key", response.json())
 
+    def test_settings_status_detects_system_environment_key_without_exposing_it(self):
+        with patch("backend.routes.settings.load_secret", return_value=""), patch(
+            "backend.routes.settings.DEEPSEEK_API_KEY", "system-test-key-not-real"
+        ), patch(
+            "backend.routes.settings.DEEPSEEK_API_KEY_SOURCE", "system_environment"
+        ):
+            response = self.client.get("/api/ghost/get_api_key", headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["has_key"])
+        self.assertEqual(response.json()["key_source"], "system_environment")
+        self.assertNotIn("system-test-key-not-real", response.text)
+
     def test_create_load_turn_and_duplicate_turn_are_consistent(self):
         with tempfile.TemporaryDirectory() as root:
             characters_dir = Path(root)

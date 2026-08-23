@@ -167,9 +167,9 @@ class TurnCoordinator:
         status = self.get_status(character_id, turn_id)
         if status is None:
             return
-            status.state = state
-            status.updated_at = time.time()
-            status.phase_timestamps[state] = status.updated_at
+        status.state = state
+        status.updated_at = time.time()
+        status.phase_timestamps[state] = status.updated_at
         for key, value in updates.items():
             if hasattr(status, key):
                 setattr(status, key, value)

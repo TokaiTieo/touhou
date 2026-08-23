@@ -10,6 +10,7 @@ $previousDataDir = $env:TOUHOU_DATA_DIR
 $previousSmokeFlag = $env:TOUHOU_SMOKE_TEST
 $previousSmokeSeconds = $env:TOUHOU_SMOKE_SECONDS
 $previousMockAI = $env:TOUHOU_E2E_MOCK_AI
+$previousApiKey = $env:DEEPSEEK_API_KEY
 $process = $null
 $succeeded = $false
 
@@ -33,6 +34,7 @@ PRIVATE_DEBUG=False
     $env:TOUHOU_SMOKE_TEST = "1"
     $env:TOUHOU_SMOKE_SECONDS = "60"
     $env:TOUHOU_E2E_MOCK_AI = "1"
+    $env:DEEPSEEK_API_KEY = "smoke-system-key-not-real"
     $process = Start-Process -FilePath $resolvedExe -PassThru -WindowStyle Hidden
 
     $runtimePath = Join-Path $smokeRoot "runtime.json"
@@ -86,6 +88,16 @@ PRIVATE_DEBUG=False
     }
 
     $headers = @{ "X-Touhou-Token" = $Matches[1] }
+    $keyStatus = Invoke-RestMethod -Uri ($runtime.url + "/api/ghost/get_api_key") -Headers $headers -TimeoutSec 10
+    if (-not $keyStatus.has_key -or $keyStatus.key_source -ne "system_environment") {
+        throw "Packaged API Key environment fallback validation failed."
+    }
+    if (($keyStatus | ConvertTo-Json -Compress) -match "smoke-system-key-not-real") {
+        throw "Packaged API Key status exposed the complete credential."
+    }
+    if (Test-Path -LiteralPath (Join-Path $smokeRoot "config\api_key.dat")) {
+        throw "System environment API Key was unexpectedly persisted."
+    }
     $character = Invoke-RestMethod -Method Post `
         -Uri ($runtime.url + "/api/ghost/create_character") `
         -Headers $headers `
@@ -167,6 +179,7 @@ finally {
     $env:TOUHOU_SMOKE_TEST = $previousSmokeFlag
     $env:TOUHOU_SMOKE_SECONDS = $previousSmokeSeconds
     $env:TOUHOU_E2E_MOCK_AI = $previousMockAI
+    $env:DEEPSEEK_API_KEY = $previousApiKey
     if ($succeeded -and (Test-Path -LiteralPath $smokeRoot)) {
         $tempPrefix = [IO.Path]::GetFullPath($env:TEMP).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
         $resolvedSmokeRoot = [IO.Path]::GetFullPath($smokeRoot)
