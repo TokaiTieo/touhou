@@ -2,10 +2,12 @@
 
 import { createApp } from './vendor/vue.esm-browser.prod.js';
 import { TouhouApp } from './vue/app.js';
+import { applyAccessibilitySettings } from './vue/accessibility.js';
 
 window.TOUHOU_APP_VERSION = 'dev';
 window.__TOUHOU_VUE_SHELL__ = true;
 window.TOUHOU_SESSION_TOKEN = document.querySelector('meta[name="touhou-session-token"]')?.content || '';
+applyAccessibilitySettings();
 
 // Old versions stored the complete API Key in browser storage. Remove that
 // plaintext copy before any legacy module can read it.

@@ -26,6 +26,13 @@ test('uses the Vue settings dialog without restoring the saved key', async ({ pa
     await expect(page.locator('.vue-settings-dialog')).toBeVisible();
     await expect(page.locator('#vueApiKeyInput')).toHaveValue('');
     await expect(page.locator('.vue-settings-dialog')).toContainText('Key 不会保存在浏览器');
+    await expect(page.locator('.accessibility-settings')).toContainText('本地朗读');
+    await page.locator('#vueFontScale').evaluate(element => {
+        element.value = '1.2';
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--touhou-font-scale'))).toBe('1.2');
+    expect(await page.evaluate(() => localStorage.getItem('touhou_font_scale'))).toBe('1.2');
 });
 
 test('keeps the producer template secret and public relationship wording restrained', async ({ page }) => {

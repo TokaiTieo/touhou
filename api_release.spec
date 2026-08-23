@@ -29,7 +29,9 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[
         'Flask', 'PIL', 'fitz', 'matplotlib', 'numpy', 'pandas',
-        'pypdf', 'scipy', 'sklearn', 'tkinter'
+        'pypdf', 'scipy', 'sklearn', 'tkinter',
+        'pytest', '_pytest', 'IPython', 'jupyter', 'notebook',
+        'mypy', 'ruff'
     ],
     noarchive=False,
     optimize=1,

@@ -8,6 +8,7 @@ import socket
 import threading
 import time
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 
 import uvicorn
@@ -16,6 +17,27 @@ import uvicorn
 logger = logging.getLogger(__name__)
 ERROR_ALREADY_EXISTS = 183
 DEFAULT_STARTUP_TIMEOUT = 60.0
+
+
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def _write_startup_diagnostic(data_dir: Path, phase: str, status: str, **details) -> dict:
+    path = Path(data_dir) / "logs" / "startup-diagnostics.json"
+    payload = {
+        "product": "TouHou",
+        "pid": os.getpid(),
+        "phase": phase,
+        "status": status,
+        "updated_at": datetime.now().isoformat(),
+        **details,
+    }
+    _write_json_atomic(path, payload)
+    return payload
 
 
 def _available_port(host: str, preferred: int) -> int:
@@ -67,23 +89,33 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
     mutex = _acquire_single_instance(runtime_path)
     if mutex is None:
         return
+    data_dir.mkdir(parents=True, exist_ok=True)
+    probe_path = data_dir / ".touhou-write-probe"
+    probe_path.write_text("ok", encoding="ascii")
+    probe_path.unlink()
+    _write_startup_diagnostic(data_dir, "preflight", "ok", data_path=str(data_dir))
     port = _available_port(host, preferred_port)
     url = f"http://{host}:{port}"
     logger.info("Desktop launch selected %s", url)
-    data_dir.mkdir(parents=True, exist_ok=True)
+    started_at = datetime.now().isoformat()
 
-    def write_runtime(status: str):
-        runtime_path.write_text(
-            json.dumps({
+    def write_runtime(status: str, phase: str, **details):
+        _write_json_atomic(
+            runtime_path,
+            {
                 "url": url,
                 "port": port,
                 "pid": os.getpid(),
                 "status": status,
-            }),
-            encoding="utf-8",
+                "phase": phase,
+                "started_at": started_at,
+                "updated_at": datetime.now().isoformat(),
+                **details,
+            },
         )
 
-    write_runtime("starting")
+    write_runtime("starting", "server_config")
+    _write_startup_diagnostic(data_dir, "server_config", "ok", url=url)
 
     config = uvicorn.Config(
         app,
@@ -118,13 +150,22 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
     thread = threading.Thread(target=serve, name="touhou-api", daemon=True)
     thread.start()
     startup_timeout = _startup_timeout()
+    write_runtime("starting", "health_wait", timeout_seconds=startup_timeout)
+    _write_startup_diagnostic(data_dir, "health_wait", "running", url=url, timeout_seconds=startup_timeout)
     if not _wait_for_server(host, port, startup_timeout, thread):
         server.should_exit = True
         thread.join(timeout=3)
-        try:
-            runtime_path.unlink()
-        except OSError:
-            pass
+        reason = "server_error" if server_errors else "thread_exited" if not thread.is_alive() else "timeout"
+        detail = str(server_errors[0])[:500] if server_errors else ""
+        write_runtime("failed", "health_wait", reason=reason, detail=detail)
+        _write_startup_diagnostic(
+            data_dir,
+            "health_wait",
+            "failed",
+            reason=reason,
+            detail=detail,
+            log_file=str(data_dir / "logs" / "touhou.log"),
+        )
         ctypes.windll.kernel32.CloseHandle(mutex)
         if server_errors:
             detail = f"：{server_errors[0]}"
@@ -138,7 +179,8 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
             f"诊断日志位于 {data_dir / 'logs' / 'touhou.log'}"
         )
     logger.info("Embedded API server is healthy")
-    write_runtime("ready")
+    write_runtime("ready", "ready")
+    _write_startup_diagnostic(data_dir, "ready", "ok", url=url)
 
     def cleanup():
         server.should_exit = True
@@ -148,6 +190,7 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
             runtime_path.unlink()
         except OSError:
             pass
+        _write_startup_diagnostic(data_dir, "shutdown", "ok")
         ctypes.windll.kernel32.CloseHandle(mutex)
 
     if os.environ.get("TOUHOU_SMOKE_TEST", "").lower() in ("1", "true", "yes"):
@@ -179,6 +222,8 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
     )
     window_holder["window"] = window
     logger.info("Opening native WebView window")
+    write_runtime("ready", "window")
+    _write_startup_diagnostic(data_dir, "window", "running", url=url)
     try:
         try:
             webview.start(private_mode=False)

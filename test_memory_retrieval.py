@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
+from backend.services.npc_memory_service import get_npc_memory_text, record_npc_memories, upgrade_npc_memory_metadata
 from backend.services.memory_retrieval import (
     _recency_score,
     configure_dense_provider,
@@ -76,6 +77,32 @@ class MemoryRetrievalTests(unittest.TestCase):
         self.assertEqual(_recency_score({"created_at": "not-a-date"}), 0.0)
         self.assertEqual(_recency_score({}), 0.0)
         self.assertEqual(_recency_score({"created_at": future}), 3.0)
+
+
+    def test_old_memories_upgrade_additively_with_provenance(self):
+        character = {"npc_memories": {"灵梦": [{"summary": "一起调查过结界", "custom": "keep"}]}}
+        self.assertTrue(upgrade_npc_memory_metadata(character))
+        memory = character["npc_memories"]["灵梦"][0]
+        self.assertEqual(memory["knowledge_type"], "direct")
+        self.assertEqual(memory["truth_status"], "accepted")
+        self.assertEqual(memory["custom"], "keep")
+        self.assertFalse(upgrade_npc_memory_metadata(character))
+
+    def test_conflicting_fact_keeps_history_and_marks_superseded_entry(self):
+        character = {}
+        record_npc_memories(character, [{
+            "npc_name": "灵梦", "summary": "裂隙位于神社后山",
+            "fact_key": "rift_location", "confidence": 0.55, "knowledge_type": "reported",
+        }])
+        record_npc_memories(character, [{
+            "npc_name": "灵梦", "summary": "裂隙实际位于参道尽头",
+            "fact_key": "rift_location", "confidence": 0.95, "knowledge_type": "direct",
+        }])
+        memories = character["npc_memories"]["灵梦"]
+        self.assertEqual(len(memories), 2)
+        self.assertEqual(memories[0]["truth_status"], "superseded")
+        self.assertEqual(memories[0]["superseded_by"], memories[1]["id"])
+        self.assertIn("亲历", get_npc_memory_text(character, "灵梦", query="裂隙"))
 
 
 if __name__ == "__main__":

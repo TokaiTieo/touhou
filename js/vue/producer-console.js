@@ -3,6 +3,9 @@ import { state } from '../ghost/core/state.js';
 import { openAppModal } from './app-store.js';
 import {
     loadProducerConsoleState,
+    loadProducerContent,
+    saveProducerContent,
+    validateProducerContent,
     producerCompressNPCMemory,
     producerCreateEvent,
     producerDeleteNPCMemory,
@@ -55,6 +58,11 @@ export const ProducerConsole = defineComponent({
         const memorySummary = ref('');
         const memoryTags = ref('');
         const memoryImportance = ref('');
+        const contentFiles = ref([]);
+        const contentPath = ref('');
+        const contentText = ref('');
+        const contentReport = ref(null);
+        const contentMessage = ref('');
         const debug = computed(() => data.value.debug_last_ai || {});
         const runtime = computed(() => data.value.model_runtime || debug.value.model_runtime || {});
         const context = computed(() => debug.value.context_injection || {});
@@ -71,6 +79,68 @@ export const ProducerConsole = defineComponent({
             data.value = await loadProducerConsoleState(state.currentSession.characterId);
             remaining.value = data.value.time?.chapter_time_remaining ?? 72;
             nodeName.value = data.value.time?.chapter_node_name || '';
+        }
+
+        async function loadContentFiles() {
+            const result = await loadProducerContent(state.currentSession.characterId);
+            contentFiles.value = result.files || [];
+            if (!contentPath.value && contentFiles.value.length) contentPath.value = contentFiles.value[0].path;
+            if (contentPath.value) await loadContent();
+        }
+
+        async function loadContent() {
+            if (!contentPath.value) return;
+            busy.value = true;
+            contentMessage.value = '';
+            try {
+                const result = await loadProducerContent(state.currentSession.characterId, contentPath.value);
+                contentText.value = result.formatted || JSON.stringify(result.content || {}, null, 2);
+                contentReport.value = null;
+            } catch (error) {
+                contentMessage.value = error.message || '内容读取失败';
+            } finally {
+                busy.value = false;
+            }
+        }
+
+        function parsedContent() {
+            try { return JSON.parse(contentText.value); }
+            catch (error) { throw new Error(`JSON 格式错误：${error.message}`); }
+        }
+
+        async function validateContent() {
+            if (!contentPath.value) return;
+            busy.value = true;
+            contentMessage.value = '';
+            try {
+                contentReport.value = await validateProducerContent(
+                    state.currentSession.characterId, contentPath.value, parsedContent()
+                );
+                contentMessage.value = contentReport.value.valid ? '结构与引用校验通过' : '内容存在错误';
+            } catch (error) {
+                contentReport.value = { valid: false, errors: [error.message || '校验失败'] };
+                contentMessage.value = '内容存在错误';
+            } finally {
+                busy.value = false;
+            }
+        }
+
+        async function saveContent() {
+            if (!contentPath.value) return;
+            busy.value = true;
+            contentMessage.value = '';
+            try {
+                const result = await saveProducerContent(
+                    state.currentSession.characterId, contentPath.value, parsedContent()
+                );
+                contentReport.value = result.validation || null;
+                contentText.value = JSON.stringify(parsedContent(), null, 2);
+                contentMessage.value = '内容已保存，旧版本已自动备份';
+            } catch (error) {
+                contentMessage.value = error.message || '内容保存失败';
+            } finally {
+                busy.value = false;
+            }
         }
 
         async function run(action, message) {
@@ -191,14 +261,14 @@ export const ProducerConsole = defineComponent({
             ), 'NPC 记忆已压缩');
         }
 
-        onMounted(reload);
+        onMounted(async () => { await reload(); await loadContentFiles(); });
         return {
-            attitude, busy, compressMemory, context, contextBudget, createEvent, data, debug, deleteMemory,
+            attitude, busy, compressMemory, contentFiles, contentMessage, contentPath, contentReport, contentText, context, contextBudget, createEvent, data, debug, deleteMemory,
             eventDescription, eventTitle, eventType, memoryGroups, memoryId, memoryImportance,
             memoryNpc, memoryRetrieval, memorySummary, memoryTags, nodeName, npcName, playerPairs, reason,
             checkpoint, remaining, resourceKey, resourcePairs, resourceValue, restore, runtime,
             scene, setAnomaly, setPlayerState, setRelationship, setResource, stateKey, stateValue,
-            teleport, turnRuntime, upsertMemory, workflow
+            loadContent, saveContent, teleport, turnRuntime, upsertMemory, validateContent, workflow
         };
     },
     template: `
@@ -217,6 +287,7 @@ export const ProducerConsole = defineComponent({
                     </div>
                     <section class="producer-block producer-wide"><h3>创建自由探索事件</h3><input v-model="eventTitle" placeholder="事件标题"><select v-model="eventType"><option>异变线索</option><option>日常</option><option>偶遇</option><option>战斗</option><option>暧昧邀约</option><option>资源发现</option></select><textarea v-model="eventDescription" rows="3" placeholder="事件描述"></textarea><button :disabled="busy" @click="createEvent">写入事件池</button></section>
                     <section class="producer-block producer-wide"><h3>NPC 长期记忆</h3><input v-model="memoryNpc" placeholder="NPC 名称"><input v-model="memoryId" placeholder="记忆 ID，可留空"><textarea v-model="memorySummary" rows="3" placeholder="记忆内容"></textarea><input v-model="memoryTags" placeholder="标签"><input v-model="memoryImportance" type="number" min="1" max="10" placeholder="重要度"><div class="producer-memory-actions"><button :disabled="busy" @click="upsertMemory">新增/改写</button><button :disabled="busy" @click="deleteMemory">删除 ID</button><button :disabled="busy" @click="compressMemory">压缩记忆</button></div><div class="producer-state-preview producer-memory-preview"><div v-for="[name,items] in memoryGroups" :key="name" class="producer-memory-npc"><strong>{{ name }}</strong><div v-for="item in items.slice(-3).reverse()" :key="item.id" class="producer-memory-item"><code>{{ item.id }}</code><span>{{ item.summary }}</span></div></div></div></section>
+                    <section class="producer-block producer-wide producer-content-editor"><h3>世界内容编辑器</h3><div class="producer-content-toolbar"><select v-model="contentPath" :disabled="busy" @change="loadContent"><option v-for="item in contentFiles" :key="item.path" :value="item.path">{{ item.label }} · {{ item.path }}</option></select><button :disabled="busy || !contentPath" @click="loadContent">重新载入</button><button :disabled="busy || !contentPath" @click="validateContent">校验</button><button class="producer-primary-btn" :disabled="busy || !contentPath" @click="saveContent">校验并保存</button></div><textarea v-model="contentText" rows="18" spellcheck="false" aria-label="世界内容 JSON"></textarea><div v-if="contentReport" class="producer-content-report" :class="{ 'is-valid': contentReport.valid, 'is-error': !contentReport.valid }"><strong>{{ contentReport.valid ? '校验通过' : '校验未通过' }}</strong><span v-for="(error,index) in (contentReport.errors || [])" :key="index">{{ error }}</span></div><p v-if="contentMessage" class="dialog-status">{{ contentMessage }}</p></section>
                     <section class="producer-block producer-wide"><h3>最近 AI 调试</h3><div class="producer-state-preview">类型：{{ debug.kind || '暂无' }}<br>模型：{{ runtime.used_model || runtime.requested_model || '暂无' }} · 尝试 {{ runtime.attempts || 0 }} 次 · {{ runtime.fallback_used ? '已降级' : '未降级' }}<br>上下文：{{ runtime.prompt_chars || debug.prompt_chars || 0 }} 字符<span v-if="runtime.compressed">（由 {{ runtime.original_chars }} 压缩）</span><br>预算：{{ contextBudget.used_chars || 0 }} / {{ contextBudget.total_budget_chars || 0 }} 字符，约 {{ contextBudget.estimated_tokens || 0 }} Token<br>Token：{{ debug.actual_total_tokens || 0 }}（输入 {{ debug.usage?.prompt_tokens || 0 }} / 输出 {{ debug.usage?.completion_tokens || 0 }}）<br>世界书：{{ context.used_chars || 0 }} / {{ context.budget_chars || 0 }} 字符<br>注入：{{ (context.entries || []).map(item => item.title).join('、') || '无' }}</div><div class="producer-state-preview producer-memory-preview"><div v-for="item in memoryRetrieval" :key="item.npc_name + ':' + item.memory_id" class="producer-memory-item"><code>{{ item.memory_id }}</code><span>{{ item.npc_name }} · {{ item.reasons?.join('、') }} · {{ item.chars }} 字符 · {{ item.score }}</span></div></div><textarea rows="6" readonly :value="debug.prompt_preview || '普通模式未保存提示词内容'"></textarea><textarea rows="4" readonly :value="debug.response_preview || '普通模式未保存响应内容'"></textarea></section>
                     <section class="producer-block producer-wide"><h3>回合工作流</h3><div class="producer-state-preview">Functional API：{{ turnRuntime.langgraph_enabled ? '启用' : '回退路径' }} · 最近恢复：{{ workflow.recovered ? '是' : '否' }} · 本回合回退：{{ workflow.fallback ? '是' : '否' }}<br>工作流耗时：{{ workflow.workflow_ms || 0 }} ms · 检查点：{{ checkpoint.active_threads || 0 }} 个 · 数据库：{{ checkpoint.database_bytes || 0 }} bytes<br>最旧恢复数据：{{ checkpoint.oldest_age_seconds || 0 }} 秒 · 清理故障：{{ workflow.cleanup_error || '无' }}</div><div class="producer-state-preview producer-memory-preview"><div v-for="item in (turnRuntime.recent_turns || [])" :key="item.turn_id" class="producer-memory-item"><code>{{ item.turn_id }}</code><span>{{ item.kind }} · {{ item.state }}<template v-if="item.recovered"> · 已恢复</template></span></div></div></section>
                 </div>

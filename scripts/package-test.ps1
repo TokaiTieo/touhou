@@ -17,8 +17,17 @@ try {
     }
     Set-Content -LiteralPath (Join-Path $Staging ".env") -Value @(
         "DEEPSEEK_API_KEY="
+        "DEEPSEEK_BASE_URL=https://api.deepseek.com"
         "DEEPSEEK_MODEL=deepseek-v4-flash"
+        "TOUHOU_AI_MODELS=deepseek-v4-flash,deepseek-v4-pro"
     ) -Encoding UTF8
+
+    & python (Join-Path $ProjectRoot "release_manifest.py") `
+        --root $Staging `
+        --output (Join-Path $Staging "release-manifest.json")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Release manifest generation failed."
+    }
 
     $OutputDirectory = Split-Path -Parent $Output
     New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
@@ -26,6 +35,13 @@ try {
         Remove-Item -LiteralPath $Output
     }
     Compress-Archive -Path (Join-Path $Staging "*") -DestinationPath $Output -CompressionLevel Optimal
+    & python (Join-Path $ProjectRoot "release_manifest.py") `
+        --root $OutputDirectory `
+        --output ($Output + ".manifest.json") `
+        $Output
+    if ($LASTEXITCODE -ne 0) {
+        throw "Package checksum manifest generation failed."
+    }
     Write-Host "Created clean test package: $Output"
 } finally {
     if (Test-Path -LiteralPath $Staging) {

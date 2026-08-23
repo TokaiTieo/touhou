@@ -8,11 +8,11 @@ from openai import OpenAI
 from backend.config import (
     DEEPSEEK_API_KEY,
     DEEPSEEK_API_KEY_SOURCE,
-    DEEPSEEK_BASE_URL,
     ENV_PATH,
     SECRET_PATH,
 )
-from backend.services.ai_service import AVAILABLE_MODELS, ai_service
+from backend.services.ai_service import ai_service
+from backend.services.ai_provider_service import provider_descriptor
 from backend.services.ai_diagnostics_service import public_usage_summary
 from backend.services.memory_retrieval import semantic_backend_status
 from backend.services.turn_workflow import (
@@ -27,9 +27,43 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _save_env_settings(updates: dict) -> None:
+    lines = ENV_PATH.read_text(encoding="utf-8-sig").splitlines() if ENV_PATH.exists() else []
+    names = set(updates)
+    lines = [line for line in lines if not any(line.startswith(f"{name}=") for name in names)]
+    lines.extend(f"{name}={value}" for name, value in updates.items())
+    ENV_PATH.parent.mkdir(parents=True, exist_ok=True)
+    ENV_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 @router.get("/get_model")
 async def get_model():
-    return {"current_model": ai_service.model, "available_models": AVAILABLE_MODELS}
+    return {"current_model": ai_service.model, "available_models": ai_service.available_models}
+
+
+@router.get("/provider")
+async def get_provider():
+    return ai_service.provider
+
+
+@router.post("/provider")
+async def set_provider(request: dict):
+    base_url = str(request.get("base_url") or "").strip()
+    models = request.get("models") or []
+    model = str(request.get("model") or "").strip()
+    try:
+        descriptor = provider_descriptor(base_url, models, model)
+        ai_service.set_provider(
+            descriptor["base_url"], descriptor["models"], descriptor["current_model"]
+        )
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    _save_env_settings({
+        "DEEPSEEK_BASE_URL": descriptor["base_url"],
+        "DEEPSEEK_MODEL": descriptor["current_model"],
+        "TOUHOU_AI_MODELS": ",".join(descriptor["models"]),
+    })
+    return {"status": "ok", **descriptor}
 
 
 @router.get("/diagnostics")
@@ -69,7 +103,7 @@ async def set_model(request: dict):
     model_name = request.get("model")
     if not model_name:
         raise HTTPException(status_code=400, detail="缺少 model 参数")
-    if model_name not in AVAILABLE_MODELS:
+    if model_name not in ai_service.available_models:
         raise HTTPException(status_code=400, detail=f"不支持的模型: {model_name}")
     if not ai_service.set_model(model_name):
         raise HTTPException(status_code=500, detail="模型切换失败")
@@ -80,12 +114,13 @@ async def set_model(request: dict):
 async def test_ai_with_key(request: dict):
     api_key = str(request.get("api_key") or "").strip()
     model = request.get("model", ai_service.model)
+    base_url = str(request.get("base_url") or ai_service.base_url).strip()
+    requested_models = request.get("models") or [model]
     if not api_key:
         return {"success": False, "message": "未提供 API Key"}
-    if model not in AVAILABLE_MODELS:
-        return {"success": False, "message": "不支持的模型"}
     try:
-        client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL, timeout=30, max_retries=1)
+        descriptor = provider_descriptor(base_url, requested_models, model)
+        client = OpenAI(api_key=api_key, base_url=descriptor["base_url"], timeout=30, max_retries=1)
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": "请回复：OK"}],

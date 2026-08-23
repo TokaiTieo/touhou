@@ -46,8 +46,17 @@ from backend.services.relationship_policy_service import (
 from backend.services.game_rules import preview_turn_ruling, format_ruling_for_prompt
 from backend.services.incident_service import sync_incident_from_tasks
 from backend.services.ai_contracts import DialogueTurnResult, EnvironmentTurnResult, parse_turn_response
-from backend.services.world_info_service import build_world_info_context
-from backend.services.story_summary_service import format_story_summary_for_ai
+from backend.services.turn_context_service import (
+    format_history_for_ai,
+    format_locations_for_ai as _format_locations_for_ai,
+    format_npcs_for_ai,
+    format_player_state_for_ai,
+    get_world_info_context as _get_world_info_context,
+)
+from backend.services.story_summary_service import (
+    format_story_director_for_ai,
+    format_story_summary_for_ai,
+)
 from backend.services.progression_service import format_progression_for_ai
 from backend.services.turn_prompt_service import render_prompt
 from backend.services.context_budget_service import budget_context_sections
@@ -233,36 +242,12 @@ def load_prompt(prompt_name: str) -> str:
     return ""
 
 
-def format_player_state_for_ai(character: Dict) -> str:
-    """把玩家当前状态整理成可被叙事裁定直接引用的上下文。"""
-    player_state = character.get("player_state", {}) or {}
-    if not player_state:
-        return "未记录"
-
-    lines = []
-    for key, value in player_state.items():
-        lines.append(f"- {key}: {value}")
-
-    fatigue = float(player_state.get("疲劳", 0) or 0)
-    injury = float(player_state.get("受伤", 0) or 0)
-    spell = float(player_state.get("符卡熟练度", 0) or 0)
-    tips = []
-    if fatigue >= 60:
-        tips.append("疲劳较高，长距离移动、弹幕回避和精细施法应更容易失误")
-    if injury >= 40:
-        tips.append("伤势会影响爆发力、持续战斗和危险动作的成功率")
-    if spell >= 50:
-        tips.append("符卡熟练度较高，允许更稳定地使用弹幕、结界和回避技巧")
-    elif spell <= 15:
-        tips.append("符卡熟练度偏低，面对强者时更依赖环境、交涉或退让")
-    if tips:
-        lines.append("叙事裁定参考：" + "；".join(tips))
-    return "\n".join(lines)
-
-
 def get_world_info_context(query: str, scene: str = "", npc_name: str = "", limit: int = 6) -> Dict:
-    world_info_path = get_current_world_path() / "world_info.json"
-    return build_world_info_context(world_info_path, query, scene, npc_name, limit=limit)
+    return _get_world_info_context(get_current_world_path(), query, scene, npc_name, limit)
+
+
+def format_locations_for_ai() -> str:
+    return _format_locations_for_ai(get_locations_dir())
 
 def parse_number(value, default=0):
     try:
@@ -485,81 +470,6 @@ def check_and_enable_gm_mode(
     return ""
 
 
-def format_history_for_ai(history: List[Dict], max_count: int = 20) -> str:
-    """格式化历史对话供 AI 使用"""
-    if not history:
-        return "（无历史记录）"
-    
-    lines = []
-    for h in history[-max_count:]:
-        speaker = h.get("speaker", "未知")
-        content = h.get("content", "")
-        lines.append(f"{speaker}: {content}")
-    
-    return "\n".join(lines)
-
-
-def format_locations_for_ai() -> str:
-    """格式化已有地点库供 AI 使用"""
-    lm = get_location_manager(get_locations_dir())
-    all_locations = lm.get_all_locations()
-    
-    regions = []
-    scenes = []
-    
-    for loc_id, loc in all_locations.items():
-        if hasattr(loc, 'name'):
-            name = loc.name
-            loc_type = loc.type
-            parent = loc.parent
-        else:
-            name = loc.get('name')
-            loc_type = loc.get('type')
-            parent = loc.get('parent')
-        
-        if loc_type == 'region':
-            regions.append(f"  - {name} ({loc_id})")
-        else:
-            scenes.append(f"  - {name} ({loc_id})，父级={parent}")
-    
-    lines = ["【区域】"]
-    lines.extend(regions if regions else ["  （暂无区域）"])
-    lines.append("【场景】")
-    lines.extend(scenes if scenes else ["  （暂无场景）"])
-    
-    return "\n".join(lines)
-
-
-def format_npcs_for_ai(npcs: List[Dict], character: Dict = None) -> str:
-    """格式化 NPC 信息供 AI 使用"""
-    if not npcs:
-        return "（没有其他人在场）"
-    
-    lines = []
-    for npc in npcs:
-        profile = npc.get("profile", {})
-        lines.append(f"- {npc.get('name')}：{profile.get('identity', '普通人')}")
-        if profile.get("description"):
-            lines.append(f"  外貌性格：{profile.get('description')}")
-        if profile.get("personality"):
-            lines.append(f"  行为风格：{profile.get('personality')}")
-        if profile.get("initial_attitude"):
-            lines.append(f"  初始态度：{profile.get('initial_attitude')}")
-        if profile.get("story_hook"):
-            lines.append(f"  可触发事件：{profile.get('story_hook')}")
-        if profile.get("spellcard_style"):
-            lines.append(f"  符卡倾向：{profile.get('spellcard_style')}")
-        if profile.get("encounter_tier"):
-            lines.append(f"  登场层级：{profile.get('encounter_tier')}")
-        if (
-            profile.get("romance_adult_hook")
-            and character
-            and mature_context_allowed(character, npc.get("name", ""), profile)
-        ):
-            lines.append(f"  恋爱/成人互动倾向：{profile.get('romance_adult_hook')}")
-    return "\n".join(lines)
-
-
 # ========== API 端点 ==========
 
 @router.post("/environment_interact")
@@ -629,6 +539,7 @@ async def environment_interact(request: EnvironmentInteractRequest):
         history = character.get("conversation_history", [])
         history_text = format_history_for_ai(history + request.history)
         story_summary_text = format_story_summary_for_ai(character)
+        story_director_text = format_story_director_for_ai(character)
         world_info = get_world_info_context(
             f"{user_input_text} " + " ".join(npc.get("name", "") for npc in scene_npcs),
             request.scene
@@ -682,6 +593,7 @@ async def environment_interact(request: EnvironmentInteractRequest):
             "npc_info": format_npcs_for_ai(scene_npcs, character),
             "history_text": history_text,
             "story_summary": story_summary_text,
+            "story_director": story_director_text,
             "progression_context": progression_context,
             "existing_locations": existing_locations,
             "current_relationships": current_relationships,
@@ -715,6 +627,8 @@ async def environment_interact(request: EnvironmentInteractRequest):
             "npc_memories": context_sections["npc_memories"],
         }, (
             context_sections["rule_context"]
+            + "\n\n## 长篇叙事导演（只作连贯性建议，不限制探索）\n"
+            + context_sections["story_director"]
             + "\n\n## 已发生的世界回响（只影响叙事后果，不限制探索）\n"
             + context_sections["consequences"]
             + "\n\n## 近期离屏人物动向\n"
@@ -814,6 +728,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
     history = character.get("conversation_history", [])
     history_text = format_history_for_ai(history + request.history)
     story_summary_text = format_story_summary_for_ai(character)
+    story_director_text = format_story_director_for_ai(character)
     
     # 获取 NPC 数据
     from backend.world_manager import get_npcs_dir
@@ -923,6 +838,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
         "scene_npcs": scene_npcs_info,
         "history_text": history_text,
         "story_summary": story_summary_text,
+        "story_director": story_director_text,
         "progression_context": progression_context,
         "current_relationships": current_relationships,
         "active_tasks": active_tasks_text,
@@ -950,6 +866,8 @@ async def npc_dialogue(request: NPCDialogueRequest):
         "npc_memories": context_sections["npc_memories"],
     }, (
         context_sections["rule_context"]
+        + "\n\n## 长篇叙事导演（只作连贯性建议，不限制探索）\n"
+        + context_sections["story_director"]
         + "\n\n## 已发生的世界回响（只影响叙事后果，不限制探索）\n"
         + context_sections["consequences"]
         + "\n\n## 近期离屏人物动向\n"

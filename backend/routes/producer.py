@@ -1,11 +1,19 @@
 """Producer-mode API isolated from ordinary player turn routes."""
 
+import json
 import re
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 
+from backend.config import DATA_DIR, DEFAULT_WORLD_ID, WORLDS_DIR
 from backend.world_manager import load_character, save_character
+from backend.services.content_validation_service import (
+    list_editable_content,
+    read_editable_content,
+    save_editable_content,
+    validate_editable_content,
+)
 from backend.services.relationship_service import update_relationships
 from backend.services import npc_memory_service as memory_runtime
 from backend.services.turn_coordinator import turn_coordinator
@@ -61,6 +69,50 @@ async def state(character_id: str):
             "recent_turns": turn_coordinator.recent_statuses(character_id),
         },
     }
+
+
+@router.get("/producer_console/content")
+async def get_content(character_id: str, path: str = ""):
+    _character(character_id)
+    world_root = WORLDS_DIR / DEFAULT_WORLD_ID
+    if not path:
+        return {"files": list_editable_content(world_root)}
+    try:
+        return read_editable_content(world_root, path)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/producer_console/content/validate")
+async def validate_content(request: dict):
+    _character(request.get("character_id"))
+    try:
+        result = validate_editable_content(
+            WORLDS_DIR / DEFAULT_WORLD_ID, request.get("path"), request.get("content")
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result
+
+
+@router.post("/producer_console/content/save")
+async def save_content(request: dict):
+    _character(request.get("character_id"))
+    try:
+        result = save_editable_content(
+            WORLDS_DIR / DEFAULT_WORLD_ID,
+            DATA_DIR / "content_backups" / DEFAULT_WORLD_ID,
+            request.get("path"),
+            request.get("content"),
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not result.get("saved"):
+        raise HTTPException(status_code=422, detail={
+            "message": "内容校验未通过，未写入文件",
+            "errors": result.get("validation", {}).get("errors", []),
+        })
+    return result
 
 
 @router.post("/producer_console/restore")

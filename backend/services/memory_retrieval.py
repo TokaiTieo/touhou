@@ -194,6 +194,10 @@ def rank_memories(
         keyword_score = _keyword_overlap(summary, query)
         importance = max(1.0, min(10.0, _number(item.get("importance"), 5)))
         used_count = min(10.0, _number(item.get("used_count"), 0))
+        confidence = max(0.0, min(1.0, _number(item.get("confidence"), 0.85)))
+        truth_adjustment = {"accepted": 1.5, "disputed": -2.0, "superseded": -8.0}.get(
+            str(item.get("truth_status") or "accepted"), 0.0
+        )
         score = (
             vector_score * 24
             + dense_score * 18
@@ -201,6 +205,8 @@ def rank_memories(
             + importance * 1.6
             + used_count * 0.35
             + _recency_score(item)
+            + confidence * 2.0
+            + truth_adjustment
         )
         if not query:
             score += index / max(len(items), 1) * 4

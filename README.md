@@ -91,6 +91,16 @@ python -m backend.api
 npm test
 ```
 
+提交或发布前的完整质量门禁：
+
+```powershell
+python -m pip install -r requirements-dev.txt
+npm run quality
+npm run test:e2e
+```
+
+GitHub Actions 会在 Windows 上重复执行以上检查，并构建、隔离冒烟测试和打包无存档发布候选。
+
 也可以分别执行：
 
 ```powershell
@@ -126,6 +136,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-test.ps1
 ```
 
 默认输出为 `release/touhou-test-package.zip`。
+压缩包内含逐文件 `release-manifest.json`，旁边会生成 ZIP 自身的
+`touhou-test-package.zip.manifest.json`，可用其中的 SHA-256 校验分发文件。
+
+如已安装可信 Windows 代码签名证书，可在冒烟测试通过后执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-release.ps1 `
+  -CertificateThumbprint "你的证书指纹" -ExePath .\dist\touhou.exe
+```
+
+签名脚本会再次读取 Authenticode 状态，只有验证为 `Valid` 才成功结束。
 
 ## 项目结构
 

@@ -107,6 +107,101 @@ def _check_aliases(
             errors.append(f"{label} alias target does not exist: {alias} -> {target}")
 
 
+EDITABLE_CONTENT_FILES = {
+    "world.json": "世界资料",
+    "world_info.json": "动态世界书",
+    "events.json": "事件池",
+    "incidents.json": "异变库",
+    "npc_schedules.json": "NPC 日程",
+    "locations/location_base.json": "地点库",
+    "npcs/npc_index.json": "NPC 名册",
+}
+
+
+def _editable_path(world_root: Path, relative: str) -> Path:
+    normalized = str(relative or "").replace("\\", "/").strip("/")
+    if normalized not in EDITABLE_CONTENT_FILES:
+        raise ValueError("该内容文件不在制作人编辑白名单中")
+    root = Path(world_root).resolve()
+    target = (root / normalized).resolve()
+    if root != target and root not in target.parents:
+        raise ValueError("内容路径超出当前世界")
+    return target
+
+
+def list_editable_content(world_root: Path) -> List[Dict]:
+    root = Path(world_root)
+    return [
+        {"path": relative, "label": label, "exists": (root / relative).exists()}
+        for relative, label in EDITABLE_CONTENT_FILES.items()
+    ]
+
+
+def read_editable_content(world_root: Path, relative: str) -> Dict:
+    path = _editable_path(world_root, relative)
+    document = _load(path)
+    return {
+        "path": relative,
+        "label": EDITABLE_CONTENT_FILES[relative],
+        "content": document,
+        "formatted": json.dumps(document, ensure_ascii=False, indent=2),
+    }
+
+
+def validate_editable_content(
+    world_root: Path, relative: str, document: Dict, schemas_root: Path = None
+) -> Dict:
+    import shutil
+    import tempfile
+
+    _editable_path(world_root, relative)
+    if not isinstance(document, dict):
+        return {"valid": False, "errors": ["JSON 顶层必须是对象"], "counts": {}}
+    if relative not in SCHEMA_FILES:
+        return {"valid": True, "errors": [], "counts": {}, "mode": "object"}
+    with tempfile.TemporaryDirectory(prefix="touhou-content-preview-") as temp_dir:
+        preview_root = Path(temp_dir) / "world_touhou"
+        shutil.copytree(world_root, preview_root)
+        target = preview_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
+        result = validate_world_content(preview_root, schemas_root)
+    result["mode"] = "schema_and_references"
+    return result
+
+
+def save_editable_content(
+    world_root: Path,
+    backup_root: Path,
+    relative: str,
+    document: Dict,
+    schemas_root: Path = None,
+) -> Dict:
+    import os
+    import shutil
+    from datetime import datetime
+
+    path = _editable_path(world_root, relative)
+    validation = validate_editable_content(world_root, relative, document, schemas_root)
+    if not validation.get("valid"):
+        return {"saved": False, "validation": validation, "backup": None}
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    safe_name = relative.replace("/", "__")
+    backup_path = Path(backup_root) / f"{timestamp}__{safe_name}"
+    backup_path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        shutil.copy2(path, backup_path)
+    temp_path = path.with_suffix(path.suffix + ".producer.tmp")
+    temp_path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(temp_path, path)
+    return {
+        "saved": True,
+        "validation": validation,
+        "backup": str(backup_path) if backup_path.exists() else None,
+        "path": relative,
+    }
+
+
 def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
     world_root = Path(world_root)
     schemas_root = schemas_root or Path(__file__).resolve().parents[2] / "content_schemas"

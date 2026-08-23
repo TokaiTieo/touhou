@@ -7,6 +7,7 @@ from backend.services.incident_service import advance_incident_state
 from backend.services.progression_service import apply_progression_updates
 from backend.services.turn_service import apply_time_progression
 from backend.services.npc_simulation_service import simulate_offscreen_npcs
+from backend.services.story_summary_service import update_story_director
 
 
 def apply_turn_resolution(
@@ -35,6 +36,15 @@ def apply_turn_resolution(
     )
     apply_progression_updates(character, result, scene, action_text)
     advance_incident_state(character, result, action_text, tasks_data, rule_preview)
+    update_story_director(
+        character,
+        result,
+        action_text,
+        scene,
+        tasks_data,
+        npc_name=npc_name,
+        turn_id=turn_id,
+    )
     apply_time_progression(character, result)
     offscreen_updates = simulate_offscreen_npcs(character, result.get("time_cost", 0))
     result["offscreen_updates"] = offscreen_updates

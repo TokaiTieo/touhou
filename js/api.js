@@ -600,6 +600,13 @@ async function loadCharacterJournal(characterId) {
     return await apiCall(`/ghost/character_journal?character_id=${encodeURIComponent(characterId)}`);
 }
 
+async function setSpellcardLoadout(characterId, spellcards) {
+    return await apiCall('/ghost/spellcard_loadout', {
+        method: 'POST',
+        body: { character_id: characterId, spellcards }
+    });
+}
+
 async function loadNPCMemories(characterId, npcName = '') {
     if (!characterId) {
         return npcName ? { npc_name: npcName, memories: [] } : { memories: {} };
@@ -610,6 +617,23 @@ async function loadNPCMemories(characterId, npcName = '') {
 
 async function loadProducerConsoleState(characterId) {
     return await apiCall(`/ghost/producer_console/state?character_id=${encodeURIComponent(characterId)}`);
+}
+
+async function loadProducerContent(characterId, path = '') {
+    const suffix = path ? `&path=${encodeURIComponent(path)}` : '';
+    return await apiCall(`/ghost/producer_console/content?character_id=${encodeURIComponent(characterId)}${suffix}`);
+}
+
+async function validateProducerContent(characterId, path, content) {
+    return await apiCall('/ghost/producer_console/content/validate', {
+        method: 'POST', body: { character_id: characterId, path, content }
+    });
+}
+
+async function saveProducerContent(characterId, path, content) {
+    return await apiCall('/ghost/producer_console/content/save', {
+        method: 'POST', body: { character_id: characterId, path, content }
+    });
 }
 
 async function producerRestore(characterId) {
@@ -760,8 +784,12 @@ export {
     loadTasks,
     loadRelationships,
     loadCharacterJournal,
+    setSpellcardLoadout,
     loadNPCMemories,
     loadProducerConsoleState,
+    loadProducerContent,
+    validateProducerContent,
+    saveProducerContent,
     producerRestore,
     producerTeleport,
     producerSetRelationship,

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from backend.services.ai_service import AIService, compress_prompt
+from backend.services.ai_provider_service import normalize_base_url, normalize_models
 
 
 class _FakeCompletions:
@@ -45,6 +46,9 @@ def _service(responder):
     service._error_local = __import__("threading").local()
     service._runtime_local = __import__("threading").local()
     service._has_key = True
+    service._api_key = "test-key"
+    service._base_url = "https://api.deepseek.com"
+    service._available_models = ["deepseek-v4-flash", "deepseek-v4-pro"]
     completions = _FakeCompletions(responder)
     service.client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
     service._model = "deepseek-v4-flash"
@@ -110,6 +114,27 @@ class AIRuntimeTests(unittest.TestCase):
         self.assertEqual(len(calls.calls), 2)
         self.assertEqual(service.last_runtime["attempts"], 2)
         self.assertFalse(service.last_runtime["fallback_used"])
+
+
+    def test_provider_rejects_control_character_injection(self):
+        from backend.services.ai_provider_service import provider_descriptor
+
+        with self.assertRaises(ValueError):
+            provider_descriptor("https://api.example.com\nINJECTED=1", ["model-a"], "model-a")
+        with self.assertRaises(ValueError):
+            provider_descriptor("https://api.example.com", ["model-a\nINJECTED=1"], "model-a")
+
+    def test_provider_validation_and_dynamic_model_selection(self):
+        self.assertEqual(normalize_base_url("https://example.test/v1/"), "https://example.test/v1")
+        self.assertEqual(normalize_models(["model-a", "model-a"], "model-b"), ["model-b", "model-a"])
+        with self.assertRaises(ValueError):
+            normalize_base_url("file:///tmp/model")
+        service, _calls = _service(lambda _kwargs, _count: _response())
+        with patch("backend.services.ai_service.OpenAI", return_value=service.client):
+            self.assertTrue(service.set_provider("https://example.test/v1", ["model-a", "model-b"], "model-b"))
+        self.assertEqual(service.model, "model-b")
+        self.assertEqual(service.available_models, ["model-a", "model-b"])
+        self.assertTrue(service.provider["is_custom"])
 
 
 if __name__ == "__main__":

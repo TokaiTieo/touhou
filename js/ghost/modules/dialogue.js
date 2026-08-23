@@ -476,6 +476,10 @@ function buildDialogueSummary(data) {
     if (data.dynamic_event) {
         parts.push(`新见闻：${data.dynamic_event.title || '人物事件'}`);
     }
+    const progressionNotices = data.progression_notifications || data.progression_delta?.notifications || [];
+    if (progressionNotices.length) {
+        parts.push(`成长：${progressionNotices.map(item => item.detail ? `${item.title}（${item.detail}）` : item.title).join('，')}`);
+    }
     const inventoryDelta = data.progression_delta?.inventory || [];
     const inventoryText = inventoryDelta
         .filter(item => item.action !== 'rejected')

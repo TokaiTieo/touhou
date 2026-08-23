@@ -10,6 +10,7 @@ import {
 import { state } from '../ghost/core/state.js';
 import { renderMarkdownLite, softenPublicText } from '../ghost/ui/text.js';
 import { showToast } from '../ghost/ui/components.js';
+import { accessibilityState, speakText } from './accessibility.js';
 import {
     fillComposer,
     gameUi,
@@ -185,11 +186,7 @@ const ChatMessage = defineComponent({
             await navigator.clipboard?.writeText(displayContent.value);
         }
         function speak() {
-            if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(displayContent.value);
-            utterance.lang = 'zh-CN';
-            window.speechSynthesis.speak(utterance);
+            if (!speakText(displayContent.value)) showToast('请先在设置中开启本地朗读', 1800);
         }
         function selectRewrite(index) {
             props.message.activeRewrite = index;
@@ -205,7 +202,7 @@ const ChatMessage = defineComponent({
             }
             refreshGameUi();
         }
-        return { copy, emit, html, kind, messageClass, rate, selectRewrite, speak };
+        return { accessibilityState, copy, emit, html, kind, messageClass, rate, selectRewrite, speak };
     },
     template: `
         <article class="th-message" :class="messageClass">
@@ -222,7 +219,8 @@ const ChatMessage = defineComponent({
                 </div>
                 <footer class="th-message-tools">
                     <button type="button" title="复制" @click="copy">复制</button>
-                    <button v-if="message.role === 'assistant'" type="button" title="朗读" @click="speak">朗读</button>
+                    <button v-if="message.role === 'assistant'" type="button" :disabled="!accessibilityState.ttsEnabled"
+                        :title="accessibilityState.ttsEnabled ? '朗读消息' : '请先在设置中开启本地朗读'" @click="speak">朗读</button>
                     <button v-if="message.role === 'assistant'" type="button" :class="{ active: message.rating === 'up' }" title="满意" @click="rate('up')">好</button>
                     <button v-if="message.role === 'assistant'" type="button" :class="{ active: message.rating === 'down' }" title="需改进" @click="rate('down')">改</button>
                     <button v-if="message.role === 'assistant' && !message.isStreaming && message.conversationIndex !== undefined"
@@ -346,6 +344,9 @@ export const GameScreen = defineComponent({
             return { progress, threat, stage, note: resolved ? '等待新的传闻或后续异变' : `调查不限制路线 · 距关键节点 ${Math.round(remaining)} 小时` };
         });
 
+        const turnAnnouncement = computed(() => state.isWaitingForAI ? '正在生成并结算本回合' : '可以继续行动');
+        const speechRecognitionSupported = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+
         function scrollChat() {
             nextTick(() => {
                 if (chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight;
@@ -454,18 +455,20 @@ export const GameScreen = defineComponent({
             actionRef, activeTasks, addNpc, anomaly, chatRef, completedTasks, continueDialogue,
             deleteMessage, deleteTask, endDialogue, gameUi, helper, journal, keydown, locationDetail,
             locations, messages, npcAction, npcs, playerState, relationships, reroll, selectSuggestion,
-            send, sendRef, session, speechRef, suggestions, testAi, travel, voice
+            send, sendRef, session, speechRecognitionSupported, speechRef, suggestions, testAi,
+            travel, turnAnnouncement, voice
         };
     },
     template: `
         <div class="th-game">
             <section class="th-story-stage">
-                <div ref="chatRef" class="th-chat-scroll" aria-live="polite">
+                <div ref="chatRef" class="th-chat-scroll" aria-label="剧情记录">
                     <div v-if="!messages.length" class="th-opening"><span>東</span><strong>异变记录尚未落笔</strong><small>第一段叙事正在生成</small></div>
                     <ChatMessage v-for="(message, index) in messages" :key="message.timestamp + '-' + index" :message="message" :index="index"
                         :last="index === messages.length - 1" @delete="deleteMessage" @reroll="reroll" @continue="continueDialogue" />
                     <button v-if="session.isInDialogue && session.currentDialogueNPC && !session.isWaitingForAI" type="button" class="th-end-dialogue" @click="endDialogue">结束与 {{ session.currentDialogueNPC?.name }} 的对话</button>
                 </div>
+                <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</p>
 
                 <div class="th-composer">
                     <div class="th-suggestions">
@@ -473,7 +476,7 @@ export const GameScreen = defineComponent({
                     </div>
                     <div class="th-composer-fields">
                         <label><span>行动</span><textarea ref="actionRef" v-model="gameUi.actionDraft" rows="2" :disabled="gameUi.inputDisabled" placeholder="观察、移动、调查或宣言符卡" @keydown="keydown"></textarea></label>
-                        <label><span>台词</span><textarea ref="speechRef" v-model="gameUi.speechDraft" rows="2" :disabled="gameUi.inputDisabled" placeholder="输入你想说的话" @keydown="keydown"></textarea><button type="button" class="th-voice" title="语音输入" @click="voice">音</button></label>
+                        <label><span>台词</span><textarea ref="speechRef" v-model="gameUi.speechDraft" rows="2" :disabled="gameUi.inputDisabled" placeholder="输入你想说的话" @keydown="keydown"></textarea><button type="button" class="th-voice" :disabled="!speechRecognitionSupported" :title="speechRecognitionSupported ? '语音输入' : '当前系统浏览器不支持语音输入'" @click="voice">音</button></label>
                     </div>
                     <button ref="sendRef" type="button" class="th-send" :class="{ cancel: gameUi.allowCancel }" :disabled="gameUi.inputDisabled && !gameUi.allowCancel" @click="send">
                         <span>{{ gameUi.allowCancel ? '止' : '宣' }}</span><strong>{{ gameUi.allowCancel ? '停止生成' : '宣言行动' }}</strong>

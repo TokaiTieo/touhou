@@ -1,5 +1,10 @@
 import { defineComponent, onMounted, ref } from '../vendor/vue.esm-browser.prod.js';
 import { state as gameState } from '../ghost/core/state.js';
+import {
+    accessibilityState,
+    resetAccessibilitySettings,
+    updateAccessibilitySettings
+} from './accessibility.js';
 import { openAppModal } from './app-store.js';
 
 
@@ -13,12 +18,19 @@ export const SettingsDialog = defineComponent({
         const hasKey = ref(false);
         const model = ref(localStorage.getItem('touhou_model') || 'deepseek-v4-flash');
         const models = ref(['deepseek-v4-flash', 'deepseek-v4-pro']);
+        const providerBaseUrl = ref('https://api.deepseek.com');
+        const providerName = ref('DeepSeek');
         const status = ref('');
         const statusType = ref('');
         const busy = ref(false);
         const usage = ref(null);
         const diagnosticsMessage = ref('');
         const recovery = ref(null);
+        const saveHealth = ref(null);
+        const fontScale = ref(accessibilityState.fontScale);
+        const ttsEnabled = ref(accessibilityState.ttsEnabled);
+        const ttsRate = ref(accessibilityState.ttsRate);
+        const ttsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
         onMounted(async () => {
             try {
@@ -28,9 +40,12 @@ export const SettingsDialog = defineComponent({
                 maskedKey.value = data.masked_key || '';
                 keySource.value = data.key_source || 'none';
                 if (data.model) model.value = data.model;
-                const modelResponse = await fetch('/api/ghost/get_model');
-                const modelData = await modelResponse.json();
-                models.value = modelData.available_models || models.value;
+                const providerResponse = await fetch('/api/ghost/provider');
+                const providerData = await providerResponse.json();
+                providerBaseUrl.value = providerData.base_url || providerBaseUrl.value;
+                providerName.value = providerData.name || providerName.value;
+                models.value = providerData.models || models.value;
+                if (providerData.current_model) model.value = providerData.current_model;
                 const characterId = gameState.currentSession.characterId || '';
                 const diagnosticsResponse = await fetch(`/api/ghost/diagnostics?character_id=${encodeURIComponent(characterId)}`);
                 if (diagnosticsResponse.ok) {
@@ -40,6 +55,7 @@ export const SettingsDialog = defineComponent({
                 }
                 const recoveryResponse = await fetch('/api/ghost/turn_recovery');
                 if (recoveryResponse.ok) recovery.value = await recoveryResponse.json();
+                if (characterId) await loadSaveHealth(characterId);
             } catch (error) {
                 status.value = '读取配置失败，请重新打开设置。';
                 statusType.value = 'error';
@@ -66,19 +82,27 @@ export const SettingsDialog = defineComponent({
                     hasKey.value = true;
                     keySource.value = 'encrypted_store';
                 }
-                const modelResponse = await fetch('/api/ghost/set_model', {
+                const configuredModels = [...new Set([...models.value, model.value.trim()].filter(Boolean))];
+                const providerResponse = await fetch('/api/ghost/provider', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: model.value })
+                    body: JSON.stringify({
+                        base_url: providerBaseUrl.value.trim(),
+                        models: configuredModels,
+                        model: model.value.trim()
+                    })
                 });
-                if (!modelResponse.ok) throw new Error('模型切换失败');
+                const providerData = await providerResponse.json();
+                if (!providerResponse.ok) throw new Error(providerData.detail || 'AI 服务配置失败');
+                models.value = providerData.models || configuredModels;
+                providerName.value = providerData.name || '兼容服务';
                 localStorage.setItem('touhou_model', model.value);
                 if (apiKey.value.trim()) {
                     status.value = '正在测试连接...';
                     const testResponse = await fetch('/api/ghost/test_ai_with_key', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ api_key: apiKey.value.trim(), model: model.value })
+                        body: JSON.stringify({ api_key: apiKey.value.trim(), model: model.value, base_url: providerBaseUrl.value.trim(), models: models.value })
                     });
                     const testData = await testResponse.json();
                     if (!testData.success) throw new Error(testData.message || '连接测试失败');
@@ -92,6 +116,35 @@ export const SettingsDialog = defineComponent({
                 setTimeout(props.onClose, 900);
             } catch (error) {
                 status.value = error.message || '配置失败';
+                statusType.value = 'error';
+            } finally {
+                busy.value = false;
+            }
+        }
+
+        async function loadSaveHealth(characterId = gameState.currentSession.characterId) {
+            if (!characterId) return;
+            const response = await fetch(`/api/ghost/save_health?character_id=${encodeURIComponent(characterId)}`);
+            if (response.ok) saveHealth.value = await response.json();
+        }
+
+        async function repairSave() {
+            const characterId = gameState.currentSession.characterId;
+            if (!characterId || !window.confirm('修复前会建立快照；损坏存档只会从已有有效快照恢复。继续吗？')) return;
+            busy.value = true;
+            try {
+                const response = await fetch('/api/ghost/save_health/repair', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ character_id: characterId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.detail || '存档修复失败');
+                saveHealth.value = result.health || saveHealth.value;
+                status.value = result.status === 'restored_snapshot' ? '已从最近有效快照恢复' : '存档检查与自动升级已完成';
+                statusType.value = 'ok';
+            } catch (error) {
+                status.value = typeof error.message === 'string' ? error.message : '存档修复失败';
                 statusType.value = 'error';
             } finally {
                 busy.value = false;
@@ -133,9 +186,26 @@ export const SettingsDialog = defineComponent({
             }[keySource.value] || '本地配置';
         }
 
+        function saveAccessibility() {
+            updateAccessibilitySettings({
+                fontScale: fontScale.value,
+                ttsEnabled: ttsEnabled.value,
+                ttsRate: ttsRate.value
+            });
+        }
+
+        function resetAccessibility() {
+            resetAccessibilitySettings();
+            fontScale.value = accessibilityState.fontScale;
+            ttsEnabled.value = accessibilityState.ttsEnabled;
+            ttsRate.value = accessibilityState.ttsRate;
+        }
+
         return {
             apiKey, busy, clearRecovery, costText, diagnosticsMessage, formatNumber, hasKey,
-            keySourceText, maskedKey, model, models, recovery, saveAndTest, status, statusType, usage
+            fontScale, keySourceText, maskedKey, model, models, providerBaseUrl, providerName,
+            recovery, repairSave, resetAccessibility, saveAccessibility, saveAndTest, saveHealth,
+            status, statusType, ttsEnabled, ttsRate, ttsSupported, usage
         };
     },
     template: `
@@ -148,16 +218,39 @@ export const SettingsDialog = defineComponent({
                 <div class="dialog-content">
                     <div v-if="hasKey" class="api-key-status ok">当前已配置：{{ maskedKey || '已安全载入' }} · {{ keySourceText() }}</div>
                     <div class="form-group">
-                        <label for="vueApiKeyInput">{{ hasKey ? '更换 DeepSeek API Key' : 'DeepSeek API Key' }}</label>
+                        <label for="vueApiKeyInput">{{ hasKey ? '更换 API Key' : 'API Key' }}</label>
                         <input id="vueApiKeyInput" v-model="apiKey" type="password" autocomplete="off" placeholder="输入后将使用 Windows DPAPI 加密保存">
                         <div class="form-hint">Key 不会保存在浏览器、本地存储或前端文件中。</div>
                     </div>
                     <div class="form-group">
-                        <label for="vueApiModel">模型</label>
-                        <select id="vueApiModel" v-model="model">
-                            <option v-for="item in models" :key="item" :value="item">{{ item }}</option>
-                        </select>
+                        <label for="vueProviderBaseUrl">兼容接口地址</label>
+                        <input id="vueProviderBaseUrl" v-model="providerBaseUrl" type="url" autocomplete="off" placeholder="https://api.deepseek.com">
+                        <div class="form-hint">当前：{{ providerName }} · 使用 OpenAI-compatible Chat Completions 协议。</div>
                     </div>
+                    <div class="form-group">
+                        <label for="vueApiModel">模型</label>
+                        <input id="vueApiModel" v-model="model" list="vueApiModelOptions" autocomplete="off" placeholder="输入服务支持的模型 ID">
+                        <datalist id="vueApiModelOptions"><option v-for="item in models" :key="item" :value="item"></option></datalist>
+                    </div>
+                    <section class="accessibility-settings" aria-labelledby="accessibilitySettingsTitle">
+                        <div class="usage-diagnostics__heading">
+                            <strong id="accessibilitySettingsTitle">阅读与语音</strong>
+                            <button type="button" class="text-command" @click="resetAccessibility">恢复默认</button>
+                        </div>
+                        <label class="accessibility-range" for="vueFontScale">
+                            <span>界面字号 <strong>{{ Math.round(fontScale * 100) }}%</strong></span>
+                            <input id="vueFontScale" v-model.number="fontScale" type="range" min="0.85" max="1.25" step="0.05" @input="saveAccessibility">
+                        </label>
+                        <label class="accessibility-toggle" :class="{ disabled: !ttsSupported }">
+                            <input v-model="ttsEnabled" type="checkbox" :disabled="!ttsSupported" @change="saveAccessibility">
+                            <span><strong>本地朗读</strong><small>{{ ttsSupported ? '由系统浏览器语音引擎朗读剧情，默认关闭。' : '当前系统浏览器不支持语音朗读。' }}</small></span>
+                        </label>
+                        <label v-if="ttsEnabled && ttsSupported" class="accessibility-range" for="vueTtsRate">
+                            <span>朗读速度 <strong>{{ Number(ttsRate).toFixed(1) }}x</strong></span>
+                            <input id="vueTtsRate" v-model.number="ttsRate" type="range" min="0.7" max="1.4" step="0.1" @input="saveAccessibility">
+                        </label>
+                        <p>设置仅保存在本机浏览器中，朗读文本不会发送到额外服务。</p>
+                    </section>
                     <section class="usage-diagnostics" aria-label="AI 运行概况">
                         <div class="usage-diagnostics__heading">
                             <strong>本存档运行概况</strong>
@@ -174,6 +267,12 @@ export const SettingsDialog = defineComponent({
                             最近故障：{{ usage.last_error.message }}
                         </p>
                         <small v-else-if="usage">最近一次 AI 请求未记录故障。</small>
+                    </section>
+                    <section v-if="saveHealth" class="usage-diagnostics" aria-label="存档健康">
+                        <div class="usage-diagnostics__heading"><strong>存档健康</strong><span>{{ saveHealth.status === 'healthy' ? '健康' : saveHealth.status === 'warning' ? '可升级' : '需要修复' }}</span></div>
+                        <p v-for="(item,index) in [...(saveHealth.errors || []), ...(saveHealth.warnings || [])]" :key="index">{{ item }}</p>
+                        <small>快照 {{ saveHealth.snapshot_count || 0 }} 个 · {{ formatNumber(saveHealth.size_bytes) }} bytes</small>
+                        <button class="cancel-btn" type="button" :disabled="busy || !saveHealth.repairable" @click="repairSave">检查并修复</button>
                     </section>
                     <section class="usage-diagnostics" aria-label="本地恢复数据">
                         <div class="usage-diagnostics__heading"><strong>本地回合恢复</strong><span>{{ recovery?.active_threads || 0 }} 个未完成回合</span></div>
