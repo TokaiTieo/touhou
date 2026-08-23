@@ -5,6 +5,44 @@ from backend.services.turn_coordinator import TurnCoordinator
 
 
 class TurnCoordinatorTests(unittest.IsolatedAsyncioTestCase):
+    async def test_set_state_records_detailed_turn_phases(self):
+        coordinator = TurnCoordinator()
+        phases = (
+            "preparing",
+            "generating",
+            "settling",
+            "checkpoint_cleanup",
+        )
+
+        async def operation():
+            for index, phase in enumerate(phases):
+                coordinator.set_state(
+                    "char-1",
+                    "turn-phases",
+                    phase,
+                    **({"recovered": True} if index == 1 else {}),
+                )
+                status = coordinator.get_status("char-1", "turn-phases")
+                self.assertEqual(status.state, phase)
+                self.assertIn(phase, status.phase_timestamps)
+                await asyncio.sleep(0)
+            return {"description": "阶段记录完成"}
+
+        await coordinator.execute(
+            character_id="char-1",
+            turn_id="turn-phases",
+            kind="environment",
+            operation=operation,
+        )
+
+        status = coordinator.get_status("char-1", "turn-phases")
+        self.assertEqual(status.state, "committed")
+        self.assertTrue(status.recovered)
+        expected_phases = ("queued", "running", *phases, "committed")
+        self.assertTrue(all(phase in status.phase_timestamps for phase in expected_phases))
+        timestamps = [status.phase_timestamps[phase] for phase in expected_phases]
+        self.assertEqual(timestamps, sorted(timestamps))
+
     async def test_duplicate_turns_share_one_operation(self):
         coordinator = TurnCoordinator()
         calls = 0

@@ -7,6 +7,7 @@ from openai import OpenAI
 
 from backend.config import (
     DEEPSEEK_API_KEY,
+    DEEPSEEK_API_KEY_SOURCE,
     DEEPSEEK_BASE_URL,
     ENV_PATH,
     SECRET_PATH,
@@ -99,7 +100,9 @@ async def test_ai_with_key(request: dict):
 
 @router.get("/get_api_key")
 async def get_api_key():
-    api_key = load_secret(SECRET_PATH) or DEEPSEEK_API_KEY or ""
+    encrypted_key = load_secret(SECRET_PATH)
+    api_key = encrypted_key or DEEPSEEK_API_KEY or ""
+    key_source = "encrypted_store" if encrypted_key else DEEPSEEK_API_KEY_SOURCE
     if not api_key and ENV_PATH.exists():
         for line in ENV_PATH.read_text(encoding="utf-8-sig").splitlines():
             if line.startswith("DEEPSEEK_API_KEY="):
@@ -111,7 +114,12 @@ async def get_api_key():
         masked = api_key[:3] + "***"
     else:
         masked = ""
-    return {"has_key": bool(api_key), "masked_key": masked, "model": ai_service.model}
+    return {
+        "has_key": bool(api_key),
+        "masked_key": masked,
+        "key_source": key_source if api_key else "none",
+        "model": ai_service.model,
+    }
 
 
 @router.post("/update_api_key")

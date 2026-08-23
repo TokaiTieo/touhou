@@ -9,6 +9,7 @@ export const SettingsDialog = defineComponent({
     setup(props) {
         const apiKey = ref('');
         const maskedKey = ref('');
+        const keySource = ref('none');
         const hasKey = ref(false);
         const model = ref(localStorage.getItem('touhou_model') || 'deepseek-v4-flash');
         const models = ref(['deepseek-v4-flash', 'deepseek-v4-pro']);
@@ -25,6 +26,7 @@ export const SettingsDialog = defineComponent({
                 const data = await response.json();
                 hasKey.value = Boolean(data.has_key);
                 maskedKey.value = data.masked_key || '';
+                keySource.value = data.key_source || 'none';
                 if (data.model) model.value = data.model;
                 const modelResponse = await fetch('/api/ghost/get_model');
                 const modelData = await modelResponse.json();
@@ -62,6 +64,7 @@ export const SettingsDialog = defineComponent({
                     });
                     if (!saveResponse.ok) throw new Error('保存 API Key 失败');
                     hasKey.value = true;
+                    keySource.value = 'encrypted_store';
                 }
                 const modelResponse = await fetch('/api/ghost/set_model', {
                     method: 'POST',
@@ -122,9 +125,17 @@ export const SettingsDialog = defineComponent({
             return `${usage.value.estimated_cost} ${usage.value.cost_currency || ''}`.trim();
         }
 
+        function keySourceText() {
+            return {
+                encrypted_store: '本机加密存储',
+                env_file: '本地兼容配置',
+                system_environment: '系统环境变量'
+            }[keySource.value] || '本地配置';
+        }
+
         return {
             apiKey, busy, clearRecovery, costText, diagnosticsMessage, formatNumber, hasKey,
-            maskedKey, model, models, recovery, saveAndTest, status, statusType, usage
+            keySourceText, maskedKey, model, models, recovery, saveAndTest, status, statusType, usage
         };
     },
     template: `
@@ -135,7 +146,7 @@ export const SettingsDialog = defineComponent({
                     <button class="icon-button" type="button" title="关闭" aria-label="关闭" @click="onClose">×</button>
                 </header>
                 <div class="dialog-content">
-                    <div v-if="hasKey" class="api-key-status ok">当前已配置：{{ maskedKey || '已加密保存' }}</div>
+                    <div v-if="hasKey" class="api-key-status ok">当前已配置：{{ maskedKey || '已安全载入' }} · {{ keySourceText() }}</div>
                     <div class="form-group">
                         <label for="vueApiKeyInput">{{ hasKey ? '更换 DeepSeek API Key' : 'DeepSeek API Key' }}</label>
                         <input id="vueApiKeyInput" v-model="apiKey" type="password" autocomplete="off" placeholder="输入后将使用 Windows DPAPI 加密保存">

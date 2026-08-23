@@ -3,12 +3,36 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backend.config import migrate_legacy_runtime_data
+from backend.config import _resolve_api_key, migrate_legacy_runtime_data
 from backend.utils.secret_store import load_secret, save_secret
 from backend.world_manager import ensure_worlds_available
 
 
 class RuntimeDataTests(unittest.TestCase):
+    def test_empty_env_placeholder_falls_back_to_system_api_key(self):
+        key, source = _resolve_api_key(
+            "",
+            {"DEEPSEEK_API_KEY": ""},
+            {"DEEPSEEK_API_KEY": "system-test-key"},
+        )
+        self.assertEqual(key, "system-test-key")
+        self.assertEqual(source, "system_environment")
+
+    def test_saved_and_legacy_api_keys_keep_priority_over_system_environment(self):
+        env_key, env_source = _resolve_api_key(
+            "",
+            {"DEEPSEEK_API_KEY": "legacy-env-key"},
+            {"DEEPSEEK_API_KEY": "system-test-key"},
+        )
+        self.assertEqual((env_key, env_source), ("legacy-env-key", "env_file"))
+
+        saved_key, saved_source = _resolve_api_key(
+            "encrypted-key",
+            {"DEEPSEEK_API_KEY": "legacy-env-key"},
+            {"DEEPSEEK_API_KEY": "system-test-key"},
+        )
+        self.assertEqual((saved_key, saved_source), ("encrypted-key", "encrypted_store"))
+
     def test_legacy_worlds_and_env_migrate_once(self):
         with tempfile.TemporaryDirectory() as root:
             root = Path(root)

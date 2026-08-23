@@ -64,7 +64,8 @@ PROMPTS_DIR = BASE_DIR / "prompts"
 ENV_PATH = DATA_DIR / ".env"
 SECRET_PATH = DATA_DIR / "config" / "api_key.dat"
 
-load_dotenv(ENV_PATH, override=True, encoding="utf-8-sig")
+_PROCESS_ENV_VALUES = dict(os.environ)
+load_dotenv(ENV_PATH, override=False, encoding="utf-8-sig")
 _ENV_VALUES = dotenv_values(ENV_PATH, encoding="utf-8-sig") if ENV_PATH.exists() else {}
 
 
@@ -72,11 +73,29 @@ def _get_setting(name: str, default: str = "") -> str:
     """Non-empty local config wins; blank placeholders fall back to OS variables."""
     if name in _ENV_VALUES and _ENV_VALUES.get(name):
         return _ENV_VALUES.get(name) or ""
-    return os.environ.get(name, default)
+    return _PROCESS_ENV_VALUES.get(name, default)
+
+
+def _resolve_api_key(encrypted_secret: str, env_values: dict, process_env: dict):
+    """Resolve a key without persisting credentials inherited from the OS."""
+    secret = str(encrypted_secret or "").strip()
+    if secret:
+        return secret, "encrypted_store"
+    env_file_key = str((env_values or {}).get("DEEPSEEK_API_KEY") or "").strip()
+    if env_file_key:
+        return env_file_key, "env_file"
+    process_key = str((process_env or {}).get("DEEPSEEK_API_KEY") or "").strip()
+    if process_key:
+        return process_key, "system_environment"
+    return "", "none"
 
 # ========== AI 配置（完全从环境变量读取）==========
-DEEPSEEK_API_KEY = load_secret(SECRET_PATH) or _get_setting("DEEPSEEK_API_KEY", "")
-if IS_FROZEN and DEEPSEEK_API_KEY and not SECRET_PATH.exists():
+DEEPSEEK_API_KEY, DEEPSEEK_API_KEY_SOURCE = _resolve_api_key(
+    load_secret(SECRET_PATH),
+    _ENV_VALUES,
+    _PROCESS_ENV_VALUES,
+)
+if IS_FROZEN and DEEPSEEK_API_KEY_SOURCE == "env_file" and not SECRET_PATH.exists():
     try:
         save_secret(SECRET_PATH, DEEPSEEK_API_KEY)
         if ENV_PATH.exists():
@@ -86,7 +105,7 @@ if IS_FROZEN and DEEPSEEK_API_KEY and not SECRET_PATH.exists():
     except OSError as exc:
         print(f"⚠️ API Key 安全迁移失败，将继续使用当前配置: {exc}")
 if not DEEPSEEK_API_KEY:
-    print("⚠️ 警告: .env 中未设置 DEEPSEEK_API_KEY，AI 功能将不可用，请在前端设置 API Key")
+    print("⚠️ 警告: 未发现 DEEPSEEK_API_KEY，AI 功能将不可用，请在前端设置 API Key")
 
 DEEPSEEK_BASE_URL = _get_setting("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 DEEPSEEK_MODEL = _get_setting("DEEPSEEK_MODEL", "deepseek-v4-flash")
