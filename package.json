@@ -2,7 +2,7 @@
   "name": "touhou-ai-adventure-ui",
   "private": true,
   "type": "module",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Vue 3 frontend shell for TouHou - 东方异变录",
   "scripts": {
     "vendor:vue": "node scripts/copy-vue-runtime.mjs",

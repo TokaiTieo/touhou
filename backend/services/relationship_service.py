@@ -145,6 +145,41 @@ def update_relationships(
     return accepted
 
 
+def apply_relationship_delta(
+    character: Dict,
+    npc_name: str,
+    delta: float,
+    reason: str,
+) -> Dict:
+    """Apply a small deterministic relationship change for local systems."""
+    get_current_relationships(character)
+    progress = ensure_relationship_progress(character)
+    current = progress.get(npc_name, {})
+    old_score = float(current.get("score", 0) or 0)
+    new_score = max(-100, min(100, old_score + float(delta or 0)))
+    stage = _stage_for_score(new_score)
+    attitude = f"{stage}({reason})"
+    character["relationships_map"][npc_name] = attitude
+    progress[npc_name] = {
+        "score": new_score,
+        "stage": stage,
+        "attitude": attitude,
+        "reason": reason,
+        "updated_at": datetime.now().isoformat(),
+        "pacing_reason": "deterministic_local_action",
+    }
+    history = character.setdefault("relationships_history", [])
+    history.append({
+        "hour": character.get("time", {}).get("current_hour", 0),
+        "content": build_relationship_string(character["relationships_map"]),
+        "timestamp": datetime.now().isoformat(),
+    })
+    character["relationships_history"] = sorted(
+        history, key=lambda item: item.get("hour", 0), reverse=True
+    )[:20]
+    return {"npc_name": npc_name, "delta": new_score - old_score, "score": new_score, "stage": stage}
+
+
 def rollback_relationships_to_hour(character: Dict, target_hour: int):
     history = character.get("relationships_history", [])
     if not history:

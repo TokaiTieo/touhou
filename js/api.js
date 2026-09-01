@@ -3,6 +3,24 @@
 // 版本: v4.0 - 完整 ES6 模块导出
 
 // ========== 基础 API 调用函数 ==========
+const DEFAULT_API_TIMEOUT_MS = 30000;
+const DEFAULT_STREAM_CONNECT_TIMEOUT_MS = 20000;
+const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 45000;
+
+function timeoutError(message) {
+    const error = new Error(message);
+    error.name = 'TimeoutError';
+    return error;
+}
+
+function linkedAbortController(externalSignal) {
+    const controller = new AbortController();
+    const abort = () => controller.abort(externalSignal?.reason);
+    if (externalSignal?.aborted) abort();
+    else externalSignal?.addEventListener('abort', abort, { once: true });
+    return { controller, detach: () => externalSignal?.removeEventListener('abort', abort) };
+}
+
 async function apiCall(endpoint, options = {}) {
     const url = endpoint.startsWith('http') ? endpoint : `/api${endpoint}`;
     const defaultOptions = {
@@ -11,12 +29,15 @@ async function apiCall(endpoint, options = {}) {
         },
     };
     
+    const { timeoutMs = DEFAULT_API_TIMEOUT_MS, ...fetchOptions } = options;
+    const linked = linkedAbortController(fetchOptions.signal);
     const mergedOptions = {
         ...defaultOptions,
-        ...options,
+        ...fetchOptions,
+        signal: linked.controller.signal,
         headers: {
             ...defaultOptions.headers,
-            ...options.headers,
+            ...fetchOptions.headers,
         },
     };
     
@@ -24,6 +45,7 @@ async function apiCall(endpoint, options = {}) {
         mergedOptions.body = JSON.stringify(mergedOptions.body);
     }
     
+    const timer = setTimeout(() => linked.controller.abort(timeoutError('本地游戏服务响应超时')), timeoutMs);
     try {
         const response = await fetch(url, mergedOptions);
         
@@ -44,8 +66,14 @@ async function apiCall(endpoint, options = {}) {
         
         return await response.json();
     } catch (err) {
+        if (linked.controller.signal.aborted && !fetchOptions.signal?.aborted) {
+            throw timeoutError(`请求超过 ${Math.round(timeoutMs / 1000)} 秒未响应`);
+        }
         console.error(`API 调用失败 [${endpoint}]:`, err);
         throw err;
+    } finally {
+        clearTimeout(timer);
+        linked.detach();
     }
 }
 
@@ -63,17 +91,42 @@ function formatApiError(errorData, fallback) {
     return fallback;
 }
 
-async function streamApiCall(endpoint, body, { signal, onToken } = {}) {
-    const response = await fetch(`/api${endpoint}`, {
+async function streamApiCall(endpoint, body, {
+    signal,
+    onToken,
+    connectTimeoutMs = DEFAULT_STREAM_CONNECT_TIMEOUT_MS,
+    idleTimeoutMs = DEFAULT_STREAM_IDLE_TIMEOUT_MS
+} = {}) {
+    const linked = linkedAbortController(signal);
+    const connectTimer = setTimeout(
+        () => linked.controller.abort(timeoutError('连接本地流式服务超时')),
+        connectTimeoutMs
+    );
+    let response;
+    try {
+        response = await fetch(`/api${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
         body: JSON.stringify(body),
-        signal
-    });
+            signal: linked.controller.signal
+        });
+    } catch (error) {
+        linked.detach();
+        if (linked.controller.signal.aborted && !signal?.aborted) {
+            throw timeoutError('连接本地流式服务超时');
+        }
+        throw error;
+    } finally {
+        clearTimeout(connectTimer);
+    }
     if (!response.ok) {
+        linked.detach();
         throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
-    if (!response.body) throw new Error('当前环境不支持流式响应');
+    if (!response.body) {
+        linked.detach();
+        throw new Error('当前环境不支持流式响应');
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -94,13 +147,32 @@ async function streamApiCall(endpoint, body, { signal, onToken } = {}) {
         if (eventName === 'error') throw new Error(payload.message || '流式生成失败');
     };
 
-    while (true) {
-        const { value, done } = await reader.read();
-        buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
-        const blocks = buffer.split(/\r?\n\r?\n/);
-        buffer = blocks.pop() || '';
-        for (const block of blocks) consumeEvent(block);
-        if (done) break;
+    try {
+        while (true) {
+            let idleTimer;
+            const read = reader.read();
+            const idle = new Promise((_, reject) => {
+                idleTimer = setTimeout(() => reject(timeoutError('流式响应长时间没有心跳')), idleTimeoutMs);
+            });
+            let packet;
+            try {
+                packet = await Promise.race([read, idle]);
+            } finally {
+                clearTimeout(idleTimer);
+            }
+            const { value, done } = packet;
+            buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+            const blocks = buffer.split(/\r?\n\r?\n/);
+            buffer = blocks.pop() || '';
+            for (const block of blocks) consumeEvent(block);
+            if (done) break;
+        }
+    } catch (error) {
+        await reader.cancel(error).catch(() => {});
+        linked.controller.abort(error);
+        throw error;
+    } finally {
+        linked.detach();
     }
     if (buffer.trim()) consumeEvent(buffer);
     if (!finalResult) throw new Error('流式响应未返回最终结算');
@@ -607,6 +679,20 @@ async function setSpellcardLoadout(characterId, spellcards) {
     });
 }
 
+async function performInventoryAction(characterId, action, itemName, npcName = '') {
+    return await apiCall('/ghost/inventory_action', {
+        method: 'POST',
+        body: { character_id: characterId, action, item_name: itemName, npc_name: npcName || null }
+    });
+}
+
+async function updateOnboarding(characterId, action) {
+    return await apiCall('/ghost/onboarding', {
+        method: 'POST',
+        body: { character_id: characterId, action }
+    });
+}
+
 async function loadNPCMemories(characterId, npcName = '') {
     if (!characterId) {
         return npcName ? { npc_name: npcName, memories: [] } : { memories: {} };
@@ -633,6 +719,28 @@ async function validateProducerContent(characterId, path, content) {
 async function saveProducerContent(characterId, path, content) {
     return await apiCall('/ghost/producer_console/content/save', {
         method: 'POST', body: { character_id: characterId, path, content }
+    });
+}
+
+async function loadProducerContentBackups(characterId, path) {
+    return await apiCall(`/ghost/producer_console/content/backups?character_id=${encodeURIComponent(characterId)}&path=${encodeURIComponent(path)}`);
+}
+
+async function restoreProducerContentBackup(characterId, path, backupId) {
+    return await apiCall('/ghost/producer_console/content/restore_backup', {
+        method: 'POST', body: { character_id: characterId, path, backup_id: backupId }
+    });
+}
+
+async function runProducerEvaluation(characterId) {
+    return await apiCall('/ghost/producer_console/evaluation/run', {
+        method: 'POST', body: { character_id: characterId }, timeoutMs: 300000
+    });
+}
+
+async function maintainProducerMemory(characterId) {
+    return await apiCall('/ghost/producer_console/memory/maintain', {
+        method: 'POST', body: { character_id: characterId }, timeoutMs: 120000
     });
 }
 
@@ -785,11 +893,17 @@ export {
     loadRelationships,
     loadCharacterJournal,
     setSpellcardLoadout,
+    performInventoryAction,
+    updateOnboarding,
     loadNPCMemories,
     loadProducerConsoleState,
     loadProducerContent,
     validateProducerContent,
     saveProducerContent,
+    loadProducerContentBackups,
+    restoreProducerContentBackup,
+    runProducerEvaluation,
+    maintainProducerMemory,
     producerRestore,
     producerTeleport,
     producerSetRelationship,

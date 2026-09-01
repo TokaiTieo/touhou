@@ -38,6 +38,11 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
             relationshipsMap: relationshipsResult.relationships || {},
             playerState: result.player_state || {},
             incidentState: result.incident_state || {},
+            campaignState: result.campaign_state || {},
+            onboarding: result.onboarding || {},
+            resources: result.resources || {},
+            reputation: result.reputation || {},
+            currentGoals: result.current_goals || [],
             time: result.time || {
                 current_day: 1,
                 current_hour: 8,

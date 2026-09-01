@@ -37,9 +37,6 @@ class TurnContext(BaseModel):
     base_character_revision: int = 0
     base_tasks_revision: int = 0
     pending_world_changes: Dict[str, Any] = Field(default_factory=dict)
-    base_character_revision: int = 0
-    base_tasks_revision: int = 0
-    pending_world_changes: Dict[str, Any] = Field(default_factory=dict)
 
 
 class TurnOutcome(BaseModel):

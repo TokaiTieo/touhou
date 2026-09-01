@@ -98,11 +98,14 @@ def rebuild_story_summary(character: Dict, tasks_data: Dict = None, force: bool 
         for item in (character.get("spellcard_history", []) or [])[-5:] if isinstance(item, dict)
     ]
     incident = character.get("incident_state", {}) or {}
+    campaign = character.get("campaign_state", {}) or {}
     incident_events = []
     if incident.get("status") in ("resolved", "aftermath", "waiting"):
         title = incident.get("title") or incident.get("incident_title") or "异变"
         path = incident.get("resolution_path_title") or incident.get("resolution_path") or "自由解决"
         incident_events.append(f"{title}已通过「{path}」解决")
+    if campaign.get("epilogues"):
+        incident_events.append(str(campaign["epilogues"][-1].get("summary") or ""))
 
     unresolved = [
         f"{item.get('name') or item.get('task_name') or item.get('id', '未命名')}：{_compact(item.get('description') or item.get('info'), 120)}"
@@ -211,6 +214,7 @@ def update_story_director(
         return director
 
     incident = character.get("incident_state", {}) or {}
+    campaign = character.get("campaign_state", {}) or {}
     incident_status = str(incident.get("status") or "active")
     incident_title = str(incident.get("title") or "幻想乡异变")
     if incident_status in ("resolved", "aftermath", "waiting"):
@@ -235,6 +239,7 @@ def update_story_director(
         "status": incident_status,
         "updated_at": datetime.now().isoformat(),
         "gates_exploration": False,
+        "campaign_cycle": campaign.get("cycle", 1),
     }
     focus = []
     if npc_name:

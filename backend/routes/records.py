@@ -17,7 +17,17 @@ from backend.services.narrative_evaluation_service import (
     build_rated_samples,
     summarize_rated_samples,
 )
-from backend.services.progression_service import ensure_progression_profile
+from backend.services.progression_service import (
+    ensure_progression_profile,
+    perform_inventory_action,
+    reputation_profile,
+)
+from backend.services.onboarding_service import (
+    advance_onboarding,
+    dismiss_onboarding,
+    public_onboarding,
+)
+from backend.services.runtime_diagnostics_service import diagnostics_summary
 from backend.services.relationship_service import get_current_relationships
 from backend.services.save_health_service import (
     inspect_character_file,
@@ -79,6 +89,18 @@ class RestoreSnapshotRequest(BaseModel):
 class SpellcardLoadoutRequest(BaseModel):
     character_id: str
     spellcards: list[str]
+
+
+class InventoryActionRequest(BaseModel):
+    character_id: str
+    action: str
+    item_name: str
+    npc_name: Optional[str] = None
+
+
+class OnboardingRequest(BaseModel):
+    character_id: str
+    action: str
 
 
 def _require_character(character_id: str):
@@ -286,6 +308,41 @@ async def set_spellcard_loadout(request: SpellcardLoadoutRequest):
     return {"status": "ok", "spellcard_loadout": character["spellcard_loadout"], "exploration_restricted": False}
 
 
+@router.post("/inventory_action")
+async def inventory_action(request: InventoryActionRequest):
+    character = _require_character(request.character_id)
+    try:
+        result = perform_inventory_action(
+            character,
+            action=request.action,
+            item_name=request.item_name,
+            npc_name=request.npc_name or "",
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    save_character(request.character_id, character)
+    return {
+        "status": "ok",
+        "result": result,
+        "inventory": character.get("inventory_state", {}),
+        "relationships": character.get("relationships_map", {}),
+        "player_state": character.get("player_state", {}),
+    }
+
+
+@router.post("/onboarding")
+async def update_onboarding(request: OnboardingRequest):
+    character = _require_character(request.character_id)
+    if request.action == "dismiss":
+        state = dismiss_onboarding(character)
+    elif request.action in ("turn", "dialogue", "journal"):
+        state = advance_onboarding(character, request.action)
+    else:
+        raise HTTPException(status_code=400, detail="不支持的引导操作")
+    save_character(request.character_id, character)
+    return {"status": "ok", "onboarding": public_onboarding(character), "exploration_restricted": False}
+
+
 @router.get("/character_journal")
 async def get_character_journal(character_id: str):
     character = _require_character(character_id)
@@ -297,12 +354,15 @@ async def get_character_journal(character_id: str):
         "resources": character.get("resources", {}),
         "inventory": character.get("inventory_state", {}),
         "reputation": character.get("reputation", {}),
+        "reputation_profile": reputation_profile(character),
         "reputation_history": character.get("reputation_history", []),
         "relationships": character.get("relationships_map", {}),
         "relationship_progress": character.get("relationship_progress", {}),
         "relationship_boundaries": character.get("relationship_boundaries", {}),
         "story_summary": character.get("story_summary", {}),
         "story_director": character.get("story_director", {}),
+        "campaign_state": character.get("campaign_state", {}),
+        "incident_history": character.get("incident_history", []),
         "usage": character.get("usage_stats", {}),
         "npc_memories": character.get("npc_memories", {}),
         "npc_memory_summaries": character.get("npc_memory_summaries", {}),
@@ -316,6 +376,10 @@ async def get_character_journal(character_id: str):
         "consequence_log": character.get("consequence_log", []),
         "deferred_consequences": character.get("deferred_consequences", []),
         "npc_simulation": character.get("npc_simulation", {}),
+        "npc_agency": character.get("npc_agency", {}),
+        "memory_maintenance": character.get("memory_maintenance", {}),
+        "turn_diagnostics": diagnostics_summary(character),
+        "onboarding": public_onboarding(character),
         "narrative_feedback": summarize_rated_samples(character),
         "gm_mode": character.get("gm_mode", False),
     }

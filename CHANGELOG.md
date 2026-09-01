@@ -1,5 +1,14 @@
 # TouHou Changelog
 
+## v0.13.0
+
+- Added runtime service watchdogs, bounded AI concurrency, request timeouts, SSE heartbeats, and turn lock timeouts.
+- Added opt-in live narrative evaluation with four fixed Touhou scenarios and privacy-safe reports.
+- Added actionable inventory, equipment, gifts, reputation benefits, repeatable incident cycles, and persistent NPC agency.
+- Expanded the producer console with structured content editing, validation, backups, restore, runtime timelines, memory maintenance, and diagnostic export.
+- Added bounded memory deduplication and compression, optional onboarding, accessibility settings, IME-safe input, and configurable send keys.
+- Added additive V8 save migration and repair while preserving unknown fields and existing private relationship content.
+
 ## v0.11.0
 
 - Unified the playable frontend under Vue components and removed the legacy rendering chain.

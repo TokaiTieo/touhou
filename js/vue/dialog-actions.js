@@ -1,4 +1,4 @@
-import { loadCharacterJournal, loadNPCMemories, loadRelationships } from '../api.js';
+import { loadCharacterJournal, loadNPCMemories, loadRelationships, updateOnboarding } from '../api.js';
 import { state } from '../ghost/core/state.js';
 import { openAppModal } from './app-store.js';
 
@@ -47,6 +47,12 @@ export async function openNPCDetail(npcId) {
 
 export async function openPlayerJournal() {
     const journal = await loadCharacterJournal(state.currentSession.characterId);
+    try {
+        const onboarding = await updateOnboarding(state.currentSession.characterId, 'journal');
+        state.currentSession.onboarding = onboarding.onboarding || state.currentSession.onboarding;
+    } catch {
+        // The journal remains available if optional onboarding persistence fails.
+    }
     const profile = journal.profile || {};
     const progress = Object.fromEntries(Object.entries(journal.relationship_progress || {}).map(
         ([name, value]) => [name, `${value.stage || '相识'} · ${value.score ?? 0}`]
@@ -63,19 +69,23 @@ export async function openPlayerJournal() {
         spellcardEditor: true,
         availableSpellcards,
         spellcardLoadout: journal.spellcard_loadout || [],
+        inventoryEditor: true,
+        inventoryItems: journal.inventory?.items || [],
+        equippedItems: journal.inventory?.equipped || [],
+        giftTargets: (state.currentSceneNPCs || []).map(item => item.name).filter(Boolean),
         rows: [
             { label: '外貌', value: profile.appearance },
             { label: '性格', value: profile.personality },
             { label: '背景', value: profile.background },
             { label: '玩家状态', value: journal.player_state },
             { label: '资源', value: journal.resources },
-            { label: '行囊', value: (journal.inventory?.items || []).map(item => `${item.name} × ${item.quantity || 1}${item.description ? ` · ${item.description}` : ''}`) },
-            { label: '势力声望', value: journal.reputation },
+            { label: '势力声望', value: Object.fromEntries(Object.entries(journal.reputation_profile || {}).map(([name, item]) => [name, `${item.tier} ${item.value} · ${item.benefit}`])) },
             { label: '关系阶段', value: journal.relationships },
             { label: '关系进展', value: progress },
             { label: '关系边界', value: Object.fromEntries(Object.entries(journal.relationship_boundaries || {}).map(([name, value]) => [name, value.romance === 'closed' ? '保持普通交往' : value.romance === 'open' ? '愿意自然发展' : '尚未明确'])) },
             { label: '长期剧情摘要', value: [journal.story_summary?.recent_arc, ...(journal.story_summary?.key_events || []).slice(-6)].filter(Boolean) },
             { label: '叙事焦点', value: [journal.story_director?.current_arc?.title, journal.story_director?.current_arc?.focus, ...(journal.story_director?.suggested_focus || [])].filter(Boolean) },
+            { label: '异变周期', value: [`第 ${journal.campaign_state?.cycle || 1} 轮`, ...(journal.campaign_state?.epilogues || []).slice(-3).map(item => item.summary)] },
             { label: '自由探索事件', value: (journal.open_events || []).slice(-8).map(item => `${item.scene || '未知地点'} · ${item.title}：${item.description}`) },
             { label: '符卡与战斗', value: (journal.spellcard_history || []).slice(-8).map(item => `${item.spellcard_name || '无名符卡'} · ${item.opponent || '未知对手'} · ${item.outcome || '未裁定'}${item.metrics?.accuracy !== undefined ? ` · 命中${item.metrics.accuracy}% · 擦弹${item.metrics.graze_count || 0}` : ''}`) },
             { label: '常用符卡栏', value: (journal.spellcard_loadout || []).length ? journal.spellcard_loadout : '尚未配置；不影响临场使用其他符卡' },

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from backend.services.npc_schedule_service import period_for_hour, scheduled_location
+from backend.services.npc_agency_service import record_npc_activity
 
 
 ACTIVITIES = {
@@ -120,6 +121,7 @@ def simulate_offscreen_npcs(
                 "game_hour": tick_hour,
                 "created_at": datetime.now().isoformat(),
             }
+            record_npc_activity(character, event)
             generated.append(event)
             simulation["events"].append(event)
             runtime_state = runtime.setdefault(name, {})
@@ -148,6 +150,8 @@ def format_npc_simulation_context(
         relevant = [item for item in events if isinstance(item, dict)]
     lines = [
         f"- {item.get('npc_name')}在{item.get('location')}：{item.get('activity')}"
+        + (f"；当前目标：{item.get('goal')}" if item.get("goal") else "")
+        + (f"；听闻：{item.get('rumor')}" if item.get("rumor") else "")
         for item in relevant[-limit:]
     ]
     return "\n".join(lines) if lines else "暂无新的离屏人物动向。"

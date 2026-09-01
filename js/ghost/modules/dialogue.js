@@ -384,6 +384,9 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
         if (data.incident_state) {
             state.currentSession.incidentState = data.incident_state;
         }
+        if (data.onboarding) {
+            state.currentSession.onboarding = data.onboarding;
+        }
 
         if (data.player_state_delta) {
             await refreshCharacterTime();

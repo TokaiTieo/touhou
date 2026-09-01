@@ -33,6 +33,12 @@ test('uses the Vue settings dialog without restoring the saved key', async ({ pa
     });
     await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue('--touhou-font-scale'))).toBe('1.2');
     expect(await page.evaluate(() => localStorage.getItem('touhou_font_scale'))).toBe('1.2');
+    await page.getByText('高对比度', { exact: true }).click();
+    await expect(page.locator('html')).toHaveClass(/touhou-high-contrast/);
+    await page.getByText('减少动态效果', { exact: true }).click();
+    await expect(page.locator('html')).toHaveClass(/touhou-reduce-motion/);
+    await page.locator('#vueSendKey').selectOption('ctrl-enter');
+    expect(await page.evaluate(() => localStorage.getItem('touhou_send_key'))).toBe('ctrl-enter');
 });
 
 test('keeps the producer template secret and public relationship wording restrained', async ({ page }) => {
@@ -87,8 +93,43 @@ test('loads a distinct widescreen scene for every base location', async ({ page 
     expect(result.appliedBackground).toContain('scene-animal-realm-v1.png');
 });
 
+test('opens the V8 producer tools without exposing them to ordinary players', async ({ page }) => {
+    page.on('dialog', dialog => dialog.accept());
+    await page.goto('/');
+    const created = await page.evaluate(async () => {
+        const response = await fetch('/api/ghost/create_character', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                profile: {
+                    name: 'E2E制作人工具验收', gender: '女', identity: '境界管理者',
+                    appearance: '红白礼装', personality: '冷静', background: '内容工具隔离验收',
+                    gm_mode: true
+                }
+            })
+        });
+        return response.json();
+    });
+    expect(created.character_id).toBeTruthy();
+    await page.reload();
+    await page.locator('.character-card').filter({ hasText: 'E2E制作人工具验收' }).getByRole('button', { name: '继续异变' }).click();
+    await page.getByTitle('高级控制台').click();
+    const consoleDialog = page.locator('.vue-producer-console');
+    await expect(consoleDialog).toBeVisible();
+    await expect(consoleDialog.locator('.producer-structured-editor')).toBeVisible();
+    await consoleDialog.getByRole('button', { name: 'JSON', exact: true }).click();
+    await expect(consoleDialog.locator('.producer-content-editor > textarea')).toBeVisible();
+    await consoleDialog.getByRole('button', { name: '结构化', exact: true }).click();
+    await consoleDialog.getByRole('button', { name: '校验并保存' }).click();
+    await expect(consoleDialog.locator('.producer-backup-list button').first()).toBeVisible();
+    await consoleDialog.getByRole('button', { name: '维护全部记忆' }).click();
+    await expect(consoleDialog).toContainText('去重');
+    await consoleDialog.getByRole('button', { name: '运行隔离评测' }).click();
+    await expect(consoleDialog.locator('.producer-evaluation-list article')).toHaveCount(4, { timeout: 30_000 });
+});
 
-test('completes the playable loop, compares a rewrite, branches, and reloads the V7 save', async ({ page }) => {
+
+test('completes the playable loop, compares a rewrite, branches, and reloads the V8 save', async ({ page }) => {
     page.on('dialog', dialog => dialog.accept());
     await page.goto('/');
     const created = await page.evaluate(async () => {
@@ -115,7 +156,15 @@ test('completes the playable loop, compares a rewrite, branches, and reloads the
     await expect(card).toBeVisible();
     await card.getByRole('button', { name: '继续异变' }).click();
     await expect(page.locator('.th-game')).toBeVisible();
+    await expect(page.locator('.th-onboarding')).toBeVisible();
     await expect(page.locator('.th-npc').filter({ hasText: '博丽灵梦' })).toBeVisible();
+
+    const messageCountBeforeComposition = await page.locator('.th-message').count();
+    await page.locator('.th-composer textarea').nth(0).fill('输入法组合中的行动');
+    await page.locator('.th-composer textarea').nth(0).dispatchEvent('keydown', {
+        key: 'Enter', code: 'Enter', keyCode: 229, isComposing: true
+    });
+    await expect(page.locator('.th-message')).toHaveCount(messageCountBeforeComposition);
 
     // Force the streaming endpoint to fail once and verify the normal-request fallback.
     await page.route('**/api/ghost/environment_interact_stream', route => {
@@ -170,7 +219,7 @@ test('completes the playable loop, compares a rewrite, branches, and reloads the
         const branch = list.characters.find(item => item.profile?.name === 'E2E异变测试者 · 独立分支');
         return (await fetch(`/api/ghost/character/${branch.character_id}`)).json();
     });
-    expect(save.save_version).toBe(7);
+    expect(save.save_version).toBe(8);
     expect(save.story_summary).toBeTruthy();
-    expect(save.migration_history.some(item => item.version === 7)).toBeTruthy();
+    expect(save.migration_history.some(item => item.version === 8)).toBeTruthy();
 });

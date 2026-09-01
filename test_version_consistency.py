@@ -15,7 +15,7 @@ class VersionConsistencyTests(unittest.TestCase):
         self.assertEqual(package_lock["version"], APP_VERSION)
         self.assertEqual(VERSION_MANIFEST["save_schema"], SAVE_SCHEMA_VERSION)
         self.assertEqual(VERSION_MANIFEST["content_schema"], CONTENT_SCHEMA_VERSION)
-        self.assertGreaterEqual(SAVE_SCHEMA_VERSION, 7)
+        self.assertGreaterEqual(SAVE_SCHEMA_VERSION, 8)
         self.assertNotIn("v0.9.0", (root / "js/main.js").read_text(encoding="utf-8"))
 
 

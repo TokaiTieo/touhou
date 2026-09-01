@@ -6,9 +6,10 @@ import contextvars
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from threading import Event, local
+from threading import BoundedSemaphore, Event, local
 from typing import Callable, Optional
 from openai import OpenAI
 from backend.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, DEFAULT_TEMPERATURE
@@ -23,6 +24,19 @@ from backend.services.ai_provider_service import (
 
 # AI 调用超时（秒）
 AI_TIMEOUT = 60
+
+
+def _bounded_env_int(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(os.environ.get(name, str(default)) or default)
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(maximum, value))
+
+
+AI_MAX_CONCURRENT = _bounded_env_int("TOUHOU_AI_MAX_CONCURRENT", 4, 1, 8)
+_AI_EXECUTOR = ThreadPoolExecutor(max_workers=AI_MAX_CONCURRENT, thread_name_prefix="touhou-ai")
+_AI_CAPACITY = BoundedSemaphore(AI_MAX_CONCURRENT)
 E2E_MOCK_AI = os.environ.get("TOUHOU_E2E_MOCK_AI", "").lower() in ("1", "true", "yes")
 
 # 支持默认列表与本地配置的兼容模型
@@ -459,7 +473,8 @@ def call_ai(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
 
 async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
     """便捷函数：异步调用 AI（在线程池中执行，不阻塞事件循环，带总超时保护）"""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
+    started_at = time.perf_counter()
     stream_context = _stream_context.get()
     caller = ai_service.call
     args = (prompt, temperature)
@@ -470,12 +485,28 @@ async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -
             cancelled=stream_context.cancelled
         )
     def call_and_capture():
-        result = caller(*args)
-        return result, ai_service.last_usage, ai_service.last_error, ai_service.last_runtime
+        try:
+            result = caller(*args)
+            return result, ai_service.last_usage, ai_service.last_error, ai_service.last_runtime
+        finally:
+            _AI_CAPACITY.release()
+
+    if not _AI_CAPACITY.acquire(blocking=False):
+        error = classify_ai_error("provider_busy: request queue is full")
+        runtime = {
+            "attempts": 0,
+            "error_code": error["code"],
+            "elapsed_ms": 0,
+            "executor_capacity": AI_MAX_CONCURRENT,
+        }
+        _last_usage_context.set({})
+        _last_error_context.set(error)
+        _last_runtime_context.set(runtime)
+        return f"【AI调用失败】{error['message']}"
 
     try:
         result, usage, error, runtime = await asyncio.wait_for(
-            loop.run_in_executor(None, call_and_capture),
+            loop.run_in_executor(_AI_EXECUTOR, call_and_capture),
             timeout=AI_TIMEOUT + 5
         )
     except asyncio.TimeoutError:
@@ -483,6 +514,11 @@ async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -
         error = classify_ai_error("timeout")
         runtime = {"attempts": 1, "error_code": "timeout"}
         result = f"【AI调用失败】{error['message']}"
+    runtime = {
+        **(runtime or {}),
+        "elapsed_ms": round((time.perf_counter() - started_at) * 1000, 2),
+        "executor_capacity": AI_MAX_CONCURRENT,
+    }
     _last_usage_context.set(usage)
     _last_error_context.set(error)
     _last_runtime_context.set(runtime)

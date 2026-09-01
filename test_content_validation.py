@@ -5,8 +5,10 @@ import unittest
 from pathlib import Path
 
 from backend.services.content_validation_service import (
+    list_content_backups,
     list_editable_content,
     read_editable_content,
+    restore_content_backup,
     save_editable_content,
     validate_editable_content,
     validate_world_content,
@@ -63,6 +65,8 @@ class ContentValidationTests(unittest.TestCase):
                 target.write_bytes((self.world_root / relative).read_bytes())
             files = list_editable_content(temp_root)
             self.assertTrue(any(item["path"] == "npcs/npc_index.json" for item in files))
+            descriptor = read_editable_content(temp_root, "world.json")["editor"]
+            self.assertTrue(all(item["item_type"] == "scalar" for item in descriptor["collections"]))
             document = read_editable_content(temp_root, "world_info.json")["content"]
             self.assertTrue(validate_editable_content(temp_root, "world_info.json", document)["valid"])
             document["content_editor_test"] = True
@@ -71,5 +75,15 @@ class ContentValidationTests(unittest.TestCase):
             self.assertTrue(Path(saved["backup"]).exists())
             saved_document = json.loads((temp_root / "world_info.json").read_text(encoding="utf-8"))
             self.assertTrue(saved_document["content_editor_test"])
+            backups = list_content_backups(backup_root, "world_info.json")
+            self.assertEqual(len(backups), 1)
+            restored = restore_content_backup(
+                temp_root, backup_root, "world_info.json", backups[0]["backup_id"]
+            )
+            self.assertTrue(restored["restored"])
+            restored_document = json.loads(
+                (temp_root / "world_info.json").read_text(encoding="utf-8")
+            )
+            self.assertNotIn("content_editor_test", restored_document)
             with self.assertRaises(ValueError):
                 read_editable_content(temp_root, "../sessions/characters/player.json")

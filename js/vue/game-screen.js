@@ -344,6 +344,7 @@ export const GameScreen = defineComponent({
             return { progress, threat, stage, note: resolved ? '等待新的传闻或后续异变' : `调查不限制路线 · 距关键节点 ${Math.round(remaining)} 小时` };
         });
 
+        const onboarding = computed(() => state.currentSession.onboarding || {});
         const turnAnnouncement = computed(() => state.isWaitingForAI ? '正在生成并结算本回合' : '可以继续行动');
         const speechRecognitionSupported = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
 
@@ -375,7 +376,11 @@ export const GameScreen = defineComponent({
             await handleSendMessage();
         }
         function keydown(event) {
-            if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); send(); }
+            if (event.isComposing || event.keyCode === 229 || event.key !== 'Enter') return;
+            const shouldSend = accessibilityState.sendKey === 'ctrl-enter'
+                ? (event.ctrlKey || event.metaKey)
+                : !event.shiftKey;
+            if (shouldSend) { event.preventDefault(); send(); }
         }
         async function travel(location) {
             if (location.name === session.value.currentScene || !window.confirm(`确定要前往「${location.name}」吗？`)) return;
@@ -445,6 +450,24 @@ export const GameScreen = defineComponent({
             recognition.onresult = event => { gameUi.speechDraft += event.results?.[0]?.[0]?.transcript || ''; };
             recognition.start();
         }
+        async function onboardingPrimary() {
+            const step = onboarding.value.step;
+            if (!step) return;
+            if (step.id === 'first_action') fillComposer(step.action || '', '');
+            else if (step.id === 'first_dialogue') {
+                gameUi.sidebarTab = 'encounter';
+                gameUi.mobileSidebarOpen = true;
+            } else if (step.id === 'open_journal') await journal();
+        }
+        async function dismissOnboarding() {
+            try {
+                const { updateOnboarding } = await import('../api.js');
+                const result = await updateOnboarding(state.currentSession.characterId, 'dismiss');
+                state.currentSession.onboarding = result.onboarding || {};
+            } catch (error) {
+                showToast(error.message || '暂时无法关闭引导', 2200);
+            }
+        }
         async function testAi() {
             const { testAIConnection } = await import('../ghost/modules/chat.js');
             await testAIConnection();
@@ -454,8 +477,9 @@ export const GameScreen = defineComponent({
         return {
             actionRef, activeTasks, addNpc, anomaly, chatRef, completedTasks, continueDialogue,
             deleteMessage, deleteTask, endDialogue, gameUi, helper, journal, keydown, locationDetail,
-            locations, messages, npcAction, npcs, playerState, relationships, reroll, selectSuggestion,
-            send, sendRef, session, speechRecognitionSupported, speechRef, suggestions, testAi,
+            dismissOnboarding, locations, messages, npcAction, npcs, onboarding, onboardingPrimary,
+            playerState, relationships, reroll, selectSuggestion, send, sendRef, session,
+            speechRecognitionSupported, speechRef, suggestions, testAi,
             travel, turnAnnouncement, voice
         };
     },
@@ -470,6 +494,11 @@ export const GameScreen = defineComponent({
                 </div>
                 <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</p>
 
+                <aside v-if="onboarding.enabled && !onboarding.dismissed && onboarding.step" class="th-onboarding" aria-live="polite">
+                    <span class="th-onboarding-seal">初</span><div><strong>{{ onboarding.step.title }}</strong><p>{{ onboarding.step.description }}</p></div>
+                    <button type="button" class="primary" @click="onboardingPrimary">{{ onboarding.step.id === 'first_action' ? '填入行动' : onboarding.step.id === 'first_dialogue' ? '查看人物' : '打开档案' }}</button>
+                    <button type="button" title="跳过引导" @click="dismissOnboarding">跳过</button>
+                </aside>
                 <div class="th-composer">
                     <div class="th-suggestions">
                         <button v-for="item in suggestions" :key="item.label" type="button" @click="selectSuggestion(item)"><span>{{ item.mark }}</span>{{ item.label }}</button>

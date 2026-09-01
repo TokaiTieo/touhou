@@ -1,5 +1,6 @@
 import os
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -7,6 +8,8 @@ from unittest.mock import patch
 from backend.desktop_launcher import (
     DEFAULT_STARTUP_TIMEOUT,
     _startup_timeout,
+    _runtime_watchdog_config,
+    _watch_runtime_health,
     _wait_for_server,
     _write_startup_diagnostic,
 )
@@ -47,6 +50,35 @@ class DesktopLauncherTests(unittest.TestCase):
             self.assertTrue(path.exists())
             self.assertEqual(payload["phase"], "health_wait")
             self.assertNotIn("api_key", path.read_text(encoding="utf-8").lower())
+
+    def test_runtime_watchdog_reports_only_after_consecutive_failures(self):
+        failures = []
+        stop = threading.Event()
+
+        class AliveThread:
+            @staticmethod
+            def is_alive():
+                return True
+
+        _watch_runtime_health(
+            stop,
+            AliveThread(),
+            "http://127.0.0.1:1",
+            lambda reason, count: failures.append((reason, count)),
+            interval=0.001,
+            timeout=0.001,
+            failure_limit=3,
+            probe=lambda _url, _timeout: False,
+        )
+        self.assertEqual(failures, [("health_probe_timeout", 3)])
+
+    def test_runtime_watchdog_config_is_bounded(self):
+        with patch.dict(os.environ, {
+            "TOUHOU_WATCHDOG_INTERVAL": "1",
+            "TOUHOU_WATCHDOG_TIMEOUT": "99",
+            "TOUHOU_WATCHDOG_FAILURES": "30",
+        }):
+            self.assertEqual(_runtime_watchdog_config(), (5.0, 15.0, 10))
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ ERROR_MESSAGES = {
     "network": "无法连接 AI 服务，请检查网络与代理设置。",
     "model": "当前模型暂不可用，请在设置中切换模型。",
     "response_format": "AI 返回格式异常，本次行动未写入存档，请重试。",
+    "provider_busy": "AI 请求队列已满，请等待当前生成结束后重试。",
     "unknown": "AI 服务暂时不可用，请稍后重试。",
 }
 
@@ -28,6 +29,8 @@ def classify_ai_error(error: Any) -> Dict[str, str]:
         code = "authentication"
     elif any(word in lower for word in ("insufficient", "balance", "quota", "billing", "402")):
         code = "quota"
+    elif "provider_busy" in lower or "request queue is full" in lower:
+        code = "provider_busy"
     elif any(word in lower for word in ("rate limit", "too many requests", "429")):
         code = "rate_limit"
     elif any(word in lower for word in ("timeout", "timed out", "deadline")):
@@ -55,6 +58,7 @@ def update_usage_stats(
     estimated_tokens: int,
     model: str,
     error: Dict[str, str] | None = None,
+    runtime: Dict[str, Any] | None = None,
 ) -> Dict:
     stats = character.setdefault("usage_stats", {})
     stats["requests"] = int(stats.get("requests", 0) or 0) + 1
@@ -64,6 +68,15 @@ def update_usage_stats(
     stats["last_error"] = error or None
     stats["last_model"] = model
     stats["last_request_at"] = datetime.now().isoformat()
+    failures = stats.setdefault("failure_counts", {})
+    if error and error.get("code"):
+        code = str(error["code"])
+        failures[code] = int(failures.get(code, 0) or 0) + 1
+    elapsed = (runtime or {}).get("elapsed_ms")
+    if elapsed is not None:
+        latency = stats.setdefault("latency_ms", [])
+        latency.append(max(0, float(elapsed or 0)))
+        stats["latency_ms"] = latency[-120:]
 
     def price(name: str) -> float:
         try:
@@ -88,6 +101,13 @@ def update_usage_stats(
 
 def public_usage_summary(character: Dict) -> Dict:
     stats = dict(character.get("usage_stats", {}) or {})
+    latency = sorted(float(value or 0) for value in stats.get("latency_ms", []) or [])
+
+    def percentile(ratio: float):
+        if not latency:
+            return None
+        return round(latency[min(len(latency) - 1, int((len(latency) - 1) * ratio))], 2)
+
     return {
         "requests": int(stats.get("requests", 0) or 0),
         "prompt_tokens": int(stats.get("prompt_tokens", 0) or 0),
@@ -99,4 +119,7 @@ def public_usage_summary(character: Dict) -> Dict:
         "last_model": stats.get("last_model", ""),
         "last_request_at": stats.get("last_request_at"),
         "last_error": stats.get("last_error"),
+        "failure_counts": stats.get("failure_counts", {}),
+        "latency_p50_ms": percentile(0.5),
+        "latency_p95_ms": percentile(0.95),
     }

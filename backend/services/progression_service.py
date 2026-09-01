@@ -122,6 +122,10 @@ def ensure_inventory_state(character: Dict) -> Dict:
     items = state.setdefault("items", [])
     state.setdefault("capacity", 30)
     state.setdefault("currency", 0)
+    equipped = state.setdefault("equipped", [])
+    if not isinstance(equipped, list):
+        equipped = []
+        state["equipped"] = equipped
     known = {_item_name(item) for item in items if _item_name(item)}
     legacy_values: List = list(character.get("inventory", []) or [])
     resources = character.get("resources", {}) or {}
@@ -146,7 +150,7 @@ def _find_item(items: Iterable[Dict], name: str):
     return next((item for item in items if isinstance(item, dict) and _item_name(item) == name), None)
 
 
-def _apply_known_item_effect(character: Dict, name: str, result: Dict) -> None:
+def _apply_known_item_effect(character: Dict, name: str, result: Dict) -> bool:
     state = character.setdefault("player_state", {})
     delta = result.setdefault("player_state_delta", {})
 
@@ -157,12 +161,17 @@ def _apply_known_item_effect(character: Dict, name: str, result: Dict) -> None:
             state[key] = int(new) if float(new).is_integer() else round(new, 2)
             delta[key] = round(_number(delta.get(key), 0) + new - old, 2)
 
+    applied = False
     if any(word in name for word in ("恢复药", "急救药", "绷带", "伤药")):
         change("受伤", -20)
+        applied = True
     if any(word in name for word in ("茶", "便当", "饭团", "点心")):
         change("疲劳", -12)
+        applied = True
     if any(word in name for word in ("灵力", "御神酒", "魔力药")):
         change("灵力", 15, 999999)
+        applied = True
+    return applied
 
 
 def _apply_inventory_updates(character: Dict, updates: List[Dict], result: Dict) -> List[Dict]:
@@ -201,6 +210,7 @@ def _apply_inventory_updates(character: Dict, updates: List[Dict], result: Dict)
                 _apply_known_item_effect(character, name, result)
             if existing["quantity"] <= 0:
                 items.remove(existing)
+                state["equipped"] = [item for item in state["equipped"] if item != name]
         applied.append({"action": action, "name": name, "quantity": quantity})
     return applied
 
@@ -260,7 +270,7 @@ def format_progression_for_ai(character: Dict) -> str:
         f"{item.get('name')}×{int(_number(item.get('quantity'), 1))}"
         for item in inventory.get("items", [])[-12:] if isinstance(item, dict)
     ]
-    reputation = character.get("reputation", {}) or {}
+    reputation = reputation_profile(character)
     relation_progress = character.get("relationship_progress", {}) or {}
     spellcards = character.get("spellcard_mastery", {}) or {}
     loadout = ensure_progression_profile(character)["loadout"]
@@ -270,7 +280,12 @@ def format_progression_for_ai(character: Dict) -> str:
     ]
     return "\n".join([
         "持有物品：" + ("、".join(item_lines) if item_lines else "无"),
-        "势力声望：" + ("、".join(f"{name}:{value}" for name, value in reputation.items()) if reputation else "尚未建立"),
+        "势力声望：" + (
+            "、".join(
+                f"{name}:{value['tier']}({value['value']})；{value['benefit']}"
+                for name, value in reputation.items()
+            ) if reputation else "尚未建立"
+        ),
         "关系阶段：" + ("、".join(relations) if relations else "尚未建立"),
         "常用符卡栏：" + ("、".join(loadout) if loadout else "尚未配置；临场使用不受限制"),
         "符卡熟练：" + (
@@ -282,3 +297,80 @@ def format_progression_for_ai(character: Dict) -> str:
             if spellcards else "尚未形成个人符卡记录"
         ),
     ])
+
+
+REPUTATION_BENEFITS = {
+    "敬仰": "会主动提供高价值情报、援助与更坦率的回应",
+    "信赖": "更愿意协助调查、交换消息或提供日常便利",
+    "友善": "初次交涉更自然，也更容易听到当地传闻",
+    "中立": "按玩家本次行为正常回应",
+    "疏远": "保持距离，但不会封锁地点或人物",
+    "敌视": "会警惕或反驳玩家，但仍保留自由交涉与探索",
+}
+
+
+def reputation_profile(character: Dict) -> Dict:
+    return {
+        faction: {
+            "value": value,
+            "tier": _reputation_tier(_number(value, 0)),
+            "benefit": REPUTATION_BENEFITS[_reputation_tier(_number(value, 0))],
+            "gates_exploration": False,
+        }
+        for faction, value in (character.get("reputation", {}) or {}).items()
+    }
+
+
+def perform_inventory_action(
+    character: Dict,
+    *,
+    action: str,
+    item_name: str,
+    npc_name: str = "",
+) -> Dict:
+    """Perform explicit local inventory actions without an AI round trip."""
+    action = str(action or "").strip().lower()
+    name = str(item_name or "").strip()
+    if action not in ("use", "discard", "gift", "equip", "unequip"):
+        raise ValueError("不支持的行囊操作")
+    state = ensure_inventory_state(character)
+    item = _find_item(state["items"], name)
+    if not item:
+        raise ValueError("行囊中没有该物品")
+
+    equipped = state.setdefault("equipped", [])
+    result = {"action": action, "name": name, "quantity": 1, "player_state_delta": {}}
+    if action == "equip":
+        if name not in equipped:
+            if len(equipped) >= 4:
+                raise ValueError("随身装备最多配置 4 件")
+            equipped.append(name)
+        result["message"] = f"已将「{name}」设为随身装备"
+    elif action == "unequip":
+        if name in equipped:
+            equipped.remove(name)
+        result["message"] = f"已卸下「{name}」"
+    elif action == "use":
+        if not _apply_known_item_effect(character, name, result):
+            raise ValueError("该物品没有可直接使用的确定效果，可在行动中描述其他用法")
+        _apply_inventory_updates(character, [{"action": "remove", "name": name, "quantity": 1}], result)
+        result["message"] = f"已使用「{name}」"
+    else:
+        if action == "gift" and not npc_name.strip():
+            raise ValueError("赠送物品时需要选择人物")
+        _apply_inventory_updates(character, [{"action": "remove", "name": name, "quantity": 1}], result)
+        if action == "gift":
+            from backend.services.relationship_service import apply_relationship_delta
+
+            result["relationship"] = apply_relationship_delta(
+                character, npc_name.strip(), 4, f"收到玩家赠送的{name}"
+            )
+            result["message"] = f"已将「{name}」赠给{npc_name.strip()}"
+        else:
+            result["message"] = f"已丢弃「{name}」"
+
+    result["equipped"] = list(state.get("equipped", []))
+    history = state.setdefault("history", [])
+    history.append({**result, "created_at": datetime.now().isoformat()})
+    state["history"] = history[-80:]
+    return result

@@ -71,6 +71,7 @@ from backend.services.turn_workflow import (
 )
 from backend.services.consequence_service import format_consequence_context
 from backend.services.npc_simulation_service import format_npc_simulation_context
+from backend.services.npc_agency_service import format_npc_agency_context
 from backend.services import npc_memory_service as memory_runtime
 from backend.config import PROMPTS_DIR, PRIVATE_DEBUG
 
@@ -208,7 +209,11 @@ async def _stream_endpoint(request, handler):
         yield _sse_message("ready", {"status": "streaming"})
         try:
             while True:
-                event, payload = await queue.get()
+                try:
+                    event, payload = await asyncio.wait_for(queue.get(), timeout=15.0)
+                except asyncio.TimeoutError:
+                    yield ": ping\n\n"
+                    continue
                 if event == "done":
                     break
                 yield _sse_message(event, payload)
@@ -344,7 +349,7 @@ def remember_debug_prompt(character: Dict, prompt: str, response: str = "", kind
     runtime = get_last_ai_runtime()
     estimated_tokens = max(1, (len(prompt) + len(response or "")) // 2)
     used_model = runtime.get("used_model") or ai_service.model
-    update_usage_stats(character, usage, estimated_tokens, used_model, error)
+    update_usage_stats(character, usage, estimated_tokens, used_model, error, runtime)
     character["model_runtime"] = runtime
     capture_content = PRIVATE_DEBUG or character.get("gm_mode") is True
     character["debug_last_ai"] = {
@@ -601,6 +606,9 @@ async def environment_interact(request: EnvironmentInteractRequest):
             "npc_memories": npc_memories,
             "consequences": format_consequence_context(character),
             "npc_simulation": format_npc_simulation_context(character, request.scene),
+            "npc_agency": format_npc_agency_context(
+                character, [npc.get("name") for npc in scene_npcs], request.scene
+            ),
             "relationship_policy": relationship_policy_context,
         }, protected=("rule_context", "player_background"))
         character["_last_context_budget"] = context_budget
@@ -633,6 +641,8 @@ async def environment_interact(request: EnvironmentInteractRequest):
             + context_sections["consequences"]
             + "\n\n## 近期离屏人物动向\n"
             + context_sections["npc_simulation"]
+            + "\n\n## 人物自身目标与消息来源\n"
+            + context_sections["npc_agency"]
             + "\n\n## 关系节奏与边界（优先级高于内容倾向）\n"
             + context_sections["relationship_policy"]
         ))
@@ -847,6 +857,11 @@ async def npc_dialogue(request: NPCDialogueRequest):
         "npc_simulation": format_npc_simulation_context(
             character, request.scene, request.npc_name
         ),
+        "npc_agency": format_npc_agency_context(
+            character,
+            [request.npc_name] + [npc.get("name") for npc in request.scene_npcs],
+            request.scene,
+        ),
         "relationship_policy": relationship_policy_context,
     }, protected=("rule_context", "player_info", "npc_info"))
     character["_last_context_budget"] = context_budget
@@ -872,6 +887,8 @@ async def npc_dialogue(request: NPCDialogueRequest):
         + context_sections["consequences"]
         + "\n\n## 近期离屏人物动向\n"
         + context_sections["npc_simulation"]
+        + "\n\n## 人物自身目标与消息来源\n"
+        + context_sections["npc_agency"]
         + "\n\n## 关系节奏与边界（优先级高于内容倾向）\n"
         + context_sections["relationship_policy"]
     ))

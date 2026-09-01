@@ -1,6 +1,10 @@
 import unittest
 
-from backend.services.progression_service import apply_progression_updates, ensure_inventory_state
+from backend.services.progression_service import (
+    apply_progression_updates,
+    ensure_inventory_state,
+    perform_inventory_action,
+)
 from backend.services.relationship_service import ensure_relationship_progress
 
 
@@ -26,6 +30,16 @@ class ProgressionTests(unittest.TestCase):
         self.assertTrue(delta["reputation"])
         progress = ensure_relationship_progress(character)
         self.assertEqual(progress["博丽灵梦"]["stage"], "友好")
+
+    def test_consumed_equipped_item_is_removed_from_loadout(self):
+        character = {
+            "inventory_state": {"items": [{"name": "伤药", "quantity": 1}]},
+            "player_state": {"受伤": 40},
+        }
+        perform_inventory_action(character, action="equip", item_name="伤药")
+        self.assertEqual(character["inventory_state"]["equipped"], ["伤药"])
+        perform_inventory_action(character, action="use", item_name="伤药")
+        self.assertEqual(character["inventory_state"]["equipped"], [])
 
 
 if __name__ == "__main__":
