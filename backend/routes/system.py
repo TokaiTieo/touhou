@@ -31,8 +31,8 @@ async def version_info():
     return {
         "version": APP_VERSION,
         "display_version": DISPLAY_VERSION,
-        "save_schema": VERSION_MANIFEST.get("save_schema", 7),
-        "content_schema": VERSION_MANIFEST.get("content_schema", 7),
+        "save_schema": VERSION_MANIFEST.get("save_schema", 8),
+        "content_schema": VERSION_MANIFEST.get("content_schema", 8),
     }
 
 

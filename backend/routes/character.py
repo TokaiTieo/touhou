@@ -25,6 +25,7 @@ from backend.services.ai_service import call_ai_async, clean_json_response
 from backend.services.incident_service import sync_incident_from_tasks
 from backend.services.story_summary_service import default_story_summary
 from backend.services.relationship_policy_service import profile_age
+from backend.services.onboarding_service import default_onboarding, public_onboarding
 from backend.config import PROMPTS_DIR
 from backend.version import CONTENT_SCHEMA_VERSION, SAVE_SCHEMA_VERSION
 
@@ -398,7 +399,7 @@ async def create_character_endpoint(request: CreateCharacterRequest):
         "save_version": SAVE_SCHEMA_VERSION,
         "content_schema_version": CONTENT_SCHEMA_VERSION,
         "migration_history": [{
-            "version": 7,
+            "version": 8,
             "applied_at": datetime.now().isoformat(),
             "summary": "以当前存档结构创建",
         }],
@@ -476,6 +477,7 @@ async def create_character_endpoint(request: CreateCharacterRequest):
         "completed_tasks": [],
         "gm_mode": gm_mode
     }
+    character_data["onboarding"] = default_onboarding(enabled=not gm_mode)
 
     age = profile_age(character_data["profile"])
     character_data["profile"]["adult_verified"] = bool(age is not None and age >= 18)
@@ -549,6 +551,11 @@ async def load_character_endpoint(request: LoadCharacterRequest):
         "time": character.get("time", {}),
         "incident_state": character.get("incident_state", {}),
         "player_state": character.get("player_state", {}),
+        "resources": character.get("resources", {}),
+        "reputation": character.get("reputation", {}),
+        "current_goals": character.get("current_goals", []),
+        "campaign_state": character.get("campaign_state", {}),
+        "onboarding": public_onboarding(character),
         "gm_mode": character.get("gm_mode", False)
     }
 

@@ -16,6 +16,7 @@ from backend.services.turn_workflow import (
     clear_turn_checkpoint,
 )
 from backend.world_manager import StaleTurnError
+from backend.services.runtime_diagnostics_service import record_turn_diagnostics
 
 
 class TurnRunner:
@@ -81,6 +82,15 @@ class TurnRunner:
         on_contract_failure: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> Dict[str, Any]:
         self.mark(context, "settling")
+        status = turn_coordinator.get_status(
+            context.turn.character_id, context.turn.turn_id
+        )
+        if status is not None:
+            result["turn_diagnostics"] = record_turn_diagnostics(
+                context.character,
+                status,
+                context.character.get("model_runtime", {}),
+            )
         if not result.get("contract_valid"):
             if on_contract_failure is not None:
                 on_contract_failure(context.character)

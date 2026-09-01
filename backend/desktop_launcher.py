@@ -7,6 +7,8 @@ import os
 import socket
 import threading
 import time
+import urllib.error
+import urllib.request
 import webbrowser
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +19,9 @@ import uvicorn
 logger = logging.getLogger(__name__)
 ERROR_ALREADY_EXISTS = 183
 DEFAULT_STARTUP_TIMEOUT = 60.0
+DEFAULT_WATCHDOG_INTERVAL = 30.0
+DEFAULT_WATCHDOG_TIMEOUT = 3.0
+DEFAULT_WATCHDOG_FAILURES = 3
 
 
 def _write_json_atomic(path: Path, payload: dict) -> None:
@@ -56,6 +61,57 @@ def _startup_timeout() -> float:
     except (TypeError, ValueError):
         configured = DEFAULT_STARTUP_TIMEOUT
     return max(10.0, min(180.0, configured))
+
+
+def _runtime_watchdog_config() -> tuple[float, float, int]:
+    def number(name: str, default: float, low: float, high: float) -> float:
+        try:
+            value = float(os.environ.get(name, default))
+        except (TypeError, ValueError):
+            value = default
+        return max(low, min(high, value))
+
+    interval = number("TOUHOU_WATCHDOG_INTERVAL", DEFAULT_WATCHDOG_INTERVAL, 5.0, 300.0)
+    timeout = number("TOUHOU_WATCHDOG_TIMEOUT", DEFAULT_WATCHDOG_TIMEOUT, 0.5, 15.0)
+    failures = int(number("TOUHOU_WATCHDOG_FAILURES", DEFAULT_WATCHDOG_FAILURES, 1, 10))
+    return interval, timeout, failures
+
+
+def _probe_runtime_health(url: str, timeout: float = DEFAULT_WATCHDOG_TIMEOUT) -> bool:
+    try:
+        with urllib.request.urlopen(f"{url}/api/health", timeout=timeout) as response:
+            if response.status != 200:
+                return False
+            payload = json.loads(response.read().decode("utf-8"))
+            return payload.get("status") == "ok"
+    except (OSError, ValueError, urllib.error.URLError):
+        return False
+
+
+def _watch_runtime_health(
+    stop_event: threading.Event,
+    server_thread,
+    url: str,
+    on_failure,
+    *,
+    interval: float,
+    timeout: float,
+    failure_limit: int,
+    probe=_probe_runtime_health,
+) -> None:
+    consecutive_failures = 0
+    while not stop_event.wait(interval):
+        if not server_thread.is_alive():
+            on_failure("server_thread_exited", consecutive_failures + 1)
+            return
+        if probe(url, timeout):
+            consecutive_failures = 0
+            continue
+        consecutive_failures += 1
+        logger.warning("Runtime health probe failed (%s/%s)", consecutive_failures, failure_limit)
+        if consecutive_failures >= failure_limit:
+            on_failure("health_probe_timeout", consecutive_failures)
+            return
 
 
 def _wait_for_server(host: str, port: int, timeout: float = DEFAULT_STARTUP_TIMEOUT, server_thread=None) -> bool:
@@ -127,6 +183,9 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
     )
     server = uvicorn.Server(config)
     window_holder = {"window": None}
+    watchdog_stop = threading.Event()
+    runtime_failure = threading.Event()
+    watchdog_thread = None
 
     def shutdown():
         server.should_exit = True
@@ -182,7 +241,49 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
     write_runtime("ready", "ready")
     _write_startup_diagnostic(data_dir, "ready", "ok", url=url)
 
+    def runtime_failed(reason: str, failure_count: int):
+        runtime_failure.set()
+        server.should_exit = True
+        write_runtime("failed", "runtime_watchdog", reason=reason, failure_count=failure_count)
+        _write_startup_diagnostic(
+            data_dir,
+            "runtime_watchdog",
+            "failed",
+            reason=reason,
+            failure_count=failure_count,
+            log_file=str(data_dir / "logs" / "touhou.log"),
+        )
+        window = window_holder.get("window")
+        if window is not None:
+            try:
+                window.destroy()
+            except Exception:
+                logger.exception("Failed to close an unresponsive native window")
+        try:
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                f"本地游戏服务已失去响应。请重新启动游戏。\n诊断日志：{data_dir / 'logs' / 'touhou.log'}",
+                "东方异变录",
+                0x10,
+            )
+        except Exception:
+            logger.exception("Failed to show runtime watchdog warning")
+
+    if os.environ.get("TOUHOU_DISABLE_WATCHDOG", "").lower() not in ("1", "true", "yes"):
+        interval, health_timeout, failure_limit = _runtime_watchdog_config()
+        watchdog_thread = threading.Thread(
+            target=_watch_runtime_health,
+            args=(watchdog_stop, thread, url, runtime_failed),
+            kwargs={"interval": interval, "timeout": health_timeout, "failure_limit": failure_limit},
+            name="touhou-watchdog",
+            daemon=True,
+        )
+        watchdog_thread.start()
+
     def cleanup():
+        watchdog_stop.set()
+        if watchdog_thread is not None and watchdog_thread.is_alive():
+            watchdog_thread.join(timeout=2)
         server.should_exit = True
         if thread.is_alive():
             thread.join(timeout=10)
@@ -207,7 +308,8 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
         logger.info("pywebview unavailable; falling back to the default browser")
         try:
             webbrowser.open(url)
-            thread.join()
+            while thread.is_alive() and not runtime_failure.wait(0.5):
+                pass
         finally:
             cleanup()
         return
@@ -231,6 +333,7 @@ def run_desktop(app, host: str, preferred_port: int, data_dir: Path) -> None:
             logger.exception("Native WebView failed; falling back to the default browser")
             window_holder["window"] = None
             webbrowser.open(url)
-            thread.join()
+            while thread.is_alive() and not runtime_failure.wait(0.5):
+                pass
     finally:
         cleanup()

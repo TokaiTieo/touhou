@@ -1,10 +1,13 @@
 """Producer-mode API isolated from ordinary player turn routes."""
 
+import io
 import json
 import re
+import zipfile
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from backend.config import DATA_DIR, DEFAULT_WORLD_ID, WORLDS_DIR
 from backend.world_manager import load_character, save_character
@@ -12,6 +15,8 @@ from backend.services.content_validation_service import (
     list_editable_content,
     read_editable_content,
     save_editable_content,
+    list_content_backups,
+    restore_content_backup,
     validate_editable_content,
 )
 from backend.services.relationship_service import update_relationships
@@ -22,6 +27,14 @@ from backend.services.turn_workflow import (
     get_workflow_diagnostic,
     workflow_enabled,
 )
+from backend.services.live_narrative_evaluation_service import run_live_evaluation
+from backend.services.memory_maintenance_service import maintain_memories
+from backend.services.runtime_diagnostics_service import (
+    build_diagnostic_bundle,
+    diagnostics_summary,
+)
+from backend.version import DISPLAY_VERSION
+from backend.world_manager import load_tasks
 
 
 router = APIRouter()
@@ -68,6 +81,8 @@ async def state(character_id: str):
             "checkpoints": checkpoint_metrics,
             "recent_turns": turn_coordinator.recent_statuses(character_id),
         },
+        "turn_diagnostics": diagnostics_summary(character),
+        "memory_maintenance": character.get("memory_maintenance", {}),
     }
 
 
@@ -113,6 +128,71 @@ async def save_content(request: dict):
             "errors": result.get("validation", {}).get("errors", []),
         })
     return result
+
+
+@router.get("/producer_console/content/backups")
+async def content_backups(character_id: str, path: str):
+    _character(character_id)
+    return {
+        "backups": list_content_backups(
+            DATA_DIR / "content_backups" / DEFAULT_WORLD_ID, path
+        )
+    }
+
+
+@router.post("/producer_console/content/restore_backup")
+async def content_restore_backup(request: dict):
+    _character(request.get("character_id"))
+    try:
+        result = restore_content_backup(
+            WORLDS_DIR / DEFAULT_WORLD_ID,
+            DATA_DIR / "content_backups" / DEFAULT_WORLD_ID,
+            request.get("path"),
+            request.get("backup_id"),
+        )
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not result.get("restored"):
+        raise HTTPException(status_code=422, detail=result)
+    return result
+
+
+@router.post("/producer_console/evaluation/run")
+async def run_evaluation(request: dict):
+    character = _character(request.get("character_id"))
+    report = await run_live_evaluation(character)
+    path = DATA_DIR / "evaluations" / f"live_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
+@router.post("/producer_console/memory/maintain")
+async def maintain_memory(request: dict):
+    character_id = request.get("character_id")
+    character = _character(character_id)
+    report = maintain_memories(character, force=True)
+    save_character(character_id, character)
+    return {"status": "ok", "report": report}
+
+
+@router.get("/producer_console/diagnostic_bundle")
+async def diagnostic_bundle(character_id: str):
+    character = _character(character_id)
+    payload = build_diagnostic_bundle(character, load_tasks(character_id), DISPLAY_VERSION)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("diagnostics.json", json.dumps(payload, ensure_ascii=False, indent=2))
+        archive.writestr(
+            "README.txt",
+            "TouHou privacy-safe diagnostics. API keys, prompts, responses, conversations and NPC memory bodies are excluded.\n",
+        )
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="touhou_diagnostics.zip"'},
+    )
 
 
 @router.post("/producer_console/restore")

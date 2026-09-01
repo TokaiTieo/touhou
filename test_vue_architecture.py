@@ -117,8 +117,25 @@ class VueArchitectureTests(unittest.TestCase):
         self.assertIn("本地朗读", settings)
         self.assertIn("speechSynthesis", accessibility)
         self.assertIn("SpeechSynthesisUtterance", accessibility)
+        self.assertIn("event.isComposing", game)
+        self.assertIn("ctrl-enter", game)
+        self.assertIn("highContrast", settings)
+        self.assertIn("reduceMotion", settings)
+        self.assertIn("ttsVoice", settings)
         self.assertNotIn('class="th-chat-scroll" aria-live=', game)
         self.assertIn('role="status" aria-live="polite"', game)
+
+    def test_v8_player_and_producer_tools_are_vue_owned(self):
+        producer = (ROOT / "js/vue/producer-console.js").read_text(encoding="utf-8")
+        dialogs = (ROOT / "js/vue/game-dialogs.js").read_text(encoding="utf-8")
+        game = (ROOT / "js/vue/game-screen.js").read_text(encoding="utf-8")
+        for token in (
+            "runProducerEvaluation", "restoreProducerContentBackup",
+            "runMemoryMaintenance", "downloadDiagnostics", "producer-field-grid",
+        ):
+            self.assertIn(token, producer)
+        self.assertIn("performInventoryAction", dialogs)
+        self.assertIn("th-onboarding", game)
 
 
 if __name__ == "__main__":

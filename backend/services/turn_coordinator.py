@@ -1,6 +1,7 @@
 """In-process coordination and status tracking for player turns."""
 
 import asyncio
+import os
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -27,6 +28,10 @@ class TurnStatus:
 
     def public_dict(self, *, include_result: bool = False) -> Dict[str, Any]:
         payload = asdict(self)
+        from backend.services.runtime_diagnostics_service import phase_durations_ms
+
+        payload["duration_ms"] = round(max(0, self.updated_at - self.created_at) * 1000, 2)
+        payload["phase_durations_ms"] = phase_durations_ms(self.phase_timestamps)
         if not include_result:
             payload.pop("result", None)
         return payload
@@ -40,6 +45,7 @@ class TurnCoordinator:
         self._character_locks: Dict[Tuple[int, str], asyncio.Lock] = {}
         self._inflight: Dict[Tuple[int, str, str], asyncio.Task] = {}
         self._statuses: Dict[Tuple[str, str], TurnStatus] = {}
+        self.lock_timeout = max(10.0, min(600.0, float(os.environ.get("TOUHOU_TURN_LOCK_TIMEOUT", "120") or 120)))
 
     @staticmethod
     def ensure_turn_id(value: Optional[str]) -> str:
@@ -108,7 +114,15 @@ class TurnCoordinator:
         operation: TurnOperation,
     ) -> Dict[str, Any]:
         try:
-            async with lock:
+            try:
+                await asyncio.wait_for(lock.acquire(), timeout=self.lock_timeout)
+            except asyncio.TimeoutError as exc:
+                status.state = "failed"
+                status.error = "等待上一回合结束超时"
+                status.updated_at = time.time()
+                status.phase_timestamps["lock_timeout"] = status.updated_at
+                raise TimeoutError("等待上一回合结束超时，请检查网络或重新载入角色") from exc
+            try:
                 status.state = "running"
                 status.updated_at = time.time()
                 status.phase_timestamps["running"] = status.updated_at
@@ -118,14 +132,18 @@ class TurnCoordinator:
                 status.updated_at = time.time()
                 status.phase_timestamps["committed"] = status.updated_at
                 return result
+            finally:
+                lock.release()
         except asyncio.CancelledError:
             status.state = "cancelled"
             status.updated_at = time.time()
+            status.phase_timestamps["cancelled"] = status.updated_at
             raise
         except Exception as exc:
             status.state = "failed"
             status.error = str(exc)[:500]
             status.updated_at = time.time()
+            status.phase_timestamps["failed"] = status.updated_at
             raise
 
     def _finish_inflight(self, key: Tuple[int, str, str], task: asyncio.Task) -> None:

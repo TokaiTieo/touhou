@@ -2,7 +2,9 @@ import { defineComponent, onMounted, ref } from '../vendor/vue.esm-browser.prod.
 import { state as gameState } from '../ghost/core/state.js';
 import {
     accessibilityState,
+    refreshTtsVoices,
     resetAccessibilitySettings,
+    ttsVoices,
     updateAccessibilitySettings
 } from './accessibility.js';
 import { openAppModal } from './app-store.js';
@@ -30,9 +32,15 @@ export const SettingsDialog = defineComponent({
         const fontScale = ref(accessibilityState.fontScale);
         const ttsEnabled = ref(accessibilityState.ttsEnabled);
         const ttsRate = ref(accessibilityState.ttsRate);
+        const ttsVoice = ref(accessibilityState.ttsVoice);
+        const highContrast = ref(accessibilityState.highContrast);
+        const reduceMotion = ref(accessibilityState.reduceMotion);
+        const sendKey = ref(accessibilityState.sendKey);
+        const voices = ttsVoices;
         const ttsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
         onMounted(async () => {
+            refreshTtsVoices();
             try {
                 const response = await fetch('/api/ghost/get_api_key');
                 const data = await response.json();
@@ -190,7 +198,11 @@ export const SettingsDialog = defineComponent({
             updateAccessibilitySettings({
                 fontScale: fontScale.value,
                 ttsEnabled: ttsEnabled.value,
-                ttsRate: ttsRate.value
+                ttsRate: ttsRate.value,
+                ttsVoice: ttsVoice.value,
+                highContrast: highContrast.value,
+                reduceMotion: reduceMotion.value,
+                sendKey: sendKey.value
             });
         }
 
@@ -199,13 +211,17 @@ export const SettingsDialog = defineComponent({
             fontScale.value = accessibilityState.fontScale;
             ttsEnabled.value = accessibilityState.ttsEnabled;
             ttsRate.value = accessibilityState.ttsRate;
+            ttsVoice.value = accessibilityState.ttsVoice;
+            highContrast.value = accessibilityState.highContrast;
+            reduceMotion.value = accessibilityState.reduceMotion;
+            sendKey.value = accessibilityState.sendKey;
         }
 
         return {
             apiKey, busy, clearRecovery, costText, diagnosticsMessage, formatNumber, hasKey,
-            fontScale, keySourceText, maskedKey, model, models, providerBaseUrl, providerName,
-            recovery, repairSave, resetAccessibility, saveAccessibility, saveAndTest, saveHealth,
-            status, statusType, ttsEnabled, ttsRate, ttsSupported, usage
+            fontScale, highContrast, keySourceText, maskedKey, model, models, providerBaseUrl, providerName,
+            recovery, reduceMotion, repairSave, resetAccessibility, saveAccessibility, saveAndTest, saveHealth,
+            sendKey, status, statusType, ttsEnabled, ttsRate, ttsSupported, ttsVoice, usage, voices
         };
     },
     template: `
@@ -249,6 +265,10 @@ export const SettingsDialog = defineComponent({
                             <span>朗读速度 <strong>{{ Number(ttsRate).toFixed(1) }}x</strong></span>
                             <input id="vueTtsRate" v-model.number="ttsRate" type="range" min="0.7" max="1.4" step="0.1" @input="saveAccessibility">
                         </label>
+                        <label v-if="ttsEnabled && ttsSupported" class="field-stack" for="vueTtsVoice"><span>朗读音色</span><select id="vueTtsVoice" v-model="ttsVoice" @change="saveAccessibility"><option value="">系统默认中文音色</option><option v-for="voice in voices.list" :key="voice.voiceURI" :value="voice.voiceURI">{{ voice.name }} · {{ voice.lang }}</option></select></label>
+                        <label class="accessibility-toggle"><input v-model="highContrast" type="checkbox" @change="saveAccessibility"><span><strong>高对比度</strong><small>增强文字、边线和焦点可见度。</small></span></label>
+                        <label class="accessibility-toggle"><input v-model="reduceMotion" type="checkbox" @change="saveAccessibility"><span><strong>减少动态效果</strong><small>关闭非必要过渡和动效。</small></span></label>
+                        <label class="field-stack" for="vueSendKey"><span>发送快捷键</span><select id="vueSendKey" v-model="sendKey" @change="saveAccessibility"><option value="enter">Enter 发送，Shift+Enter 换行</option><option value="ctrl-enter">Ctrl+Enter 发送，Enter 换行</option></select></label>
                         <p>设置仅保存在本机浏览器中，朗读文本不会发送到额外服务。</p>
                     </section>
                     <section class="usage-diagnostics" aria-label="AI 运行概况">
@@ -261,6 +281,8 @@ export const SettingsDialog = defineComponent({
                             <span>实际 Token<strong>{{ formatNumber(usage.total_tokens) }}</strong></span>
                             <span>上下文估算<strong>{{ formatNumber(usage.estimated_tokens) }}</strong></span>
                             <span>费用估算<strong>{{ costText() }}</strong></span>
+                            <span>响应 P50<strong>{{ usage.latency_p50_ms == null ? '暂无' : usage.latency_p50_ms + ' ms' }}</strong></span>
+                            <span>响应 P95<strong>{{ usage.latency_p95_ms == null ? '暂无' : usage.latency_p95_ms + ' ms' }}</strong></span>
                         </div>
                         <p v-else>{{ diagnosticsMessage || '进入角色后显示用量统计。' }}</p>
                         <p v-if="usage?.last_error" class="usage-diagnostics__error">

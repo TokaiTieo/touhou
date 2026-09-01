@@ -1,6 +1,7 @@
 """Dependency-free JSON Schema subset and cross-reference validation."""
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -145,7 +146,33 @@ def read_editable_content(world_root: Path, relative: str) -> Dict:
         "label": EDITABLE_CONTENT_FILES[relative],
         "content": document,
         "formatted": json.dumps(document, ensure_ascii=False, indent=2),
+        "editor": _editor_descriptor(Path(world_root), document),
     }
+
+
+def _editor_descriptor(world_root: Path, document: Dict) -> Dict:
+    collections = []
+    for key, value in document.items():
+        if isinstance(value, list):
+            collections.append({
+                "key": key,
+                "type": "array",
+                "item_type": "object" if value and all(isinstance(item, dict) for item in value) else "scalar",
+                "count": len(value),
+            })
+        elif isinstance(value, dict):
+            collections.append({"key": key, "type": "object", "count": len(value)})
+    references = {"locations": [], "npcs": []}
+    try:
+        locations = _load(world_root / "locations" / "location_base.json")
+        references["locations"] = [
+            item.get("name") for item in locations.get("locations", []) if item.get("name")
+        ]
+        npcs = _load(world_root / "npcs" / "npc_index.json")
+        references["npcs"] = [item.get("name") for item in npcs.get("npcs", []) if item.get("name")]
+    except (OSError, json.JSONDecodeError, AttributeError):
+        pass
+    return {"collections": collections, "references": references}
 
 
 def validate_editable_content(
@@ -199,6 +226,56 @@ def save_editable_content(
         "validation": validation,
         "backup": str(backup_path) if backup_path.exists() else None,
         "path": relative,
+    }
+
+
+def list_content_backups(backup_root: Path, relative: str) -> List[Dict]:
+    safe_name = str(relative or "").replace("/", "__").replace("\\", "__")
+    root = Path(backup_root)
+    if not root.exists() or not safe_name:
+        return []
+    items = []
+    for path in root.glob(f"*__{safe_name}"):
+        if not path.is_file():
+            continue
+        items.append({
+            "backup_id": path.name,
+            "path": relative,
+            "created_at": datetime.fromtimestamp(path.stat().st_mtime).isoformat(),
+            "size_bytes": path.stat().st_size,
+        })
+    return sorted(items, key=lambda item: item["created_at"], reverse=True)[:30]
+
+
+def restore_content_backup(
+    world_root: Path,
+    backup_root: Path,
+    relative: str,
+    backup_id: str,
+    schemas_root: Path = None,
+) -> Dict:
+    _editable_path(world_root, relative)
+    safe_name = str(relative).replace("/", "__")
+    candidate = (Path(backup_root) / Path(str(backup_id or "")).name).resolve()
+    root = Path(backup_root).resolve()
+    if root not in candidate.parents or not candidate.name.endswith(f"__{safe_name}"):
+        raise ValueError("备份文件与当前内容不匹配")
+    document = _load(candidate)
+    validation = validate_editable_content(world_root, relative, document, schemas_root)
+    if not validation.get("valid"):
+        return {"restored": False, "validation": validation}
+    restore_backup = save_editable_content(
+        world_root, backup_root, relative, document, schemas_root
+    )
+    if not restore_backup.get("saved"):
+        return {"restored": False, **restore_backup}
+    return {
+        "restored": True,
+        "path": relative,
+        "backup_id": candidate.name,
+        "validation": validation,
+        "previous_version_backup": restore_backup.get("backup"),
+        "content": document,
     }
 
 

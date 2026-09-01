@@ -6,7 +6,7 @@
 - `TurnOrchestrator` 统一环境行动与 NPC 对话的状态结算。
 - `TurnInput`、`TurnContext`、`TurnOutcome` 是工作流内部契约，不替代角色存档。
 - LangGraph Functional API 只负责编排模型生成与结构化响应解析。
-- 角色 JSON、任务 JSON、V7 自动迁移和快照系统仍是游戏状态的唯一事实源。
+- 角色 JSON、任务 JSON、V8 自动迁移和快照系统仍是游戏状态的唯一事实源。
 - SQLite checkpoint 位于 `DATA_DIR/runtime/turn_checkpoints.sqlite3`，只保存未完成运行；角色与任务成功提交后立即删除相应 thread。
 - LangSmith 追踪默认关闭，不上传提示词、回复、角色状态或存档。
 
@@ -69,11 +69,11 @@
 
 ## 自动验证
 
-- 101 项 Python/API 测试通过。
-- 32 个 JavaScript 模块语法检查通过。
-- 7 项 Playwright 端到端测试通过。
+- 138 项 Python/API 测试通过。
+- 33 个 JavaScript 模块语法检查通过。
+- 8 项 Playwright 端到端测试通过。
 - 固定剧情评测 `6/6` 通过，覆盖状态恢复、调查成长、符卡裁定、制作人优势、异变完成和非法响应无副作用。
-- V1-V6 测试存档仍可自动、增量、幂等升级到 V7。
+- V1-V7 测试存档仍可自动、增量、幂等升级到 V8。
 
 ## 对照结果
 

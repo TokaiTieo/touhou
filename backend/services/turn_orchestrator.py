@@ -12,6 +12,7 @@ from backend.services.dynamic_event_service import select_dynamic_event, select_
 from backend.services.incident_service import apply_resolution_path, sync_incident_from_tasks
 from backend.services.relationship_service import update_relationships
 from backend.services.story_summary_service import rebuild_story_summary
+from backend.services.campaign_service import finalize_incident_history
 from backend.services.turn_models import TurnContext, TurnInput, TurnOutcome
 from backend.services.turn_resolution_service import apply_turn_resolution
 from backend.services.turn_service import apply_task_updates
@@ -89,6 +90,7 @@ class TurnOrchestrator:
         relationship_update = self._apply_relationship(character, result, turn)
         self._apply_memories_and_events(character, result, turn, relationship_update)
         self._apply_tasks(character, tasks, result, turn)
+        finalize_incident_history(character, result)
         if turn.kind == "environment":
             self._apply_location(context, result, turn)
         self._record_consequence(character, result, turn)
@@ -343,6 +345,10 @@ class TurnOrchestrator:
             "offscreen_updates": result.get("offscreen_updates", []),
             "consequence_record_id": result.get("consequence_record_id"),
             "consequence_summary": result.get("consequence_summary", []),
+            "incident_aftermath": result.get("incident_aftermath"),
+            "memory_maintenance": result.get("memory_maintenance"),
+            "onboarding": result.get("onboarding"),
+            "turn_diagnostics": result.get("turn_diagnostics"),
         }
 
 

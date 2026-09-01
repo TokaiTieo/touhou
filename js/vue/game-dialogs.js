@@ -6,7 +6,8 @@ import {
     getLocationByName,
     systemHelper,
     validateCharacter,
-    setSpellcardLoadout
+    setSpellcardLoadout,
+    performInventoryAction
 } from '../api.js';
 import { state } from '../ghost/core/state.js';
 import { CURRENT_CHAPTER_INDEX } from '../ghost/core/constants.js';
@@ -33,6 +34,11 @@ export const DetailDialog = defineComponent({
         const selectedSpellcards = ref([...(appUi.modalPayload?.spellcardLoadout || [])]);
         const loadoutBusy = ref(false);
         const loadoutMessage = ref('');
+        const inventoryItems = ref([...(appUi.modalPayload?.inventoryItems || [])]);
+        const equippedItems = ref([...(appUi.modalPayload?.equippedItems || [])]);
+        const inventoryBusy = ref('');
+        const inventoryMessage = ref('');
+        const giftTarget = ref(appUi.modalPayload?.giftTargets?.[0] || '');
         function toggleSpellcard(name) {
             const index = selectedSpellcards.value.indexOf(name);
             if (index >= 0) selectedSpellcards.value.splice(index, 1);
@@ -50,7 +56,30 @@ export const DetailDialog = defineComponent({
                 loadoutBusy.value = false;
             }
         }
-        return { closeAppModal, detail, loadoutBusy, loadoutMessage, rows, saveLoadout, selectedSpellcards, toggleSpellcard };
+        async function itemAction(action, item) {
+            if (action === 'discard' && !window.confirm(`确定丢弃「${item.name}」吗？`)) return;
+            inventoryBusy.value = `${action}:${item.name}`;
+            inventoryMessage.value = '';
+            try {
+                const result = await performInventoryAction(
+                    state.currentSession.characterId, action, item.name,
+                    action === 'gift' ? giftTarget.value : ''
+                );
+                inventoryItems.value = result.inventory?.items || [];
+                equippedItems.value = result.inventory?.equipped || [];
+                state.currentSession.playerState = result.player_state || state.currentSession.playerState;
+                state.currentSession.relationshipsMap = result.relationships || state.currentSession.relationshipsMap;
+                inventoryMessage.value = result.result?.message || '行囊已更新';
+            } catch (error) {
+                inventoryMessage.value = error.message || '行囊操作失败';
+            } finally {
+                inventoryBusy.value = '';
+            }
+        }
+        return {
+            closeAppModal, detail, equippedItems, giftTarget, inventoryBusy, inventoryItems, inventoryMessage,
+            itemAction, loadoutBusy, loadoutMessage, rows, saveLoadout, selectedSpellcards, toggleSpellcard
+        };
     },
     template: `
         <div class="vue-modal-backdrop" @click.self="closeAppModal">
@@ -74,6 +103,27 @@ export const DetailDialog = defineComponent({
                             </dd>
                         </template>
                     </dl>
+                    <section v-if="detail.inventoryEditor" class="inventory-action-editor">
+                        <div class="spellcard-loadout-heading"><strong>行囊操作</strong><span>{{ inventoryItems.length }} 件</span></div>
+                        <div v-if="detail.giftTargets?.length" class="inventory-gift-target">
+                            <label for="inventoryGiftTarget">赠送对象</label>
+                            <select id="inventoryGiftTarget" v-model="giftTarget"><option v-for="name in detail.giftTargets" :key="name">{{ name }}</option></select>
+                        </div>
+                        <div v-if="inventoryItems.length" class="inventory-action-list">
+                            <article v-for="item in inventoryItems" :key="item.name" :class="{ 'is-equipped': equippedItems.includes(item.name) }">
+                                <div><strong>{{ item.name }} × {{ item.quantity || 1 }}<span v-if="equippedItems.includes(item.name)"> · 随身</span></strong><small>{{ item.description || item.category || '幻想乡物品' }}</small></div>
+                                <div>
+                                    <button type="button" :disabled="!!inventoryBusy" title="使用" @click="itemAction('use', item)">用</button>
+                                    <button v-if="!equippedItems.includes(item.name)" type="button" :disabled="!!inventoryBusy" title="设为随身装备" @click="itemAction('equip', item)">装</button>
+                                    <button v-else type="button" :disabled="!!inventoryBusy" title="卸下随身装备" @click="itemAction('unequip', item)">卸</button>
+                                    <button v-if="detail.giftTargets?.length" type="button" :disabled="!!inventoryBusy || !giftTarget" title="赠送" @click="itemAction('gift', item)">赠</button>
+                                    <button type="button" :disabled="!!inventoryBusy" title="丢弃" @click="itemAction('discard', item)">弃</button>
+                                </div>
+                            </article>
+                        </div>
+                        <div v-else class="dialog-empty">行囊里暂时没有可操作的物品。</div>
+                        <p v-if="inventoryMessage" class="dialog-status">{{ inventoryMessage }}</p>
+                    </section>
                     <section v-if="detail.spellcardEditor" class="spellcard-loadout-editor">
                         <div class="spellcard-loadout-heading"><strong>配置常用符卡</strong><span>{{ selectedSpellcards.length }}/6</span></div>
                         <p>仅影响叙事优先参考，不限制临场使用其他符卡。</p>

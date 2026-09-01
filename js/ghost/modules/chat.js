@@ -239,6 +239,9 @@ export async function callAIAndRespond(userInput) {
             state.currentSession.incidentState = response.incident_state;
             updateTimeDisplay();
         }
+        if (response.onboarding) {
+            state.currentSession.onboarding = response.onboarding;
+        }
         
         // 处理时间变化
         if (response.time_cost !== undefined && response.time_cost > 0) {
