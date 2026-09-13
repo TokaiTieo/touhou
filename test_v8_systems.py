@@ -22,7 +22,7 @@ class V8MigrationTests(unittest.TestCase):
             "incident_state": {"id": "touhou_rift", "title": "结界裂隙异变", "status": "resolved"},
         }
         self.assertTrue(migrate_save_schema(character))
-        self.assertEqual(character["save_version"], 8)
+        self.assertEqual(character["save_version"], 9)
         self.assertTrue(character["custom_extension"]["keep"])
         self.assertTrue(character["profile"]["adult_verified"])
         first = list(character["migration_history"])

@@ -59,6 +59,7 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
         
         // 转换历史记录格式
         state.clearChatHistory();
+        state.historyStart = result.history_start || 0;
         for (let i = 0; i < state.currentSession.conversationHistory.length; i++) {
             const msg = state.currentSession.conversationHistory[i];
             let role = 'assistant';
@@ -78,7 +79,7 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
             state.addChatMessage({
                 role, speaker: msg.speaker, content: msg.content,
                 timestamp: Date.now(), isDead: msg.is_dead || false, isDialogue,
-                conversationIndex: i,
+                conversationIndex: state.historyStart + i,
                 messageId: msg.message_id || null,
                 rating: msg.rating || null,
                 rewriteCandidates: Array.isArray(msg.rewrite_candidates) ? msg.rewrite_candidates : [],
@@ -103,6 +104,34 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
 }
 
 // 退出幽灵模式
+export async function loadEarlierHistory() {
+    if (state.historyLoading || state.historyStart <= 0) return;
+    const owner = state.currentSession.characterId;
+    const before = state.chatHistory.find(message => message.messageId)?.messageId;
+    if (!before) return;
+    state.historyLoading = true;
+    try {
+        const response = await fetch('/api/ghost/conversation_history?' + new URLSearchParams({
+            character_id: owner, before_id: before, limit: '80'
+        }));
+        if (!response.ok) throw new Error('历史记录加载失败，请重新加载角色');
+        const page = await response.json();
+        if (owner !== state.currentSession.characterId) return;
+        const items = page.messages.map((msg, index) => ({
+            localId: msg.message_id, messageId: msg.message_id, conversationIndex: page.start + index,
+            role: msg.speaker === state.currentSession.profile?.name ? 'user' : msg.speaker === '系统' ? 'system' : 'assistant',
+            isDialogue: ![state.currentSession.profile?.name, '系统', '旁白'].includes(msg.speaker),
+            speaker: msg.speaker, content: msg.content, timestamp: msg.timestamp, isDead: msg.is_dead,
+            rating: msg.rating, rewriteCandidates: msg.rewrite_candidates || [], activeRewrite: -1
+        }));
+        const ids = new Set(state.chatHistory.map(item => item.messageId));
+        state.chatHistory.unshift(...items.filter(item => !ids.has(item.messageId)));
+        state.historyStart = page.start;
+    } finally {
+        state.historyLoading = false;
+    }
+}
+
 export async function exitGhostMode() {
     // 结束对话
     if (state.isInDialogue && state.currentDialogueNPC) {

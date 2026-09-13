@@ -46,12 +46,16 @@ test('captures the single-root Vue interface on desktop and mobile', async ({ pa
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(page.locator('.th-npc').first()).toBeVisible();
+    await page.waitForTimeout(450);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: `${visualDir}/game-desktop.png` });
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator('.th-mobile-side-toggle')).toBeVisible();
-    await page.waitForTimeout(260);
+    await page.waitForTimeout(450);
+    const sendBox = await page.locator('.th-send').boundingBox();
+    expect(sendBox.x + sendBox.width).toBeLessThanOrEqual(390);
+    expect(await page.locator('.th-send strong').evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     const closedSidebar = await page.locator('.th-side').evaluate(element => ({
         className: element.className,

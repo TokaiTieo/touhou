@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from backend.services.ai_service import call_ai_async, get_last_ai_runtime
+from backend.services.character_commands import execute_character_command
 from backend.services.incident_service import sync_incident_from_tasks
 from backend.services.narrative_evaluation_service import (
     build_rated_samples,
@@ -50,10 +51,16 @@ from backend.world_manager import (
     save_tasks,
 )
 
+from backend.services.character_commands import serialize_character_access
+
 router = APIRouter()
 
 
-class AppendConversationRequest(BaseModel):
+class CommandRequest(BaseModel):
+    operation_id: Optional[str] = None
+
+
+class AppendConversationRequest(CommandRequest):
     character_id: str
     speaker: str
     content: str
@@ -61,18 +68,20 @@ class AppendConversationRequest(BaseModel):
     is_dead: bool = False
 
 
-class DeleteHistoryRequest(BaseModel):
+class DeleteHistoryRequest(CommandRequest):
     character_id: str
-    from_index: int
+    from_index: Optional[int] = None
+    message_id: Optional[str] = None
 
 
-class RateMessageRequest(BaseModel):
+class RateMessageRequest(CommandRequest):
     character_id: str
-    message_index: int
+    message_index: Optional[int] = None
+    message_id: Optional[str] = None
     rating: Optional[str] = None
 
 
-class RewriteMessageRequest(BaseModel):
+class RewriteMessageRequest(CommandRequest):
     character_id: str
     message_id: Optional[str] = None
     message_index: Optional[int] = None
@@ -86,7 +95,7 @@ class RestoreSnapshotRequest(BaseModel):
     branch_name: Optional[str] = None
 
 
-class SpellcardLoadoutRequest(BaseModel):
+class SpellcardLoadoutRequest(CommandRequest):
     character_id: str
     spellcards: list[str]
 
@@ -96,9 +105,10 @@ class InventoryActionRequest(BaseModel):
     action: str
     item_name: str
     npc_name: Optional[str] = None
+    operation_id: Optional[str] = None
 
 
-class OnboardingRequest(BaseModel):
+class OnboardingRequest(CommandRequest):
     character_id: str
     action: str
 
@@ -112,116 +122,125 @@ def _require_character(character_id: str):
 
 @router.post("/append_conversation")
 async def append_conversation(request: AppendConversationRequest):
-    character = _require_character(request.character_id)
-    current_hour = character.get("time", {}).get("current_hour", 0)
-    history = character.setdefault("conversation_history", [])
-    message = {
-        "message_id": f"msg_{datetime.now().timestamp()}_{len(history)}",
-        "speaker": request.speaker,
-        "content": request.content,
-        "scene": request.scene,
-        "is_dead": request.is_dead,
-        "timestamp": datetime.now().isoformat(),
-        "game_hour": current_hour,
-        "rating": None,
-        "reroll_of": None,
-        "rewrite_candidates": [],
-    }
-    history.append(message)
-    character["conversation_history"] = history[-500:]
-    rebuild_story_summary(character, load_tasks(request.character_id))
-    save_character(request.character_id, character)
-    return {
-        "status": "ok",
-        "message_id": message["message_id"],
-        "message_index": len(character["conversation_history"]) - 1,
-        "rewrite_candidates": [],
-    }
+    async def change(character, tasks):
+        current_hour = character.get("time", {}).get("current_hour", 0)
+        history = character.setdefault("conversation_history", [])
+        message = {
+            "message_id": f"msg_{datetime.now().timestamp()}_{len(history)}",
+            "speaker": request.speaker,
+            "content": request.content,
+            "scene": request.scene,
+            "is_dead": request.is_dead,
+            "timestamp": datetime.now().isoformat(),
+            "game_hour": current_hour,
+            "rating": None,
+            "reroll_of": None,
+            "rewrite_candidates": [],
+        }
+        history.append(message)
+        character["conversation_history"] = history[-500:]
+        rebuild_story_summary(character, tasks)
+        return {
+            "status": "ok",
+            "message_id": message["message_id"],
+            "message_index": len(character["conversation_history"]) - 1,
+            "rewrite_candidates": [],
+        }
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "append_conversation", **payload}, change)
 
 
 @router.post("/rewrite_message")
 async def rewrite_message(request: RewriteMessageRequest):
-    """Create a prose-only alternative without replaying game state."""
-    character = _require_character(request.character_id)
-    history = character.setdefault("conversation_history", [])
-    target_index = None
-    if request.message_id:
-        target_index = next(
-            (index for index, item in enumerate(history) if item.get("message_id") == request.message_id),
-            None,
-        )
-    if target_index is None and request.message_index is not None:
-        target_index = request.message_index
-    if target_index is None or target_index < 0 or target_index >= len(history):
-        raise HTTPException(status_code=400, detail="消息索引无效")
+    async def change(character, tasks):
+        """Create a prose-only alternative without replaying game state."""
+        history = character.setdefault("conversation_history", [])
+        target_index = None
+        if request.message_id:
+            target_index = next(
+                (index for index, item in enumerate(history) if item.get("message_id") == request.message_id),
+                None,
+            )
+        if target_index is None and request.message_index is not None:
+            target_index = request.message_index
+        if target_index is None or target_index < 0 or target_index >= len(history):
+            raise HTTPException(status_code=400, detail="消息索引无效")
 
-    target = history[target_index]
-    player_name = character.get("profile", {}).get("name", "玩家")
-    if target.get("speaker") in (player_name, "系统"):
-        raise HTTPException(status_code=400, detail="仅可改写叙事或 NPC 回复")
+        target = history[target_index]
+        player_name = character.get("profile", {}).get("name", "玩家")
+        if target.get("speaker") in (player_name, "系统"):
+            raise HTTPException(status_code=400, detail="仅可改写叙事或 NPC 回复")
 
-    context_start = max(0, target_index - 5)
-    context_lines = [
-        f"{item.get('speaker', '未知')}: {item.get('content', '')}"
-        for item in history[context_start:target_index]
-    ]
-    instruction = (request.instruction or "改善文风、节奏和角色语气").strip()[:500]
-    prompt = f"""你是《东方异变录》的文字润色器。请为下方原回复生成一个不同措辞的候选版本。
+        context_start = max(0, target_index - 5)
+        context_lines = [
+            f"{item.get('speaker', '未知')}: {item.get('content', '')}"
+            for item in history[context_start:target_index]
+        ]
+        instruction = (request.instruction or "改善文风、节奏和角色语气").strip()[:500]
+        prompt = f"""你是《东方异变录》的文字润色器。请为下方原回复生成一个不同措辞的候选版本。
 
-硬性规则：
-1. 只能改写叙事表达，不得改变已经发生的事实、胜负、伤势、物品、时间、地点、任务、关系、记忆或世界状态。
-2. 不得增加新的行动结果、任务进度、奖励、惩罚或数值变化。
-3. 保持原角色身份与语气，不要输出分析、标题、Markdown 代码块或 JSON。
-4. 直接输出一段可替换原回复的完整中文文本。
+    硬性规则：
+    1. 只能改写叙事表达，不得改变已经发生的事实、胜负、伤势、物品、时间、地点、任务、关系、记忆或世界状态。
+    2. 不得增加新的行动结果、任务进度、奖励、惩罚或数值变化。
+    3. 保持原角色身份与语气，不要输出分析、标题、Markdown 代码块或 JSON。
+    4. 直接输出一段可替换原回复的完整中文文本。
 
-改写偏好：{instruction}
-最近上下文：
-{chr(10).join(context_lines) or "无"}
+    改写偏好：{instruction}
+    最近上下文：
+    {chr(10).join(context_lines) or "无"}
 
-原回复：
-{target.get("content", "")}
-"""
-    rewritten = (await call_ai_async(prompt, temperature=0.85)).strip()
-    parsed = safe_json_loads(rewritten, rewritten)
-    if isinstance(parsed, dict):
-        rewritten = str(parsed.get("description") or parsed.get("message") or "").strip()
-    if not rewritten or rewritten.startswith(("【AI调用失败】", "【系统提示】")):
-        raise HTTPException(status_code=502, detail=rewritten or "模型未返回有效改写")
+    原回复：
+    {target.get("content", "")}
+    """
+        rewritten = (await call_ai_async(prompt, temperature=0.85)).strip()
+        parsed = safe_json_loads(rewritten, rewritten)
+        if isinstance(parsed, dict):
+            rewritten = str(parsed.get("description") or parsed.get("message") or "").strip()
+        if not rewritten or rewritten.startswith(("【AI调用失败】", "【系统提示】")):
+            raise HTTPException(status_code=502, detail=rewritten or "模型未返回有效改写")
 
-    runtime = get_last_ai_runtime()
-    candidate = {
-        "candidate_id": f"rewrite_{datetime.now().timestamp()}_{len(target.get('rewrite_candidates', []))}",
-        "content": rewritten,
-        "created_at": datetime.now().isoformat(),
-        "model": runtime.get("used_model") or runtime.get("requested_model"),
-    }
-    candidates = target.setdefault("rewrite_candidates", [])
-    candidates.append(candidate)
-    target["rewrite_candidates"] = candidates[-4:]
-    character["model_runtime"] = runtime
-    save_character(request.character_id, character)
-    return {
-        "status": "ok",
-        "message_id": target.get("message_id"),
-        "message_index": target_index,
-        "original": target.get("content", ""),
-        "rewrite_candidates": target["rewrite_candidates"],
-        "active_candidate": len(target["rewrite_candidates"]) - 1,
-        "model_runtime": runtime,
-    }
+        runtime = get_last_ai_runtime()
+        candidate = {
+            "candidate_id": f"rewrite_{datetime.now().timestamp()}_{len(target.get('rewrite_candidates', []))}",
+            "content": rewritten,
+            "created_at": datetime.now().isoformat(),
+            "model": runtime.get("used_model") or runtime.get("requested_model"),
+        }
+        candidates = target.setdefault("rewrite_candidates", [])
+        candidates.append(candidate)
+        target["rewrite_candidates"] = candidates[-4:]
+        character["model_runtime"] = runtime
+        return {
+            "status": "ok",
+            "message_id": target.get("message_id"),
+            "message_index": target_index,
+            "original": target.get("content", ""),
+            "rewrite_candidates": target["rewrite_candidates"],
+            "active_candidate": len(target["rewrite_candidates"]) - 1,
+            "model_runtime": runtime,
+        }
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "rewrite_message", **payload}, change)
 
 
 @router.post("/delete_history")
 async def delete_history(request: DeleteHistoryRequest):
-    character = _require_character(request.character_id)
-    history = character.setdefault("conversation_history", [])
-    if request.from_index < 0 or request.from_index > len(history):
-        raise HTTPException(status_code=400, detail="无效的索引")
-    deleted_count = len(history) - request.from_index
-    character["conversation_history"] = history[:request.from_index]
-    rebuild_story_summary(character, load_tasks(request.character_id), force=True)
-    save_character(request.character_id, character)
-    return {"status": "ok", "deleted_count": deleted_count}
+    async def change(character, tasks):
+        history = character.setdefault("conversation_history", [])
+        index = request.from_index
+        if request.message_id:
+            index = next((i for i, item in enumerate(history) if item.get("message_id") == request.message_id), -1)
+        if index is None or index < 0 or index > len(history):
+            raise HTTPException(status_code=400, detail="无效的索引")
+        deleted_count = len(history) - index
+        character["conversation_history"] = history[:index]
+        rebuild_story_summary(character, tasks, force=True)
+        return {"status": "ok", "deleted_count": deleted_count}
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "delete_history", **payload}, change)
 
 
 @router.get("/tasks")
@@ -230,7 +249,6 @@ async def get_tasks(character_id: str):
     character = load_character(character_id)
     if character:
         sync_incident_from_tasks(character, tasks_data)
-        save_character(character_id, character)
     return {
         "active_tasks": tasks_data.get("active_tasks", []),
         "completed_tasks": tasks_data.get("completed_tasks", []),
@@ -239,48 +257,54 @@ async def get_tasks(character_id: str):
 
 @router.post("/add_task")
 async def add_task(request: dict):
-    character_id = request.get("character_id")
-    task_info = request.get("task", {})
-    if not character_id or not task_info:
-        raise HTTPException(status_code=400, detail="缺少必要参数")
-    tasks_data = load_tasks(character_id)
-    active_tasks = tasks_data.get("active_tasks", [])
-    priority = max(1, min(1000, task_info.get("priority", 100)))
-    new_task = {
-        "id": f"task_{int(datetime.now().timestamp())}_{len(active_tasks)}",
-        "name": task_info.get("name", "新任务"),
-        "description": task_info.get("description", ""),
-        "priority": priority,
-        "created_at": datetime.now().isoformat(),
-        "source": task_info.get("source", "system_helper"),
-    }
-    active_tasks.append(new_task)
-    active_tasks.sort(key=lambda item: item.get("priority", 100))
-    tasks_data["active_tasks"] = active_tasks
-    save_tasks(character_id, tasks_data)
-    return {"status": "ok", "task": new_task}
+    async def change(character, tasks):
+        character_id = request.get("character_id")
+        task_info = request.get("task", {})
+        if not character_id or not task_info:
+            raise HTTPException(status_code=400, detail="缺少必要参数")
+        tasks_data = tasks
+        active_tasks = tasks_data.get("active_tasks", [])
+        priority = max(1, min(1000, task_info.get("priority", 100)))
+        new_task = {
+            "id": f"task_{int(datetime.now().timestamp())}_{len(active_tasks)}",
+            "name": task_info.get("name", "新任务"),
+            "description": task_info.get("description", ""),
+            "priority": priority,
+            "created_at": datetime.now().isoformat(),
+            "source": task_info.get("source", "system_helper"),
+        }
+        active_tasks.append(new_task)
+        active_tasks.sort(key=lambda item: item.get("priority", 100))
+        tasks_data["active_tasks"] = active_tasks
+        return {"status": "ok", "task": new_task}
+    payload = {key: value for key, value in request.items() if key != "operation_id"}
+    return await execute_character_command(request.get("character_id"), request.get("operation_id"),
+        {"command": "add_task", **payload}, change)
 
 
 @router.post("/delete_task")
 async def delete_task(request: dict):
-    character_id = request.get("character_id")
-    task_id = request.get("task_id")
-    if not character_id or not task_id:
-        raise HTTPException(status_code=400, detail="缺少必要参数")
-    tasks_data = load_tasks(character_id)
-    active_tasks = tasks_data.get("active_tasks", [])
-    removed_tasks = tasks_data.get("removed_tasks", [])
-    removed_task = next((item for item in active_tasks if item.get("id") == task_id), None)
-    if not removed_task:
-        raise HTTPException(status_code=404, detail="任务不存在")
-    active_tasks.remove(removed_task)
-    removed_task["removed_at"] = datetime.now().isoformat()
-    removed_task["removed_reason"] = "user_deleted"
-    removed_tasks.append(removed_task)
-    tasks_data["active_tasks"] = active_tasks
-    tasks_data["removed_tasks"] = removed_tasks
-    save_tasks(character_id, tasks_data)
-    return {"status": "ok", "message": "任务已删除"}
+    async def change(character, tasks):
+        character_id = request.get("character_id")
+        task_id = request.get("task_id")
+        if not character_id or not task_id:
+            raise HTTPException(status_code=400, detail="缺少必要参数")
+        tasks_data = tasks
+        active_tasks = tasks_data.get("active_tasks", [])
+        removed_tasks = tasks_data.get("removed_tasks", [])
+        removed_task = next((item for item in active_tasks if item.get("id") == task_id), None)
+        if not removed_task:
+            raise HTTPException(status_code=404, detail="任务不存在")
+        active_tasks.remove(removed_task)
+        removed_task["removed_at"] = datetime.now().isoformat()
+        removed_task["removed_reason"] = "user_deleted"
+        removed_tasks.append(removed_task)
+        tasks_data["active_tasks"] = active_tasks
+        tasks_data["removed_tasks"] = removed_tasks
+        return {"status": "ok", "message": "任务已删除"}
+    payload = {key: value for key, value in request.items() if key != "operation_id"}
+    return await execute_character_command(request.get("character_id"), request.get("operation_id"),
+        {"command": "delete_task", **payload}, change)
 
 
 @router.get("/relationships")
@@ -296,51 +320,47 @@ async def get_relationships(character_id: str):
 
 @router.post("/spellcard_loadout")
 async def set_spellcard_loadout(request: SpellcardLoadoutRequest):
-    character = _require_character(request.character_id)
-    spellcards = list(dict.fromkeys(str(name).strip() for name in request.spellcards if str(name).strip()))
-    if len(spellcards) > 6:
-        raise HTTPException(status_code=400, detail="符卡栏最多配置 6 张")
-    if any(len(name) > 160 for name in spellcards):
-        raise HTTPException(status_code=400, detail="符卡名称过长")
-    character["spellcard_loadout"] = spellcards
-    ensure_progression_profile(character)
-    save_character(request.character_id, character)
-    return {"status": "ok", "spellcard_loadout": character["spellcard_loadout"], "exploration_restricted": False}
+    async def change(character, tasks):
+        spellcards = list(dict.fromkeys(str(name).strip() for name in request.spellcards if str(name).strip()))
+        if len(spellcards) > 6:
+            raise HTTPException(status_code=400, detail="符卡栏最多配置 6 张")
+        if any(len(name) > 160 for name in spellcards):
+            raise HTTPException(status_code=400, detail="符卡名称过长")
+        character["spellcard_loadout"] = spellcards
+        ensure_progression_profile(character)
+        return {"status": "ok", "spellcard_loadout": character["spellcard_loadout"], "exploration_restricted": False}
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "set_spellcard_loadout", **payload}, change)
 
 
 @router.post("/inventory_action")
 async def inventory_action(request: InventoryActionRequest):
-    character = _require_character(request.character_id)
-    try:
-        result = perform_inventory_action(
-            character,
-            action=request.action,
-            item_name=request.item_name,
-            npc_name=request.npc_name or "",
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    save_character(request.character_id, character)
-    return {
-        "status": "ok",
-        "result": result,
-        "inventory": character.get("inventory_state", {}),
-        "relationships": character.get("relationships_map", {}),
-        "player_state": character.get("player_state", {}),
-    }
+    def change(character, tasks):
+        try:
+            result = perform_inventory_action(character, action=request.action,
+                item_name=request.item_name, npc_name=request.npc_name or "")
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"status": "ok", "result": result, "inventory": character.get("inventory_state", {}),
+                "relationships": character.get("relationships_map", {}), "player_state": character.get("player_state", {})}
+    return await execute_character_command(request.character_id, request.operation_id,
+        request.model_dump(exclude={"operation_id"}), change)
 
 
 @router.post("/onboarding")
 async def update_onboarding(request: OnboardingRequest):
-    character = _require_character(request.character_id)
-    if request.action == "dismiss":
-        state = dismiss_onboarding(character)
-    elif request.action in ("turn", "dialogue", "journal"):
-        state = advance_onboarding(character, request.action)
-    else:
-        raise HTTPException(status_code=400, detail="不支持的引导操作")
-    save_character(request.character_id, character)
-    return {"status": "ok", "onboarding": public_onboarding(character), "exploration_restricted": False}
+    async def change(character, tasks):
+        if request.action == "dismiss":
+            state = dismiss_onboarding(character)
+        elif request.action in ("turn", "dialogue", "journal"):
+            state = advance_onboarding(character, request.action)
+        else:
+            raise HTTPException(status_code=400, detail="不支持的引导操作")
+        return {"status": "ok", "onboarding": public_onboarding(character), "exploration_restricted": False}
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "update_onboarding", **payload}, change)
 
 
 @router.get("/character_journal")
@@ -396,6 +416,7 @@ async def get_character_snapshots(character_id: str):
 
 
 @router.post("/snapshots/restore")
+@serialize_character_access
 async def restore_snapshot(request: RestoreSnapshotRequest):
     _require_character(request.character_id)
     try:
@@ -421,6 +442,7 @@ async def get_save_health(character_id: str):
 
 
 @router.post("/save_health/repair")
+@serialize_character_access
 async def repair_save(request: dict):
     character_id = str(request.get("character_id") or "").strip()
     if not character_id:
@@ -497,6 +519,7 @@ async def storage_info():
 
 
 @router.post("/archive_character")
+@serialize_character_access
 async def archive_character(request: dict):
     character_id = str(request.get("character_id") or "").strip()
     _require_character(character_id)
@@ -524,6 +547,19 @@ async def get_npc_memories(character_id: str, npc_name: Optional[str] = None):
             "memories": memories.get(npc_name, []),
         }
     return {"memories": memories, "summaries": summaries}
+
+
+@router.get("/conversation_history")
+async def conversation_page(character_id: str, before_id: Optional[str] = None, limit: int = 80):
+    character = _require_character(character_id)
+    history = character.get("conversation_history", [])
+    end = len(history)
+    if before_id:
+        end = next((i for i, item in enumerate(history) if item.get("message_id") == before_id), -1)
+        if end < 0:
+            raise HTTPException(409, "剧情记录已改变，请重新加载角色")
+    start = max(0, end - max(1, min(200, limit)))
+    return {"messages": history[start:end], "start": start, "total": len(history), "has_more": start > 0}
 
 
 @router.get("/export_feedback")
@@ -577,26 +613,33 @@ async def export_feedback(character_id: str):
 
 @router.post("/end_session")
 async def end_session(request: dict):
-    character_id = request.get("character_id")
-    if not character_id:
-        raise HTTPException(status_code=400, detail="缺少 character_id")
-    character = _require_character(character_id)
-    character["last_played"] = datetime.now().isoformat()
-    save_character(character_id, character)
-    return {"status": "ok", "message": "会话已结束，数据已保存"}
+    async def change(character, tasks):
+        character_id = request.get("character_id")
+        if not character_id:
+            raise HTTPException(status_code=400, detail="缺少 character_id")
+        character["last_played"] = datetime.now().isoformat()
+        return {"status": "ok", "message": "会话已结束，数据已保存"}
+    payload = {key: value for key, value in request.items() if key != "operation_id"}
+    return await execute_character_command(request.get("character_id"), request.get("operation_id"),
+        {"command": "end_session", **payload}, change)
 
 
 @router.post("/rate_message")
 async def rate_message(request: RateMessageRequest):
-    character = _require_character(request.character_id)
-    history = character.get("conversation_history", [])
-    if request.message_index < 0 or request.message_index >= len(history):
-        raise HTTPException(status_code=400, detail="消息索引无效")
-    history[request.message_index]["rating"] = request.rating
-    history[request.message_index]["rated_at"] = datetime.now().isoformat()
-    character["narrative_feedback_summary"] = summarize_rated_samples(character)
-    save_character(request.character_id, character)
-    return {
-        "status": "ok",
-        "summary": character["narrative_feedback_summary"],
-    }
+    async def change(character, tasks):
+        history = character.get("conversation_history", [])
+        index = request.message_index
+        if request.message_id:
+            index = next((i for i, item in enumerate(history) if item.get("message_id") == request.message_id), -1)
+        if index is None or index < 0 or index >= len(history):
+            raise HTTPException(status_code=400, detail="消息索引无效")
+        history[index]["rating"] = request.rating
+        history[index]["rated_at"] = datetime.now().isoformat()
+        character["narrative_feedback_summary"] = summarize_rated_samples(character)
+        return {
+            "status": "ok",
+            "summary": character["narrative_feedback_summary"],
+        }
+    payload = request.model_dump(exclude={"operation_id"})
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "rate_message", **payload}, change)

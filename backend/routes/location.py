@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException
 from backend.world_manager import get_locations_dir, get_current_world_path
 from backend.location_manager import get_location_manager
 
+from backend.services.character_commands import serialize_character_access
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -262,6 +264,7 @@ async def get_npcs_by_scene(scene_name: str, character_id: str = None):
 
 
 @router.post("/update_scene")  # 移除 /ghost 前缀
+@serialize_character_access
 async def update_scene(request: dict):
     """更新角色场景"""
     from backend.routes.character import load_character, save_character

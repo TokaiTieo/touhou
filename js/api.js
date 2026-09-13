@@ -6,6 +6,7 @@
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const DEFAULT_STREAM_CONNECT_TIMEOUT_MS = 20000;
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 45000;
+const pendingCommands = new Map();
 
 function timeoutError(message) {
     const error = new Error(message);
@@ -44,12 +45,23 @@ async function apiCall(endpoint, options = {}) {
     if (mergedOptions.body && typeof mergedOptions.body !== 'string') {
         mergedOptions.body = JSON.stringify(mergedOptions.body);
     }
+    let commandKey;
+    if (mergedOptions.method === 'POST' && mergedOptions.body) {
+        const payload = JSON.parse(mergedOptions.body);
+        if (payload.character_id && !payload.turn_id && !payload.operation_id) {
+            commandKey = url + ':' + mergedOptions.body;
+            const id = pendingCommands.get(commandKey) || crypto.randomUUID();
+            pendingCommands.set(commandKey, id);
+            mergedOptions.body = JSON.stringify({ ...payload, operation_id: id });
+        }
+    }
     
     const timer = setTimeout(() => linked.controller.abort(timeoutError('本地游戏服务响应超时')), timeoutMs);
     try {
         const response = await fetch(url, mergedOptions);
         
         if (!response.ok) {
+            if (commandKey && response.status < 500) pendingCommands.delete(commandKey);
             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
             try {
                 const errorData = await response.json();
@@ -64,7 +76,9 @@ async function apiCall(endpoint, options = {}) {
             return null;
         }
         
-        return await response.json();
+        const result = await response.json();
+        if (commandKey) pendingCommands.delete(commandKey);
+        return result;
     } catch (err) {
         if (linked.controller.signal.aborted && !fetchOptions.signal?.aborted) {
             throw timeoutError(`请求超过 ${Math.round(timeoutMs / 1000)} 秒未响应`);
@@ -246,7 +260,8 @@ async function loadCharacter(characterId, chapterIndex, scene = null) {
         body: {
             character_id: characterId,
             chapter_index: chapterIndex,
-            scene: scene
+            scene: scene,
+            history_limit: 80
         }
     });
     //console.log('loadCharacter API response:', result);
@@ -389,12 +404,13 @@ async function rewriteMessage(characterId, messageId, messageIndex, instruction 
 }
 
 // 删除历史记录
-async function deleteHistory(characterId, fromIndex) {
+async function deleteHistory(characterId, fromIndex, messageId = null) {
     return await apiCall('/ghost/delete_history', {
         method: 'POST',
         body: {
             character_id: characterId,
-            from_index: fromIndex
+            from_index: fromIndex,
+            message_id: messageId
         }
     });
 }

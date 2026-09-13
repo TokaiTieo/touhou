@@ -8,6 +8,7 @@ import {
     watch
 } from '../vendor/vue.esm-browser.prod.js';
 import { state } from '../ghost/core/state.js';
+import VirtualHistory from './virtual-history.js';
 import { renderMarkdownLite, softenPublicText } from '../ghost/ui/text.js';
 import { showToast } from '../ghost/ui/components.js';
 import { accessibilityState, speakText } from './accessibility.js';
@@ -193,13 +194,14 @@ const ChatMessage = defineComponent({
             refreshGameUi();
         }
         async function rate(value) {
-            props.message.rating = value;
-            if (state.currentSession.characterId && props.message.conversationIndex !== undefined) {
-                await fetch('/api/ghost/rate_message', {
+            if (state.currentSession.characterId && props.message.messageId) {
+                const response = await fetch('/api/ghost/rate_message', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ character_id: state.currentSession.characterId, message_index: props.message.conversationIndex, rating: value })
-                }).catch(() => {});
+                    body: JSON.stringify({ character_id: state.currentSession.characterId, message_id: props.message.messageId, rating: value })
+                }).catch(() => null);
+                if (!response?.ok) { showToast('评价未保存，请稍后重试', 2000); return; }
             }
+            props.message.rating = value;
             refreshGameUi();
         }
         return { accessibilityState, copy, emit, html, kind, messageClass, rate, selectRewrite, speak };
@@ -311,7 +313,7 @@ const TaskPanel = defineComponent({
 
 export const GameScreen = defineComponent({
     name: 'GameScreen',
-    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel },
+    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory },
     setup() {
         const chatRef = ref(null);
         const actionRef = ref(null);
@@ -326,6 +328,26 @@ export const GameScreen = defineComponent({
             };
         });
         const messages = computed(() => state.chatHistory);
+        const hasEarlier = computed(() => state.historyStart > 0);
+        const earlierLoading = ref(false);
+        const followTail = ref(true);
+        function onChatScroll() {
+            const element = chatRef.value;
+            if (element) followTail.value = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+        }
+        async function earlier() {
+            if (earlierLoading.value) return;
+            earlierLoading.value = true;
+            try {
+                await (await import('../ghost/core/session.js')).loadEarlierHistory();
+                await nextTick();
+                followTail.value = false;
+            } catch (error) {
+                showToast(error.message, 2500);
+            } finally {
+                earlierLoading.value = false;
+            }
+        }
         const locations = computed(() => state.locationTree || []);
         const npcs = computed(() => state.currentSceneNPCs || []);
         const activeTasks = computed(() => [...(state.tasks?.active || [])].sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100)));
@@ -349,6 +371,7 @@ export const GameScreen = defineComponent({
         const speechRecognitionSupported = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
 
         function scrollChat() {
+            if (earlierLoading.value || !followTail.value) return;
             nextTick(() => {
                 if (chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight;
             });
@@ -475,7 +498,7 @@ export const GameScreen = defineComponent({
         function selectSuggestion(item) { fillComposer(item.action, item.speech); }
 
         return {
-            actionRef, activeTasks, addNpc, anomaly, chatRef, completedTasks, continueDialogue,
+            actionRef, activeTasks, addNpc, anomaly, chatRef, completedTasks, continueDialogue, earlier, earlierLoading, hasEarlier, onChatScroll,
             deleteMessage, deleteTask, endDialogue, gameUi, helper, journal, keydown, locationDetail,
             dismissOnboarding, locations, messages, npcAction, npcs, onboarding, onboardingPrimary,
             playerState, relationships, reroll, selectSuggestion, send, sendRef, session,
@@ -486,10 +509,13 @@ export const GameScreen = defineComponent({
     template: `
         <div class="th-game">
             <section class="th-story-stage">
-                <div ref="chatRef" class="th-chat-scroll" aria-label="剧情记录">
+                <div ref="chatRef" class="th-chat-scroll" aria-label="剧情记录" @scroll.passive="onChatScroll">
+                    <button v-if="hasEarlier" type="button" class="th-history-more" :disabled="earlierLoading" @click="earlier">{{ earlierLoading ? '正在翻阅' : '翻阅更早记录' }}</button>
                     <div v-if="!messages.length" class="th-opening"><span>東</span><strong>异变记录尚未落笔</strong><small>第一段叙事正在生成</small></div>
-                    <ChatMessage v-for="(message, index) in messages" :key="message.timestamp + '-' + index" :message="message" :index="index"
-                        :last="index === messages.length - 1" @delete="deleteMessage" @reroll="reroll" @continue="continueDialogue" />
+                    <VirtualHistory :items="messages" :scroll-parent="chatRef" v-slot="{ message, index }">
+                        <ChatMessage :message="message" :index="index" :last="index === messages.length - 1"
+                            @delete="deleteMessage" @reroll="reroll" @continue="continueDialogue" />
+                    </VirtualHistory>
                     <button v-if="session.isInDialogue && session.currentDialogueNPC && !session.isWaitingForAI" type="button" class="th-end-dialogue" @click="endDialogue">结束与 {{ session.currentDialogueNPC?.name }} 的对话</button>
                 </div>
                 <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</p>

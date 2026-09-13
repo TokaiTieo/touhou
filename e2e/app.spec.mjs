@@ -219,7 +219,7 @@ test('completes the playable loop, compares a rewrite, branches, and reloads the
         const branch = list.characters.find(item => item.profile?.name === 'E2E异变测试者 · 独立分支');
         return (await fetch(`/api/ghost/character/${branch.character_id}`)).json();
     });
-    expect(save.save_version).toBe(8);
+    expect(save.save_version).toBe(9);
     expect(save.story_summary).toBeTruthy();
     expect(save.migration_history.some(item => item.version === 8)).toBeTruthy();
 });

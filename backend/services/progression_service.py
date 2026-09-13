@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Dict, Iterable, List
+from backend.services.item_effects import EFFECT_LABELS, definition, equipment_effects, gift_response
 
 
 SCENE_FACTIONS = {
@@ -127,13 +128,17 @@ def ensure_inventory_state(character: Dict) -> Dict:
         equipped = []
         state["equipped"] = equipped
     known = {_item_name(item) for item in items if _item_name(item)}
+    imported = state.setdefault("legacy_imported_names", [])
     legacy_values: List = list(character.get("inventory", []) or [])
     resources = character.get("resources", {}) or {}
     legacy_values.extend(resources.get("道具", []) or [])
     legacy_values.extend(resources.get("药材", []) or [])
     for value in legacy_values:
         name = _item_name(value)
-        if not name or name in known:
+        if not name or name in imported:
+            continue
+        imported.append(name)
+        if name in known:
             continue
         if isinstance(value, dict):
             item = {**value}
@@ -143,6 +148,13 @@ def ensure_inventory_state(character: Dict) -> Dict:
             item = {"name": name, "quantity": 1, "category": "旧版物品", "description": "从旧存档自动索引"}
         items.append(item)
         known.add(name)
+    for item in items:
+        if isinstance(item, dict):
+            item.setdefault("definition_id", definition(item).get("id"))
+            item["effect_description"] = "；".join(
+                [f"使用：{key} {value:+}" for key, value in definition(item).get("use", {}).items()]
+                + [f"装备：{EFFECT_LABELS[key]} +{value}" for key, value in definition(item).get("equip", {}).items()]
+            )
     return state
 
 
@@ -161,17 +173,10 @@ def _apply_known_item_effect(character: Dict, name: str, result: Dict) -> bool:
             state[key] = int(new) if float(new).is_integer() else round(new, 2)
             delta[key] = round(_number(delta.get(key), 0) + new - old, 2)
 
-    applied = False
-    if any(word in name for word in ("恢复药", "急救药", "绷带", "伤药")):
-        change("受伤", -20)
-        applied = True
-    if any(word in name for word in ("茶", "便当", "饭团", "点心")):
-        change("疲劳", -12)
-        applied = True
-    if any(word in name for word in ("灵力", "御神酒", "魔力药")):
-        change("灵力", 15, 999999)
-        applied = True
-    return applied
+    effects = definition(name).get("use", {})
+    for key, amount in effects.items():
+        change(key, amount, 999999 if key == "灵力" else 100)
+    return bool(effects)
 
 
 def _apply_inventory_updates(character: Dict, updates: List[Dict], result: Dict) -> List[Dict]:
@@ -260,6 +265,24 @@ def apply_progression_updates(character: Dict, result: Dict, scene: str, action_
 
     progression = {"inventory": inventory_delta, "reputation": reputation_delta}
     collect_progression_feedback(character, result, progression)
+    value = _number(character.get("reputation", {}).get(faction), 0)
+    if faction and value >= 50 and any(word in text for word in ("求助", "请协助", "请求援助", "请帮忙")):
+        day = character.get("time", {}).get("current_day", 1)
+        aid_key = f"{faction}:{day}"
+        receipts = character.setdefault("reputation_aid_receipts", [])
+        if aid_key not in receipts:
+            amount = 4 if value >= 80 else 2
+            player = character.setdefault("player_state", {})
+            old = _number(player.get("疲劳"), 0)
+            player["疲劳"] = max(0, old - amount)
+            delta = result.setdefault("player_state_delta", {})
+            delta["疲劳"] = delta.get("疲劳", 0) + player["疲劳"] - old
+            experience = character.setdefault("skill_experience", {})
+            experience["调查熟练度"] = _number(experience.get("调查熟练度"), 0) + amount
+            support = {"type": "support", "title": f"{faction}提供协助", "detail": f"当地信任带来调查经验 +{amount}、疲劳减轻 {old - player['疲劳']:g}"}
+            result["progression_notifications"].append(support)
+            progression["support"] = support
+            character["reputation_aid_receipts"] = (receipts + [aid_key])[-80:]
     result["progression_delta"] = progression
     return progression
 
@@ -279,6 +302,8 @@ def format_progression_for_ai(character: Dict) -> str:
         for name, value in list(relation_progress.items())[-10:] if isinstance(value, dict)
     ]
     return "\n".join([
+        "随身装备效果：" + ("；".join(equipment_effects(character)["sources"]) or "无"),
+        "异变承接：" + str(character.get("incident_state", {}).get("variant", {}).get("summary") or "尚无旧轮次影响"),
         "持有物品：" + ("、".join(item_lines) if item_lines else "无"),
         "势力声望：" + (
             "、".join(
@@ -361,11 +386,14 @@ def perform_inventory_action(
         _apply_inventory_updates(character, [{"action": "remove", "name": name, "quantity": 1}], result)
         if action == "gift":
             from backend.services.relationship_service import apply_relationship_delta
+            from backend.services.npc_memory_service import record_npc_memories
 
+            amount, reason = gift_response(character, npc_name.strip(), item)
             result["relationship"] = apply_relationship_delta(
-                character, npc_name.strip(), 4, f"收到玩家赠送的{name}"
+                character, npc_name.strip(), amount, f"收到玩家赠送的{name}：{reason}"
             )
-            result["message"] = f"已将「{name}」赠给{npc_name.strip()}"
+            record_npc_memories(character, [{"npc_name": npc_name.strip(), "summary": f"收到玩家赠送的{name}，{reason}", "tags": ["赠礼", "关系"]}], "gift")
+            result["message"] = f"已将「{name}」赠给{npc_name.strip()}（{reason}）"
         else:
             result["message"] = f"已丢弃「{name}」"
 

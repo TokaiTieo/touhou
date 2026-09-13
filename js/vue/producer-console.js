@@ -2,6 +2,7 @@ import { computed, defineComponent, onMounted, ref } from '../vendor/vue.esm-bro
 import { state } from '../ghost/core/state.js';
 import { openAppModal } from './app-store.js';
 import {
+    apiCall,
     loadProducerConsoleState,
     loadProducerContent,
     loadProducerContentBackups,
@@ -77,6 +78,23 @@ export const ProducerConsole = defineComponent({
         const evaluationReport = ref(null);
         const evaluationMessage = ref('');
         const memoryReport = ref(null);
+        const archive = ref({ items: [], total: 0 });
+        const archiveOffset = ref(0);
+        async function loadArchive(offset = 0) {
+            if (!memoryNpc.value.trim()) return;
+            await run(async () => {
+                archive.value = await apiCall('/ghost/producer_console/memory/archive?' + new URLSearchParams({
+                    character_id: state.currentSession.characterId, npc_name: memoryNpc.value.trim(), offset, limit: 30
+                }));
+                archiveOffset.value = offset;
+            }, '记忆档案已读取');
+        }
+        async function restoreArchived(item) {
+            await run(() => apiCall('/ghost/producer_console/memory/restore_archive', { method: 'POST', body: {
+                character_id: state.currentSession.characterId, npc_name: memoryNpc.value.trim(), archive_id: item.archive_id
+            } }), '原始记忆已恢复');
+            await loadArchive(archiveOffset.value);
+        }
         const debug = computed(() => data.value.debug_last_ai || {});
         const runtime = computed(() => data.value.model_runtime || debug.value.model_runtime || {});
         const context = computed(() => debug.value.context_injection || {});
@@ -457,6 +475,7 @@ export const ProducerConsole = defineComponent({
             evaluationReport, eventDescription, eventTitle, eventType, loadContent, memoryGroups,
             memoryId, memoryImportance, memoryNpc, memoryReport, memoryRetrieval, memorySummary,
             memoryTags, nodeName, npcName, playerPairs, reason, referenceValues, remaining,
+            archive, archiveOffset, loadArchive, restoreArchived,
             removeStructuredRecord, resourceKey, resourcePairs, resourceValue, restore, restoreBackup,
             runEvaluation, runMemoryMaintenance, runtime, saveContent, scene, setAnomaly,
             setPlayerState, setRelationship, setResource, stateKey, stateValue, structuredCollections,
@@ -480,6 +499,11 @@ export const ProducerConsole = defineComponent({
                     </div>
                     <section class="producer-block producer-wide"><h3>创建自由探索事件</h3><input v-model="eventTitle" placeholder="事件标题"><select v-model="eventType"><option>异变线索</option><option>日常</option><option>偶遇</option><option>战斗</option><option>暧昧邀约</option><option>资源发现</option></select><textarea v-model="eventDescription" rows="3" placeholder="事件描述"></textarea><button :disabled="busy" @click="createEvent">写入事件池</button></section>
                     <section class="producer-block producer-wide"><h3>NPC 长期记忆</h3><input v-model="memoryNpc" placeholder="NPC 名称"><input v-model="memoryId" placeholder="记忆 ID，可留空"><textarea v-model="memorySummary" rows="3" placeholder="记忆内容"></textarea><input v-model="memoryTags" placeholder="标签"><input v-model="memoryImportance" type="number" min="1" max="10" placeholder="重要度"><div class="producer-memory-actions"><button :disabled="busy" @click="upsertMemory">新增/改写</button><button :disabled="busy" @click="deleteMemory">删除 ID</button><button :disabled="busy" @click="compressMemory">压缩指定人物</button><button :disabled="busy" @click="runMemoryMaintenance">维护全部记忆</button></div><div v-if="memoryReport" class="producer-state-preview">去重 {{ memoryReport.duplicates_removed || 0 }} 条 · 压缩 {{ memoryReport.compressed_npcs?.length || 0 }} 人 · 索引失效 {{ memoryReport.invalidated_indexes || 0 }} 组<span v-if="memoryReport.error"> · {{ memoryReport.error }}</span></div><div class="producer-state-preview producer-memory-preview"><div v-for="[name,items] in memoryGroups" :key="name" class="producer-memory-npc"><strong>{{ name }}</strong><div v-for="item in items.slice(-3).reverse()" :key="item.id" class="producer-memory-item"><code>{{ item.id }}</code><span>{{ item.summary }}</span></div></div></div></section>
+                    <section class="producer-block producer-wide"><h3>原始记忆档案</h3>
+                        <div class="producer-tool-row"><input v-model="memoryNpc" aria-label="档案人物" placeholder="NPC 名称"><button :disabled="busy || !memoryNpc.trim()" @click="loadArchive(0)">查阅档案</button><span>{{ archive.total }} 条</span></div>
+                        <div v-for="item in archive.items" :key="item.archive_id" class="producer-memory-item"><span>{{ item.summary }}</span><small>{{ item.knowledge_type }} · {{ item.source_npc || item.source }} · {{ item.truth_status }}</small><button :disabled="busy" @click="restoreArchived(item)">恢复原文</button></div>
+                        <div class="producer-tool-row"><button :disabled="busy || archiveOffset === 0" @click="loadArchive(Math.max(0, archiveOffset - 30))">上一页</button><button :disabled="busy || archiveOffset + 30 >= archive.total" @click="loadArchive(archiveOffset + 30)">下一页</button></div>
+                    </section>
                     <section class="producer-block producer-wide producer-content-editor">
                         <h3>世界内容编辑器</h3>
                         <div class="producer-content-toolbar"><select v-model="contentPath" :disabled="busy" @change="loadContent"><option v-for="item in contentFiles" :key="item.path" :value="item.path">{{ item.label }} · {{ item.path }}</option></select><button :disabled="busy || !contentPath" @click="loadContent">重新载入</button><button :disabled="busy || !contentPath" @click="validateContent">模拟校验</button><button class="producer-primary-btn" :disabled="busy || !contentPath" @click="saveContent">校验并保存</button></div>

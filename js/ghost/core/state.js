@@ -26,6 +26,8 @@ export const GhostState = reactive({
     
     // 聊天历史
     chatHistory: [],
+    historyStart: 0,
+    historyLoading: false,
     
     // UI状态
     isWaitingForAI: false,
@@ -68,6 +70,8 @@ export const GhostState = reactive({
             playerState: {}
         };
         this.chatHistory = [];
+        this.historyStart = 0;
+        this.historyLoading = false;
         this.isWaitingForAI = false;
         this.isInDialogue = false;
         this.currentDialogueNPC = null;
@@ -83,6 +87,7 @@ export const GhostState = reactive({
     },
     
     addChatMessage(msg) {
+        msg.localId ||= crypto.randomUUID();
         this.chatHistory.push(msg);
         return this.chatHistory[this.chatHistory.length - 1];
     },

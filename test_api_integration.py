@@ -120,6 +120,37 @@ class APIIntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("api_key", response.json())
 
+    def test_history_paging_and_stable_id_actions_on_legacy_save(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root)
+            owner = "legacy-paging"
+            path = folder / f"{owner}.json"
+            path.write_text(json.dumps({"character_id": owner, "save_version": 8,
+                "profile": {"name": "分页测试"}, "custom": {"keep": True},
+                "conversation_history": [{"speaker": "旁白", "content": f"旧剧情{i}"} for i in range(240)]}), encoding="utf-8")
+            with patch("backend.world_manager.get_characters_dir", return_value=folder):
+                loaded = self.client.post("/api/ghost/load_character", headers=self.headers,
+                    json={"character_id": owner, "history_limit": 80}).json()
+                self.assertEqual(loaded["history_start"], 160)
+                page = self.client.get("/api/ghost/conversation_history", headers=self.headers,
+                    params={"character_id": owner, "before_id": loaded["conversation_history"][0]["message_id"]}).json()
+                self.assertEqual(page["start"], 80)
+                target = page["messages"][0]["message_id"]
+                rated = self.client.post("/api/ghost/rate_message", headers=self.headers,
+                    json={"character_id": owner, "message_id": target, "message_index": 0, "rating": "good"})
+                self.assertEqual(rated.status_code, 200, rated.text)
+                stored = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(stored["conversation_history"][80]["rating"], "good")
+                self.assertIsNone(stored["conversation_history"][0].get("rating"))
+                request = {"character_id": owner, "message_id": target, "operation_id": "delete-once"}
+                first = self.client.post("/api/ghost/delete_history", headers=self.headers, json=request)
+                retry = self.client.post("/api/ghost/delete_history", headers=self.headers, json=request)
+                self.assertEqual(first.json(), retry.json())
+                self.assertEqual(first.status_code, 200, first.text)
+                stored = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(len(stored["conversation_history"]), 80)
+                self.assertTrue(stored["custom"]["keep"])
+
     def test_settings_status_detects_system_environment_key_without_exposing_it(self):
         with patch("backend.routes.settings.load_secret", return_value=""), patch(
             "backend.routes.settings.DEEPSEEK_API_KEY", "system-test-key-not-real"

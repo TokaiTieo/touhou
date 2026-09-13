@@ -82,7 +82,7 @@ async function sendEnvironmentMessage(action, speech) {
     };
     state.addChatMessage(userMsg);
     
-    await appendToConversationHistory(
+    const savedUser = await appendToConversationHistory(
         state.currentSession.characterId,
         state.currentSession.profile?.name || '我',
         storageContent,
@@ -90,6 +90,8 @@ async function sendEnvironmentMessage(action, speech) {
         false
     );
     
+    userMsg.messageId = savedUser.message_id;
+    userMsg.conversationIndex = savedUser.message_index;
     renderChatHistory();
     scrollChatToBottom();
     
@@ -126,7 +128,7 @@ async function sendDialogueMessage(action, speech) {
     };
     state.addChatMessage(userMsg);
     
-    await appendToConversationHistory(
+    const savedUser = await appendToConversationHistory(
         state.currentSession.characterId,
         state.currentSession.profile?.name || '我',
         storageContent,
@@ -134,6 +136,8 @@ async function sendDialogueMessage(action, speech) {
         false
     );
     
+    userMsg.messageId = savedUser.message_id;
+    userMsg.conversationIndex = savedUser.message_index;
     renderChatHistory();
     scrollChatToBottom();
     
@@ -507,15 +511,17 @@ export async function handleContinue() {
 // 删除历史
 export async function handleDeleteHistory(fromIndex) {
     const deletedCount = state.chatHistory.length - fromIndex;
-    state.chatHistory = state.chatHistory.slice(0, fromIndex);
+    const persisted = state.chatHistory.slice(fromIndex).find(message => message.messageId);
     
     try {
         const { deleteHistory } = await import('../../api.js');
-        await deleteHistory(state.currentSession.characterId, fromIndex);
+        if (persisted) await deleteHistory(state.currentSession.characterId, persisted.conversationIndex, persisted.messageId);
+        state.chatHistory = state.chatHistory.slice(0, fromIndex);
         showToast(`已删除 ${deletedCount} 条消息`, 2000);
     } catch (err) {
         console.error('删除后端记录失败:', err);
-        showToast('后端删除失败，但前端已移除', 3000);
+        showToast('删除失败，剧情记录已保留', 3000);
+        return;
     }
     
     if (state.currentSession.isDead) {

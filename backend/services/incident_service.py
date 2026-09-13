@@ -170,7 +170,7 @@ def sync_incident_from_tasks(character: Dict, tasks_data: Dict, result: Optional
     completed = _completed_ids(tasks_data)
     completion_task_id = incident.get("completion_task_id", MAIN_INCIDENT_ID)
     migration_pending = bool(incident.pop("_migration_pending", False))
-    clue_ids = sorted(completed - {completion_task_id})
+    clue_ids = sorted(completed - {completion_task_id} - set(incident.get("task_baseline_ids", [])))
     incident["clue_ids"] = sorted(set(incident.get("clue_ids", [])) | set(clue_ids))
     incident["investigation_progress"] = max(
         _clamp(incident.get("investigation_progress")),
@@ -245,6 +245,8 @@ def apply_resolution_path(character: Dict, result: Dict, action_text: str) -> Op
 
 
 def start_next_incident(character: Dict, tasks_data: Dict) -> Optional[Dict[str, Any]]:
+    from backend.services.campaign_service import apply_incident_variant, finalize_incident_history
+    finalize_incident_history(character)
     definitions = load_incident_definitions()
     incident = ensure_incident_state(character, tasks_data)
     next_index = int(incident.get("sequence_index", 0)) + 1
@@ -252,6 +254,9 @@ def start_next_incident(character: Dict, tasks_data: Dict) -> Optional[Dict[str,
         return None
     definition = definitions[next_index]
     completion_task_id = definition.get("completion_task_id") or f"main_{definition['id']}_01"
+    cycle = int(character.get("campaign_state", {}).get("cycle", 1) or 1)
+    if cycle > 1:
+        completion_task_id = f"{completion_task_id}_cycle_{cycle}"
     incident.update({
         "version": INCIDENT_VERSION,
         "id": definition["id"],
@@ -263,6 +268,7 @@ def start_next_incident(character: Dict, tasks_data: Dict) -> Optional[Dict[str,
         "investigation_progress": 0,
         "threat_progress": 0,
         "clue_ids": [],
+        "task_baseline_ids": sorted(_completed_ids(tasks_data)),
         "started_at": datetime.now().isoformat(),
         "resolved_at": None,
         "rewards_claimed": False,
@@ -270,6 +276,8 @@ def start_next_incident(character: Dict, tasks_data: Dict) -> Optional[Dict[str,
         "resolution_path": None,
         "resolution_path_title": "",
         "aftermath": "",
+        "aftermath_turns": 0,
+        "variant": {},
         "related_locations": list(definition.get("related_locations", []) or []),
         "related_npcs": list(definition.get("related_npcs", []) or []),
     })
@@ -290,6 +298,7 @@ def start_next_incident(character: Dict, tasks_data: Dict) -> Optional[Dict[str,
             "incident_id": definition["id"],
             "created_at": datetime.now().isoformat()
         })
+    apply_incident_variant(character, definition, tasks_data)
     return definition
 
 

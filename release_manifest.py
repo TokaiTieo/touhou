@@ -37,6 +37,7 @@ def build_release_manifest(root: Path, artifacts=None) -> dict:
             "sha256": file_digest(path),
         })
     return {
+        "build_id": _release_build_id(),
         "manifest_version": 1,
         "product": "TouHou · 东方异变录",
         "version": VERSION_MANIFEST.get("version"),
@@ -46,6 +47,14 @@ def build_release_manifest(root: Path, artifacts=None) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "files": files,
     }
+
+
+def _release_build_id():
+    path = Path(__file__).parent / "release" / "build-info.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("build_id")
+    except (OSError, ValueError):
+        return None
 
 
 def main():

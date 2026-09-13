@@ -1,4 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
+import runpy
+from pathlib import Path
+
+build_info = runpy.run_path(str(Path(SPECPATH) / 'build_identity.py'))['write_build_identity'](SPECPATH)
 
 
 a = Analysis(
@@ -6,6 +10,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        (build_info, '.'),
         ('version.json', '.'),
         ('index.html', '.'),
         ('js', 'js'),
