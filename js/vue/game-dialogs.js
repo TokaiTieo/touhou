@@ -111,7 +111,7 @@ export const DetailDialog = defineComponent({
                         </div>
                         <div v-if="inventoryItems.length" class="inventory-action-list">
                             <article v-for="item in inventoryItems" :key="item.name" :class="{ 'is-equipped': equippedItems.includes(item.name) }">
-                                <div><strong>{{ item.name }} × {{ item.quantity || 1 }}<span v-if="equippedItems.includes(item.name)"> · 随身</span></strong><small>{{ item.description || item.category || '幻想乡物品' }}</small></div>
+                                <div><strong>{{ item.name }} × {{ item.quantity || 1 }}<span v-if="equippedItems.includes(item.name)"> · 随身</span></strong><small>{{ item.description || item.category || '幻想乡物品' }}</small><small v-if="item.effect_description">{{ item.effect_description }}</small></div>
                                 <div>
                                     <button type="button" :disabled="!!inventoryBusy" title="使用" @click="itemAction('use', item)">用</button>
                                     <button v-if="!equippedItems.includes(item.name)" type="button" :disabled="!!inventoryBusy" title="设为随身装备" @click="itemAction('equip', item)">装</button>

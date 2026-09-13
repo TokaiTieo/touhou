@@ -2157,17 +2157,19 @@ label.file-drop:focus-within {
 
 /* 发送按钮文案单行化修正 */
 .th-send {
-    min-width: 112px;
+    min-width: 0;
+    width: 100%;
 }
 
 .th-send strong {
-    letter-spacing: 0.1em;
+    letter-spacing: 0;
     white-space: nowrap;
 }
 
 @media (max-width: 560px) {
+    .th-send { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; gap: 8px; }
     .th-send strong {
-        letter-spacing: 0.04em;
+        letter-spacing: 0;
     }
 }
 
@@ -2363,3 +2365,6 @@ label.file-drop:focus-within {
     .inventory-action-list article { grid-template-columns: 1fr; }
     .inventory-action-list article > div:last-child { justify-content: flex-end; }
 }
+.th-chat-scroll { overflow-anchor: none; }
+.th-history-row { display: flow-root; }
+.th-history-more { display: block; margin: 0 auto 16px; }

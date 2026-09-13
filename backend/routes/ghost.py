@@ -75,6 +75,8 @@ from backend.services.npc_agency_service import format_npc_agency_context
 from backend.services import npc_memory_service as memory_runtime
 from backend.config import PROMPTS_DIR, PRIVATE_DEBUG
 
+from backend.services.character_commands import serialize_character_access
+
 router = APIRouter()
 
 
@@ -382,6 +384,13 @@ async def execute_turn_generation(
     temperature: float = 0.8,
 ):
     """Run the resumable workflow, with a legacy switch for parity tests."""
+    from backend.services.evaluation_context import evaluation_context
+    evaluation = evaluation_context.get()
+    if evaluation is not None:
+        import hashlib
+        evaluation.prompt_fingerprints.append(hashlib.sha256(prompt.encode()).hexdigest()[:16])
+        response = await evaluation.generate(prompt, temperature=temperature)
+        return response, parse_turn_response(response, contract)
     if workflow_enabled():
         payload = await run_turn_workflow(
             kind=kind,
@@ -980,6 +989,7 @@ async def cancel_turn(request: TurnControlRequest):
 
 
 @router.post("/system_helper")
+@serialize_character_access
 async def system_helper(request: SystemHelperRequest):
     """系统助手 - 帮助菜单（支持独立历史）"""
     try:

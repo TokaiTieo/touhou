@@ -2,6 +2,8 @@
 # 系统相关路由（健康检查、静态文件等）
 
 from datetime import datetime
+import json
+import sys
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
@@ -28,7 +30,15 @@ async def health_check():
 
 @router.get("/version")
 async def version_info():
+    build = {}
+    if getattr(sys, "frozen", False):
+        try:
+            build = json.loads((BASE_DIR / "build-info.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
     return {
+        "build_id": build.get("build_id"),
+        "build_mode": "packaged" if getattr(sys, "frozen", False) else "source",
         "version": APP_VERSION,
         "display_version": DISPLAY_VERSION,
         "save_schema": VERSION_MANIFEST.get("save_schema", 8),

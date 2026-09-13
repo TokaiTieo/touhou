@@ -5,6 +5,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $resolvedExe = (Resolve-Path -LiteralPath $ExePath).Path
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$expectedBuild = Get-Content -LiteralPath (Join-Path $projectRoot "release\build-info.json") -Raw | ConvertFrom-Json
+$currentBuild = & python (Join-Path $projectRoot "build_identity.py")
+if ($LASTEXITCODE -ne 0 -or $currentBuild.Trim() -ne $expectedBuild.build_id) {
+    throw "Release inputs changed after building. Rebuild before verification."
+}
 $smokeRoot = Join-Path $env:TEMP ("touhou-exe-smoke-" + [guid]::NewGuid().ToString("N"))
 $previousDataDir = $env:TOUHOU_DATA_DIR
 $previousSmokeFlag = $env:TOUHOU_SMOKE_TEST
@@ -76,6 +82,16 @@ PRIVATE_DEBUG=False
     }
     $version = Invoke-RestMethod -Uri ($runtime.url + "/api/version") -TimeoutSec 10
     $index = Invoke-WebRequest -Uri ($runtime.url + "/") -UseBasicParsing -TimeoutSec 10
+    if ($version.build_id -ne $expectedBuild.build_id -or $version.version -ne $expectedBuild.version) {
+        throw "Packaged build identity does not match the current release inputs."
+    }
+    foreach ($asset in @("js/vue/game-screen.js", "js/vue/virtual-history.js", "css/vue-game.css")) {
+        $assetPath = Join-Path $smokeRoot ([IO.Path]::GetFileName($asset))
+        Invoke-WebRequest -Uri ($runtime.url + "/" + $asset) -OutFile $assetPath -UseBasicParsing -TimeoutSec 10
+        if ((Get-FileHash -LiteralPath $assetPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedBuild.files.$asset) {
+            throw "Packaged frontend asset differs from source: $asset"
+        }
+    }
 
     if ($health.status -ne "ok") {
         throw "Health endpoint returned an unexpected status."
@@ -160,6 +176,11 @@ PRIVATE_DEBUG=False
         $process.WaitForExit(5000) | Out-Null
     }
     $succeeded = $true
+    [pscustomobject]@{
+        build_id = $version.build_id
+        sha256 = (Get-FileHash -LiteralPath $resolvedExe -Algorithm SHA256).Hash
+        version = $version.version
+    } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $projectRoot "release\verified-exe.json") -Encoding UTF8
 
     [pscustomobject]@{
         status = "ok"

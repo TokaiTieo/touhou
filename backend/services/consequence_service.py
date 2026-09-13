@@ -50,7 +50,7 @@ def _change_location_state(state: Dict, scene: str, effect: str, magnitude: floa
     return {"target": scene, "effect": effect, "magnitude": magnitude, "value": location["pressure"]}
 
 
-def _add_rumor(state: Dict, text: str, scene: str, source_id: str) -> Optional[Dict]:
+def _add_rumor(state: Dict, text: str, scene: str, source_id: str, game_hour: float = 0) -> Optional[Dict]:
     text = str(text or "").strip()
     if not text:
         return None
@@ -63,6 +63,7 @@ def _add_rumor(state: Dict, text: str, scene: str, source_id: str) -> Optional[D
         "text": text[:300],
         "scene": scene,
         "source_consequence_id": source_id,
+        "game_hour": game_hour,
         "created_at": datetime.now().isoformat(),
     }
     rumors.append(rumor)
@@ -87,6 +88,7 @@ def advance_due_consequences(character: Dict) -> List[Dict]:
             item.get("effect", "此前行动产生了新的回响。"),
             item.get("scene", "幻想乡"),
             item.get("source_consequence_id", ""),
+            current_hour,
         )
     return resolved
 
@@ -190,7 +192,7 @@ def record_turn_consequence(
         if delay:
             delayed.append({"effect": text, "delay_hours": delay, "scene": target})
         elif kind == "rumor":
-            rumor = _add_rumor(state, text, target, consequence_id)
+            rumor = _add_rumor(state, text, target, consequence_id, absolute_hour)
             if rumor:
                 direct.append({"type": "rumor", **rumor})
         elif kind == "flag":

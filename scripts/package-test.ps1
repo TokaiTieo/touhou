@@ -6,14 +6,20 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $Output = Join-Path $ProjectRoot $OutputPath
 $Staging = Join-Path ([System.IO.Path]::GetTempPath()) ("touhou-package-" + [guid]::NewGuid().ToString("N"))
+$Verified = Get-Content -LiteralPath (Join-Path $ProjectRoot "release\verified-exe.json") -Raw | ConvertFrom-Json
+$Build = Get-Content -LiteralPath (Join-Path $ProjectRoot "release\build-info.json") -Raw | ConvertFrom-Json
+$CurrentBuild = & python (Join-Path $ProjectRoot "build_identity.py")
+if ($LASTEXITCODE -ne 0 -or $CurrentBuild.Trim() -ne $Build.build_id) { throw "Release inputs changed after verification" }
+if ($Verified.build_id -ne $Build.build_id -or (Get-FileHash -LiteralPath (Join-Path $ProjectRoot "touhou.exe") -Algorithm SHA256).Hash -ne $Verified.sha256) {
+    throw "Root executable has not passed the current build smoke test."
+}
 
 try {
     New-Item -ItemType Directory -Path $Staging | Out-Null
     foreach ($Name in @("touhou.exe", "启动touhou.bat", "停止服务.bat", "玩前必读.txt")) {
         $Source = Join-Path $ProjectRoot $Name
-        if (Test-Path -LiteralPath $Source) {
-            Copy-Item -LiteralPath $Source -Destination $Staging
-        }
+        if (-not (Test-Path -LiteralPath $Source)) { throw "Missing release file: $Name" }
+        Copy-Item -LiteralPath $Source -Destination $Staging
     }
     Set-Content -LiteralPath (Join-Path $Staging ".env") -Value @(
         "DEEPSEEK_API_KEY="

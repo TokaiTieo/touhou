@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict
 
 from backend.services.memory_retrieval import semantic_backend_status
-from backend.services.npc_memory_service import compress_npc_memory_bucket, upgrade_npc_memory_metadata
+from backend.services.npc_memory_service import archive_memories, compress_npc_memory_bucket, upgrade_npc_memory_metadata
 
 
 def _fingerprint(value: str) -> str:
@@ -22,9 +22,9 @@ def maintain_memories(character: Dict, *, force: bool = False) -> Dict:
         maintenance = {}
         character["memory_maintenance"] = maintenance
     history_count = len(character.get("conversation_history", []) or [])
-    previous_count = int(maintenance.get("last_history_count", 0) or 0)
+    maintenance["pending_turns"] = int(maintenance.get("pending_turns", 0) or 0) + 1
     total_before = sum(len(items) for items in memories.values() if isinstance(items, list))
-    if not force and total_before < 40 and history_count - previous_count < 24:
+    if not force and maintenance["pending_turns"] < 12 and maintenance.get("runs", 0):
         return {"ran": False, "reason": "interval_not_reached", "total_memories": total_before}
 
     upgrade_npc_memory_metadata(character)
@@ -39,9 +39,11 @@ def maintain_memories(character: Dict, *, force: bool = False) -> Dict:
         for item in items:
             if not isinstance(item, dict):
                 continue
-            key = _fingerprint(item.get("summary"))
+            key = (_fingerprint(item.get("summary")), item.get("knowledge_type"), item.get("source_npc"),
+                   item.get("truth_status"), item.get("fact_key"), item.get("confidence"))
             if key and key in seen:
                 previous = seen[key]
+                archive_memories(character, npc_name, [item])
                 previous["importance"] = max(
                     int(previous.get("importance", 5) or 5),
                     int(item.get("importance", 5) or 5),
@@ -95,5 +97,6 @@ def maintain_memories(character: Dict, *, force: bool = False) -> Dict:
         "last_run_at": report["ran_at"],
         "last_report": report,
         "last_history_count": history_count,
+        "pending_turns": 0,
     })
     return report

@@ -1,6 +1,9 @@
 """NPC memory capture, compression, retrieval and turn record persistence."""
 
 import re
+import copy
+import hashlib
+import json
 from datetime import datetime
 from typing import Dict, List
 
@@ -100,8 +103,17 @@ def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
 
 def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, query: str = "") -> str:
     memories = character.setdefault("npc_memories", {})
+    archives = character.setdefault("npc_memory_archive", {})
     upgrade_npc_memory_metadata(character)
     summaries = character.setdefault("npc_memory_summaries", {})
+    legacy = character.get("npc_memory_legacy_summaries", {})
+    def candidates(name):
+        items = archives.get(name, []) + memories.get(name, [])
+        if legacy.get(name):
+            items = items + [{"id": f"legacy-summary:{name}", "summary": legacy[name],
+                              "importance": 7, "source": "legacy_summary", "knowledge_type": "reported",
+                              "confidence": 0.6, "truth_status": "accepted"}]
+        return items
     index_root = character.setdefault("semantic_memory_index", {})
     meta_root = character.setdefault("memory_index_meta", {})
     retrieval_diagnostics = []
@@ -114,7 +126,7 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
 
     if npc_name:
         selected = rank_memories(
-            memories.get(npc_name, []),
+            candidates(npc_name),
             query,
             limit,
             index_root.setdefault(npc_name, {}),
@@ -129,7 +141,8 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
         lines.extend(_memory_line(item) for item in selected)
         return "\n".join(lines) if lines else f"{npc_name}: 暂无关键记忆"
     lines = []
-    for name, items in memories.items():
+    for name in dict.fromkeys([*archives, *memories, *legacy]):
+        items = candidates(name)
         diagnostics_start = len(retrieval_diagnostics)
         selected = rank_memories(
             items,
@@ -178,6 +191,32 @@ def infer_memory_emotion(summary: str, tags=None) -> str:
     return "中性"
 
 
+def memory_identity(item: Dict) -> str:
+    stable = {key: value for key, value in item.items() if key not in {"used_count", "access_count", "retrieval_count", "last_accessed_at", "last_recalled_at", "last_used_at"}}
+    return hashlib.sha256(json.dumps(stable, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
+
+
+def archive_memories(character: Dict, npc_name: str, items: List[Dict]) -> None:
+    archive = character.setdefault("npc_memory_archive", {}).setdefault(npc_name, [])
+    known = {memory_identity(item) for item in archive}
+    for item in items:
+        key = memory_identity(item)
+        if key not in known:
+            archive.append(copy.deepcopy(item))
+            known.add(key)
+
+
+def restore_archived_memory(character: Dict, npc_name: str, archive_id: str) -> Dict:
+    archive = character.setdefault("npc_memory_archive", {}).get(npc_name, [])
+    item = next((item for item in archive if memory_identity(item) == archive_id), None)
+    if item is None:
+        raise ValueError("找不到这条记忆档案，请刷新后重试")
+    bucket = character.setdefault("npc_memories", {}).setdefault(npc_name, [])
+    bucket.append(copy.deepcopy(item))
+    archive.remove(item)
+    return item
+
+
 def compress_npc_memory_bucket(character: Dict, npc_name: str, keep_recent: int = 24, force: bool = False) -> bool:
     memories = character.setdefault("npc_memories", {})
     bucket = memories.get(npc_name, [])
@@ -189,9 +228,25 @@ def compress_npc_memory_bucket(character: Dict, npc_name: str, keep_recent: int 
     if not old_items:
         return False
     summaries = character.setdefault("npc_memory_summaries", {})
-    important = sorted(old_items, key=lambda item: _number(item.get("importance"), 5), reverse=True)[:6]
-    fragments = [summaries.get(npc_name, "")] + [item.get("summary", "") for item in important]
-    summaries[npc_name] = "；".join(item for item in fragments if item)[:900]
+    legacy = character.setdefault("npc_memory_legacy_summaries", {})
+    legacy.setdefault(npc_name, summaries.get(npc_name, ""))
+    archive_memories(character, npc_name, old_items)
+    all_items = character["npc_memory_archive"][npc_name] + recent
+    layers = {"facts": [], "relationships": [], "events": []}
+    for item in all_items:
+        if not isinstance(item, dict) or item.get("truth_status") == "superseded":
+            continue
+        layer = "facts" if item.get("fact_key") else (
+            "relationships" if any(word in str(item.get("tags", [])) + str(item.get("summary", ""))
+                                   for word in ("承诺", "约定", "关系", "赠礼", "亲密")) else "events")
+        layers[layer].append(item)
+    rendered = []
+    for key, items in layers.items():
+        selected = sorted(enumerate(items), key=lambda pair: (_number(pair[1].get("importance"), 5), pair[0]), reverse=True)[:3]
+        layers[key] = [copy.deepcopy(item) for _, item in selected]
+        rendered.extend(_memory_line(item)[:100] for _, item in selected)
+    character.setdefault("npc_memory_layers", {})[npc_name] = layers
+    summaries[npc_name] = "\n".join(rendered)[:1000]
     memories[npc_name] = recent
     return True
 
@@ -240,7 +295,7 @@ def record_npc_memories(
             "fact_key": item.get("fact_key"),
             "superseded_by": item.get("superseded_by"),
         }
-        _resolve_fact_conflicts(bucket, entry)
+        _resolve_fact_conflicts(character.get("npc_memory_archive", {}).get(name, []) + bucket, entry)
         bucket.append(entry)
         compress_npc_memory_bucket(character, name)
         changed = True

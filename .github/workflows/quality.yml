@@ -63,7 +63,10 @@ jobs:
         run: scripts/smoke-exe.ps1 -ExePath .\dist\touhou.exe
       - name: Build clean test package
         shell: powershell
-        run: scripts/package-test.ps1 -OutputPath release\touhou-test-package.zip
+        run: |
+          Copy-Item -LiteralPath dist\touhou.exe -Destination touhou.exe -Force
+          scripts/package-test.ps1 -OutputPath release\touhou-test-package.zip
+          scripts/verify-test-package.ps1 -ZipPath release\touhou-test-package.zip
       - name: Upload verified release candidates
         uses: actions/upload-artifact@v4
         with:

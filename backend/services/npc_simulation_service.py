@@ -120,13 +120,15 @@ def simulate_offscreen_npcs(
                 "period": period_for_hour(tick_hour),
                 "game_hour": tick_hour,
                 "created_at": datetime.now().isoformat(),
+                "profile": npc.get("profile", {}),
             }
             record_npc_activity(character, event)
+            event.pop("profile", None)
             generated.append(event)
             simulation["events"].append(event)
             runtime_state = runtime.setdefault(name, {})
             runtime_state["simulated_location"] = location
-            runtime_state["simulated_activity"] = activity
+            runtime_state["simulated_activity"] = event["activity"]
             runtime_state["simulated_until_hour"] = tick_hour + 6
             runtime_state["last_simulated_at"] = event["created_at"]
     simulation["events"] = simulation["events"][-160:]

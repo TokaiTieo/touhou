@@ -3,6 +3,7 @@
 import hashlib
 import re
 from typing import Any, Dict, List, Optional
+from backend.services.item_effects import equipment_effects
 
 
 BATTLE_WORDS = ("战斗", "符卡", "弹幕", "决斗", "挑战", "退治", "攻击", "开战")
@@ -242,6 +243,8 @@ def preview_turn_ruling(character: Dict, action_text: str, scene_npcs=None, npc_
     adaptation_bonus = min(12, _number(adaptation.get("adaptation_bonus"), 0))
     preparation = (10 + investigation_skill * 0.08) if any(word in str(action_text) for word in PREPARE_WORDS) else 0
     player_score = spirit * 0.34 + skill * 0.66 + preparation - fatigue * 0.32 - injury * 0.42
+    equipment = equipment_effects(character)
+    player_score += equipment["effects"].get("battle_score", 0)
     margin = player_score + mastery_level * 1.8 - _difficulty(opponent) - adaptation_bonus + _stable_variance(character, action_text)
     if margin >= 28:
         outcome, cost = "压制胜利", "low"
@@ -260,6 +263,7 @@ def preview_turn_ruling(character: Dict, action_text: str, scene_npcs=None, npc_
         "cost_level": cost,
         "spellcard_name": spell_name,
         "score_margin": round(margin, 1),
+        "equipment": equipment,
         "instruction": f"后端确定性裁定：对{opponent_name}的符卡战结果为「{outcome}」。叙事必须遵守该结果，可以丰富过程但不得反转胜负。"
     }
 
@@ -286,13 +290,16 @@ def resolve_turn_rules(
     delta = {}
     skill_experience = character.setdefault("skill_experience", {})
     skill_progress_delta = {}
+    equipment = equipment_effects(character)
+    effects = equipment["effects"]
+    result["equipment_effects"] = equipment
 
     def add(key, amount, ceiling=100):
         old = _number(state.get(key), defaults.get(key, 0))
         new = _clamp(old + amount, 0, ceiling)
         if new != old:
             state[key] = int(new) if float(new).is_integer() else round(new, 2)
-            delta[key] = round(new - old, 2)
+            delta[key] = round(delta.get(key, 0) + new - old, 2)
 
     def award_skill(key, experience):
         if character.get("gm_mode"):
@@ -322,7 +329,7 @@ def resolve_turn_rules(
     time_cost = _clamp(_number(result.get("time_cost"), 0), 0, 12)
     base_experience = 6 + min(6, time_cost * 2)
     if any(word in text for word in INVESTIGATION_WORDS):
-        award_skill("调查熟练度", base_experience)
+        award_skill("调查熟练度", base_experience + effects.get("investigation_experience", 0))
     if any(word in text for word in SOCIAL_WORDS):
         award_skill("交涉熟练度", base_experience)
     if any(word in text for word in SURVIVAL_WORDS):
@@ -336,7 +343,7 @@ def resolve_turn_rules(
     else:
         add("疲劳", max(1, round(time_cost * 2.5 * (1 - survival_reduction))))
     if any(word in text for word in TRAVEL_WORDS):
-        add("疲劳", max(1, round(4 * (1 - survival_reduction))))
+        add("疲劳", max(0, round(4 * (1 - survival_reduction)) - effects.get("travel_reduction", 0)))
 
     ruling = preview or preview_turn_ruling(character, text, scene_npcs or [], npc_name)
     if ruling.get("is_battle"):
@@ -349,6 +356,8 @@ def resolve_turn_rules(
         injury_cost = 0
         if not character.get("gm_mode") and "胜利" not in str(ruling.get("outcome")) and ruling.get("outcome") != "平局":
             injury_cost = 8
+        injury_cost = max(0, injury_cost - effects.get("injury_reduction", 0))
+        spirit_cost = max(0, spirit_cost - effects.get("spirit_reduction", 0))
         metrics = _battle_metrics(character, ruling, spell_name)
         result["spellcard_result"] = {
             **existing,

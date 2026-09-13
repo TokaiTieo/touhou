@@ -63,6 +63,7 @@ class TurnOrchestrator:
         result: Dict,
         *,
         rule_preview: Optional[Dict] = None,
+        persist: bool = True,
     ) -> TurnOutcome:
         if context.cached_response is not None:
             return TurnOutcome(
@@ -96,6 +97,8 @@ class TurnOrchestrator:
         self._record_consequence(character, result, turn)
 
         final_result = self._public_result(turn.kind, result)
+        if not persist:
+            return TurnOutcome(result=final_result, committed=False, workflow_thread_id=context.workflow_thread_id)
         record_turn_receipt(character, turn.turn_id, final_result)
         save_turn_bundle(
             turn.character_id,
@@ -334,6 +337,8 @@ class TurnOrchestrator:
             "dynamic_event": result.get("dynamic_event"),
             "spellcard_result": result.get("spellcard_result"),
             "player_state_delta": result.get("player_state_delta", {}),
+            "equipment_effects": result.get("equipment_effects", {}),
+            "contract_valid": result.get("contract_valid", False),
             "inventory_updates": result.get("inventory_updates", []),
             "reputation_updates": result.get("reputation_updates", []),
             "progression_delta": result.get("progression_delta", {}),

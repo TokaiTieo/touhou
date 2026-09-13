@@ -17,6 +17,7 @@ from backend.services.turn_workflow import (
 )
 from backend.world_manager import StaleTurnError
 from backend.services.runtime_diagnostics_service import record_turn_diagnostics
+from backend.services.evaluation_context import evaluation_context
 
 
 class TurnRunner:
@@ -50,6 +51,12 @@ class TurnRunner:
         return decorator
 
     async def begin(self, turn: TurnInput) -> Tuple[TurnContext, Optional[Dict[str, Any]]]:
+        evaluation = evaluation_context.get()
+        if evaluation is not None:
+            from backend.services.story_summary_service import rebuild_story_summary
+            rebuild_story_summary(evaluation.character, evaluation.tasks)
+            return TurnContext(turn=turn, character=evaluation.character, tasks=evaluation.tasks,
+                               workflow_thread_id=f"evaluation:{turn.turn_id}"), None
         turn_coordinator.set_state(turn.character_id, turn.turn_id, "preparing")
         try:
             context = turn_orchestrator.begin(turn)
@@ -81,6 +88,13 @@ class TurnRunner:
         rule_preview: Optional[Dict[str, Any]] = None,
         on_contract_failure: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> Dict[str, Any]:
+        evaluation = evaluation_context.get()
+        if evaluation is not None:
+            if result.get("contract_valid"):
+                outcome = turn_orchestrator.settle(context, result, rule_preview=rule_preview, persist=False)
+                evaluation.character, evaluation.tasks = context.character, context.tasks
+                return outcome.result
+            return result
         self.mark(context, "settling")
         status = turn_coordinator.get_status(
             context.turn.character_id, context.turn.turn_id

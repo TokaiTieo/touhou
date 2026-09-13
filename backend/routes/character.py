@@ -29,6 +29,8 @@ from backend.services.onboarding_service import default_onboarding, public_onboa
 from backend.config import PROMPTS_DIR
 from backend.version import CONTENT_SCHEMA_VERSION, SAVE_SCHEMA_VERSION
 
+from backend.services.character_commands import serialize_character_access
+
 router = APIRouter()
 
 
@@ -182,6 +184,7 @@ class CreateCharacterRequest(BaseModel):
 class LoadCharacterRequest(BaseModel):
     character_id: str
     scene: Optional[str] = None
+    history_limit: Optional[int] = None
 
 
 class CharacterStatusUpdateRequest(BaseModel):
@@ -514,6 +517,7 @@ async def create_character_endpoint(request: CreateCharacterRequest):
 
 
 @router.post("/load_character")
+@serialize_character_access
 async def load_character_endpoint(request: LoadCharacterRequest):
     """加载角色"""
     character = load_character(request.character_id)
@@ -546,7 +550,9 @@ async def load_character_endpoint(request: LoadCharacterRequest):
         "current_scene": character["status"].get("current_scene", "unknown"),
         "is_dead": character["status"].get("is_dead", False),
         "death_cause": character["status"].get("death_cause"),
-        "conversation_history": character.get("conversation_history", []),
+        "conversation_history": character.get("conversation_history", [])[-max(1, min(200, request.history_limit)):] if request.history_limit is not None else character.get("conversation_history", []),
+        "history_start": max(0, len(character.get("conversation_history", [])) - max(1, min(200, request.history_limit))) if request.history_limit is not None else 0,
+        "history_total": len(character.get("conversation_history", [])),
         "unlocked_locations": character.get("unlocked_locations", {}),
         "time": character.get("time", {}),
         "incident_state": character.get("incident_state", {}),
@@ -579,6 +585,7 @@ async def list_characters_endpoint():
 
 
 @router.delete("/delete_character/{character_id}")
+@serialize_character_access
 async def delete_character_endpoint(character_id: str):
     """删除角色"""
     characters_dir = get_characters_dir()
@@ -599,6 +606,7 @@ async def delete_character_endpoint(character_id: str):
 
 
 @router.post("/update_status")
+@serialize_character_access
 async def update_status_endpoint(request: CharacterStatusUpdateRequest):
     """更新角色状态"""
     character = load_character(request.character_id)
@@ -636,6 +644,7 @@ async def get_character_endpoint(character_id: str):
 
 
 @router.post("/convert_to_npc")
+@serialize_character_access
 async def convert_to_npc_endpoint(request: dict):
     """将角色转换为NPC"""
     character_id = request.get("character_id")

@@ -1,6 +1,7 @@
 """Explicit additive save migrations. Existing fields are never removed."""
 
 import copy
+import uuid
 from datetime import datetime
 from typing import Dict
 from backend.version import SAVE_SCHEMA_VERSION
@@ -150,10 +151,22 @@ def migrate_save_schema(character: Dict) -> bool:
         changed = True
         version = 8
 
+    if version < 9:
+        character["save_version"] = 9
+        character.setdefault("migration_history", []).append({
+            "version": 9, "applied_at": datetime.now().isoformat(),
+            "summary": "记忆档案、操作回执、人物计划与历史消息定位升级",
+        })
+        changed = True
+
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary
     v6_defaults = {
+        "npc_memory_archive": {},
+        "npc_memory_layers": {},
+        "npc_memory_legacy_summaries": {},
+        "command_receipts": [],
         "state_revision": 0,
         "story_summary": default_story_summary(),
         "story_director": default_story_director(),
@@ -245,4 +258,14 @@ def migrate_save_schema(character: Dict) -> bool:
         if not isinstance(character.get(key), list):
             character[key] = []
             changed = True
+    seen = set()
+    for message in character.get("conversation_history", []):
+        if not isinstance(message, dict):
+            continue
+        identity = message.get("message_id")
+        if not isinstance(identity, str) or not identity or identity in seen:
+            identity = "msg_" + uuid.uuid4().hex
+            message["message_id"] = identity
+            changed = True
+        seen.add(identity)
     return changed
