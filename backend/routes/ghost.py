@@ -9,7 +9,8 @@ from threading import Event
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from backend.services.npc_identity_service import canonical_npc_id, canonical_npc_name, load_npc_document
 from typing import List, Dict, Optional, Any
 
 from backend.world_manager import (
@@ -105,6 +106,16 @@ class NPCDialogueRequest(BaseModel):
     history: List[Dict] = []
     scene_npcs: List[Dict] = []
     turn_id: Optional[str] = None
+
+    @field_validator("npc_id", mode="before")
+    @classmethod
+    def resolve_id(cls, value):
+        return canonical_npc_id(value) if isinstance(value, str) else value
+
+    @field_validator("npc_name", mode="before")
+    @classmethod
+    def resolve_name(cls, value):
+        return canonical_npc_name(value) if isinstance(value, str) else value
 
 
 class TurnControlRequest(BaseModel):
@@ -754,12 +765,11 @@ async def npc_dialogue(request: NPCDialogueRequest):
     npc_index_path = get_npcs_dir() / "npc_index.json"
     npc_data = None
     if npc_index_path.exists():
-        with open(npc_index_path, 'r', encoding='utf-8-sig') as f:
-            npc_index = json.load(f)
-            for npc in npc_index.get("npcs", []):
-                if npc.get("id") == request.npc_id:
-                    npc_data = npc
-                    break
+        npc_index = load_npc_document(npc_index_path)
+        for npc in npc_index.get("npcs", []):
+            if npc.get("id") == request.npc_id:
+                npc_data = npc
+                break
     
     npc_profile = npc_data.get("profile", {}) if npc_data else {}
     observe_relationship_boundaries(character, request.npc_name, request.user_input)
@@ -1020,9 +1030,8 @@ async def system_helper(request: SystemHelperRequest):
             from backend.world_manager import get_npcs_dir
             npc_index_path = get_npcs_dir() / "npc_index.json"
             if npc_index_path.exists():
-                with open(npc_index_path, 'r', encoding='utf-8-sig') as f:
-                    npc_index = json.load(f)
-                    npcs_data = npc_index.get("npcs", [])
+                npc_index = load_npc_document(npc_index_path)
+                npcs_data = npc_index.get("npcs", [])
         
         system_history = []
         if character_id and character:
@@ -1233,7 +1242,7 @@ async def observe_npc(request: dict):
     import json
     
     character_id = request.get("character_id")
-    npc_name = request.get("npc_name")
+    npc_name = canonical_npc_name(request.get("npc_name"))
     scene = request.get("scene")
     
     if not character_id or not npc_name:
@@ -1251,15 +1260,14 @@ async def observe_npc(request: dict):
     npc_index_path = get_npcs_dir() / "npc_index.json"
     npc_info = ""
     if npc_index_path.exists():
-        with open(npc_index_path, 'r', encoding='utf-8-sig') as f:
-            npc_index = json.load(f)
-            for npc in npc_index.get("npcs", []):
-                if npc.get("name") == npc_name or npc.get("id") == npc_name:
-                    profile = npc.get("profile", {})
-                    npc_info = f"- 名称：{npc.get('name')}\n"
-                    npc_info += f"- 身份：{profile.get('identity', '未知')}\n"
-                    npc_info += f"- 描述：{profile.get('description', '暂无详细描述')}"
-                    break
+        npc_index = load_npc_document(npc_index_path)
+        for npc in npc_index.get("npcs", []):
+            if npc.get("name") == npc_name or npc.get("id") == npc_name:
+                profile = npc.get("profile", {})
+                npc_info = f"- 名称：{npc.get('name')}\n"
+                npc_info += f"- 身份：{profile.get('identity', '未知')}\n"
+                npc_info += f"- 描述：{profile.get('description', '暂无详细描述')}"
+                break
     
     # 加载 prompt 模板
     prompt_template = load_prompt("observe_npc.txt")

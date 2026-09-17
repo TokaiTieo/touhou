@@ -6,6 +6,8 @@ param(
 $ErrorActionPreference = "Stop"
 $resolvedExe = (Resolve-Path -LiteralPath $ExePath).Path
 $projectRoot = Split-Path -Parent $PSScriptRoot
+& python (Join-Path $PSScriptRoot 'verify-exe-icon.py') $resolvedExe
+if ($LASTEXITCODE -ne 0) { throw 'EXE icon verification failed.' }
 $expectedBuild = Get-Content -LiteralPath (Join-Path $projectRoot "release\build-info.json") -Raw | ConvertFrom-Json
 $currentBuild = & python (Join-Path $projectRoot "build_identity.py")
 if ($LASTEXITCODE -ne 0 -or $currentBuild.Trim() -ne $expectedBuild.build_id) {
@@ -90,6 +92,23 @@ PRIVATE_DEBUG=False
         Invoke-WebRequest -Uri ($runtime.url + "/" + $asset) -OutFile $assetPath -UseBasicParsing -TimeoutSec 10
         if ((Get-FileHash -LiteralPath $assetPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedBuild.files.$asset) {
             throw "Packaged frontend asset differs from source: $asset"
+        }
+    }
+
+    foreach ($blocked in @('/static/.env', '/static/version.json', '/static/backend/api.py')) {
+        $blockedStatus = 200
+        try { Invoke-WebRequest -Uri ($runtime.url + $blocked) -UseBasicParsing -TimeoutSec 10 | Out-Null }
+        catch {
+            if (-not $_.Exception.Response) { throw }
+            $blockedStatus = [int]$_.Exception.Response.StatusCode
+        }
+        if ($blockedStatus -ne 404) { throw "Private static path was not blocked: $blocked" }
+    }
+    foreach ($asset in @('static/touhou-favicon.svg', 'static/touhou.ico')) {
+        $assetPath = Join-Path $smokeRoot ([IO.Path]::GetFileName($asset))
+        Invoke-WebRequest -Uri ($runtime.url + '/' + $asset) -OutFile $assetPath -UseBasicParsing -TimeoutSec 10
+        if ((Get-FileHash -LiteralPath $assetPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedBuild.files.$asset) {
+            throw "Packaged branding differs from source: $asset"
         }
     }
 

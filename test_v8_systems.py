@@ -9,6 +9,7 @@ from backend.services.onboarding_service import advance_onboarding, default_onbo
 from backend.services.progression_service import perform_inventory_action, reputation_profile
 from backend.services.runtime_diagnostics_service import build_diagnostic_bundle
 from backend.services.save_migrations import migrate_save_schema
+from backend.version import SAVE_SCHEMA_VERSION
 
 
 class V8MigrationTests(unittest.TestCase):
@@ -22,7 +23,7 @@ class V8MigrationTests(unittest.TestCase):
             "incident_state": {"id": "touhou_rift", "title": "结界裂隙异变", "status": "resolved"},
         }
         self.assertTrue(migrate_save_schema(character))
-        self.assertEqual(character["save_version"], 9)
+        self.assertEqual(character["save_version"], SAVE_SCHEMA_VERSION)
         self.assertTrue(character["custom_extension"]["keep"])
         self.assertTrue(character["profile"]["adult_verified"])
         first = list(character["migration_history"])

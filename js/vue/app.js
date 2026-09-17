@@ -160,7 +160,7 @@ export const TouhouApp = defineComponent({
         <div class="touhou-vue-shell">
             <header class="app-chrome">
                 <div class="app-brand" aria-label="东方异变录">
-                    <img src="/static/static/touhou-favicon.svg" alt="" class="app-brand-mark">
+                    <img src="/static/touhou-favicon.svg" alt="" class="app-brand-mark">
                     <span class="app-brand-copy">
                         <strong>东方异变录</strong>
                         <small>幻想乡异变记录</small>
@@ -182,7 +182,7 @@ export const TouhouApp = defineComponent({
 
             <main id="gameView" class="game-view" :class="'view-' + appUi.view" :style="gameSceneStyle">
                 <section v-if="appUi.view === 'boot' && !startupError" class="vue-boot-state" aria-live="polite">
-                    <img src="/static/static/touhou-favicon.svg" alt="" class="vue-boot-mark">
+                    <img src="/static/touhou-favicon.svg" alt="" class="vue-boot-mark">
                     <div class="loading-spinner"></div>
                     <p>正在展开幻想乡的记录...</p>
                 </section>

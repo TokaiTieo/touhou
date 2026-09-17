@@ -50,6 +50,7 @@ exe = EXE(
     a.datas,
     [],
     name='touhou',
+    icon=str(Path(SPECPATH) / 'static' / 'touhou.ico'),
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

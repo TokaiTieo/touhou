@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from backend.services.memory_retrieval import rank_memories
+from backend.services.npc_identity_service import canonical_npc_name
 
 
 def _number(value, default=0):
@@ -102,6 +103,7 @@ def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
 
 
 def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, query: str = "") -> str:
+    npc_name = canonical_npc_name(npc_name)
     memories = character.setdefault("npc_memories", {})
     archives = character.setdefault("npc_memory_archive", {})
     upgrade_npc_memory_metadata(character)
@@ -197,6 +199,7 @@ def memory_identity(item: Dict) -> str:
 
 
 def archive_memories(character: Dict, npc_name: str, items: List[Dict]) -> None:
+    npc_name = canonical_npc_name(npc_name)
     archive = character.setdefault("npc_memory_archive", {}).setdefault(npc_name, [])
     known = {memory_identity(item) for item in archive}
     for item in items:
@@ -207,6 +210,7 @@ def archive_memories(character: Dict, npc_name: str, items: List[Dict]) -> None:
 
 
 def restore_archived_memory(character: Dict, npc_name: str, archive_id: str) -> Dict:
+    npc_name = canonical_npc_name(npc_name)
     archive = character.setdefault("npc_memory_archive", {}).get(npc_name, [])
     item = next((item for item in archive if memory_identity(item) == archive_id), None)
     if item is None:
@@ -218,6 +222,7 @@ def restore_archived_memory(character: Dict, npc_name: str, archive_id: str) -> 
 
 
 def compress_npc_memory_bucket(character: Dict, npc_name: str, keep_recent: int = 24, force: bool = False) -> bool:
+    npc_name = canonical_npc_name(npc_name)
     memories = character.setdefault("npc_memories", {})
     bucket = memories.get(npc_name, [])
     if (not force and len(bucket) <= 30) or (force and not bucket):
@@ -265,7 +270,7 @@ def record_npc_memories(
     for item in updates:
         if not isinstance(item, dict):
             continue
-        name = str(item.get("npc_name") or item.get("name") or "").strip()
+        name = canonical_npc_name(str(item.get("npc_name") or item.get("name") or "").strip())
         summary = str(item.get("summary") or item.get("memory") or "").strip()
         if not name or not summary:
             continue
@@ -289,7 +294,7 @@ def record_npc_memories(
             "used_count": _number(item.get("used_count"), 0),
             "source_turn_id": turn_id or item.get("source_turn_id"),
             "knowledge_type": knowledge_type,
-            "source_npc": item.get("source_npc"),
+            "source_npc": canonical_npc_name(item.get("source_npc")),
             "confidence": max(0, min(1, float(item.get("confidence", _default_confidence(knowledge_type))))),
             "truth_status": item.get("truth_status", "accepted"),
             "fact_key": item.get("fact_key"),

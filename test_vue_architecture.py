@@ -90,7 +90,7 @@ class VueArchitectureTests(unittest.TestCase):
         for location in location_data["locations"]:
             self.assertIn(f"'{location['name']}'", scene_source, location["name"])
 
-        asset_names = set(re.findall(r"/static/static/([^']+\.png)", scene_source))
+        asset_names = set(re.findall(r"/static/([^']+\.png)", scene_source))
         self.assertEqual(len(asset_names), len(location_data["locations"]))
         for asset_name in asset_names:
             asset_path = ROOT / "static" / asset_name

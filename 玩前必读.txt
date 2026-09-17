@@ -1,8 +1,8 @@
 《东方异变录》测试版
 
 1. 双击 touhou.exe 或 启动touhou.bat 启动游戏。
-2. 首次启动时，请在游戏内设置窗口填写你自己的 DeepSeek API Key。
-3. API Key 由当前 Windows 用户加密保存在本机，不会写入游戏压缩包或存档导出。
-4. 游戏存档默认位于 %LOCALAPPDATA%\TouHou；便携模式下位于程序目录的数据文件夹。
+2. 未填写 Key 时会尝试读取本机 DEEPSEEK_API_KEY 环境变量；仍未找到时，请在游戏内设置窗口填写你自己的 Key。
+3. 游戏内填写的 API Key 由当前 Windows 用户加密保存在本机；从系统环境读取的 Key 不会自动落盘。分发包不含制作者的 Key 和存档。
+4. 默认存档位于 %LOCALAPPDATA%\TouHou\worlds\world_touhou\sessions；便携模式下位于程序目录的 worlds\world_touhou\sessions。旧存档加载时自动升级并保留原始备份。
 5. 游戏仅需本机运行，AI 对话功能需要能够访问所选模型服务。
 6. 遇到问题时，可使用游戏顶部的“导出反馈”功能生成诊断包。

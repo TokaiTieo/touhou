@@ -4,6 +4,7 @@ import json
 import hashlib
 from pathlib import Path
 from typing import Optional, Tuple
+from backend.services.npc_identity_service import canonical_npc_name, normalize_npcs
 
 
 FALLBACK_SCHEDULES = {
@@ -34,7 +35,12 @@ def load_schedules(path: Path = None) -> dict:
         with open(path, "r", encoding="utf-8-sig") as handle:
             data = json.load(handle)
         schedules = data.get("schedules", {})
-        return schedules if isinstance(schedules, dict) and schedules else FALLBACK_SCHEDULES
+        if not isinstance(schedules, dict) or not schedules:
+            return FALLBACK_SCHEDULES
+        canonical = {key: value for key, value in schedules.items() if canonical_npc_name(key) == key}
+        for key, value in schedules.items():
+            canonical.setdefault(canonical_npc_name(key), value)
+        return canonical
     except (OSError, TypeError, json.JSONDecodeError, AttributeError):
         return FALLBACK_SCHEDULES
 
@@ -56,6 +62,7 @@ def _absolute_hour(character: dict) -> float:
 
 
 def scheduled_location(name: str, hour: float, default_location: str, character: dict = None) -> Tuple[str, Optional[str]]:
+    name = canonical_npc_name(name)
     schedule = load_schedules().get(name)
     if not schedule:
         return default_location, None
@@ -99,7 +106,8 @@ def scheduled_location(name: str, hour: float, default_location: str, character:
 
 
 def place_scheduled_npcs(npcs: list, scene_name: str, hour: float, static_matches: list = None, character: dict = None) -> list:
-    static_matches = static_matches or []
+    npcs = normalize_npcs(npcs)
+    static_matches = normalize_npcs(static_matches or [])
     schedules = load_schedules()
     placed = [dict(npc) for npc in static_matches if npc.get("name") not in schedules]
     for npc in npcs:

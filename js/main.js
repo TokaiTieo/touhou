@@ -50,7 +50,7 @@ if (!favicon) {
     favicon.type = 'image/svg+xml';
     document.head.appendChild(favicon);
 }
-favicon.href = '/static/static/touhou-favicon.svg';
+favicon.href = '/static/touhou-favicon.svg';
 
 createApp(TouhouApp).mount('#app');
 

@@ -69,9 +69,9 @@ class SaveMigrationTests(unittest.TestCase):
         self.assertIn("story_summary", character)
         self.assertIn("inventory_state", character)
         self.assertIn("usage_stats", character)
-        self.assertEqual([item["version"] for item in character["migration_history"]], [5, 6, 7, 8, 9])
+        self.assertEqual([item["version"] for item in character["migration_history"]], list(range(5, SAVE_SCHEMA_VERSION + 1)))
         self.assertFalse(migrate_save_schema(character))
-        self.assertEqual(len(character["migration_history"]), 5)
+        self.assertEqual(len(character["migration_history"]), SAVE_SCHEMA_VERSION - 4)
 
     def test_legacy_conversation_messages_gain_rewrite_fields_additively(self):
         character = {

@@ -1,5 +1,21 @@
 # TouHou Changelog
 
+## v0.14.1
+
+- Restricted static routes to asset directories; cached asset URLs remain compatible without exposing the project root.
+- Merged Patchouli's legacy identities across content and runtime services; V10 saves preserve original conflicting values, memories, and custom fields.
+- Unified SVG, PNG, and multi-size Windows ICO assets with reproducible generation and integrity checks.
+- Corrected release documentation, signing order, and extracted-ZIP verification; removed unused installer/log artifacts.
+- Added static-access, identity-migration, branding, and documentation regression coverage.
+
+## v0.14.0
+
+- Preserved original memory archives and layered summaries with retrieval and restoration.
+- Serialized character commands with persisted retry receipts and atomic state commits.
+- Added continuous isolated production-turn evaluation, item effects, reputation outcomes, and NPC plans.
+- Added incident variants, cycle-safe task identities, paginated virtual chat history, and stable message IDs.
+- Added V9 save migration, embedded build fingerprints, verified-EXE packaging, and clean extracted-ZIP smoke tests.
+
 ## v0.13.0
 
 - Added runtime service watchdogs, bounded AI concurrency, request timeouts, SSE heartbeats, and turn lock timeouts.

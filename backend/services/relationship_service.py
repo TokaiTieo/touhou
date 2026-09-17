@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Dict
 from backend.services.relationship_policy_service import relationship_update_policy
+from backend.services.npc_identity_service import canonical_npc_name
 
 
 ATTITUDE_SCORES = (
@@ -26,7 +27,7 @@ def parse_relationship_changes(content: str) -> Dict[str, str]:
             continue
         name, attitude = part.split(":", 1)
         if name.strip() and attitude.strip():
-            result[name.strip()] = attitude.strip()
+            result[canonical_npc_name(name.strip())] = attitude.strip()
     return result
 
 
@@ -152,6 +153,7 @@ def apply_relationship_delta(
     reason: str,
 ) -> Dict:
     """Apply a small deterministic relationship change for local systems."""
+    npc_name = canonical_npc_name(npc_name)
     get_current_relationships(character)
     progress = ensure_relationship_progress(character)
     current = progress.get(npc_name, {})
