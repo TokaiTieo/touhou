@@ -19,7 +19,8 @@ class MemoryRetentionTests(unittest.TestCase):
                      "conversation_history": [{"content": "旧记录"}, {"message_id": "same"}, {"message_id": "same"}]}
         custom = copy.deepcopy(character["custom"])
         migrate_save_schema(character)
-        self.assertEqual(character["save_version"], 9)
+        from backend.version import SAVE_SCHEMA_VERSION
+        self.assertEqual(character["save_version"], SAVE_SCHEMA_VERSION)
         self.assertEqual(character["custom"], custom)
         self.assertEqual(len({m["message_id"] for m in character["conversation_history"]}), 3)
         self.assertFalse(migrate_save_schema(character))

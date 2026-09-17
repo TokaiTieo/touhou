@@ -1,0 +1,17 @@
+{
+  "source": "static/touhou-favicon.svg",
+  "sizes": [
+    16,
+    24,
+    32,
+    48,
+    64,
+    128,
+    256
+  ],
+  "sha256": {
+    "static/touhou-favicon.svg": "912db632a33126f3c8347c67ca799c6361ceb204e2100b2b32ee865a4726ea65",
+    "touhou.png": "67341232bf9c9f769f0d9234dd348ff0fdea065a4ff885740c917b077b97e0f1",
+    "static/touhou.ico": "d1ea2d20f921e09deb03906a38dca87cd636ad1cfc8ce132ddffd7ab8fc20caa"
+  }
+}

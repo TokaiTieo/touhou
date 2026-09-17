@@ -49,6 +49,7 @@ blob-report/
 coverage/
 
 # Temporary and editor files
+/*.msi
 .tmp/
 tmp/
 temp/

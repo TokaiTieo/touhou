@@ -159,6 +159,17 @@ def migrate_save_schema(character: Dict) -> bool:
         })
         changed = True
 
+    if version < 10:
+        character["save_version"] = 10
+        character.setdefault("migration_history", []).append({
+            "version": 10, "applied_at": datetime.now().isoformat(),
+            "summary": "帕秋莉身份合并，旧记忆与关系冲突快照保留",
+        })
+        changed = True
+
+    from backend.services.npc_identity_service import migrate_npc_identities
+    changed = migrate_npc_identities(character) or changed
+
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary

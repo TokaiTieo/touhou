@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 
 from backend.services.npc_schedule_service import period_for_hour, scheduled_location
 from backend.services.npc_agency_service import record_npc_activity
+from backend.services.npc_identity_service import load_npc_document, normalize_npcs
 
 
 ACTIVITIES = {
@@ -49,7 +50,7 @@ def _load_npcs(path: Optional[Path] = None) -> List[Dict]:
         except ImportError:
             return []
     try:
-        document = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+        document = load_npc_document(path)
         return [
             item for item in document.get("npcs", [])
             if isinstance(item, dict) and item.get("active", True) and not item.get("dead", False)
@@ -90,7 +91,7 @@ def simulate_offscreen_npcs(
 
     first_tick = int(start_hour // 6) + 1
     last_tick = int(current_hour // 6)
-    candidates = npcs if npcs is not None else _load_npcs(npc_index_path)
+    candidates = normalize_npcs(npcs) if npcs is not None else _load_npcs(npc_index_path)
     runtime = character.setdefault("npc_runtime", {})
     generated = []
     for tick in range(first_tick, last_tick + 1):

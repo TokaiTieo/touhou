@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const version = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
 
 
 test.beforeEach(async ({ context }) => {
@@ -16,6 +19,16 @@ test('boots the Vue app and removes legacy plaintext credentials', async ({ page
     expect(await page.evaluate(() => localStorage.getItem('touhou_api_key'))).toBeNull();
     const token = await page.locator('meta[name="touhou-session-token"]').getAttribute('content');
     expect(token?.length).toBeGreaterThan(20);
+    await expect.poll(() => page.locator('.app-brand-mark').evaluate(image => image.complete && image.naturalWidth > 0 && image.naturalWidth === image.naturalHeight)).toBe(true);
+});
+
+test('serves current and legacy assets without exposing private project files', async ({ request }) => {
+    for (const path of ['/static/touhou-favicon.svg', '/static/static/touhou-favicon.svg', '/static/touhou.ico', '/avatars/npc_patchouli_n.png']) {
+        expect((await request.get(path)).status()).toBe(200);
+    }
+    for (const path of ['/static/.env', '/static/version.json', '/static/backend/api.py', '/static/static/../version.json']) {
+        expect((await request.get(path)).status()).toBe(404);
+    }
 });
 
 
@@ -219,7 +232,7 @@ test('completes the playable loop, compares a rewrite, branches, and reloads the
         const branch = list.characters.find(item => item.profile?.name === 'E2E异变测试者 · 独立分支');
         return (await fetch(`/api/ghost/character/${branch.character_id}`)).json();
     });
-    expect(save.save_version).toBe(9);
+    expect(save.save_version).toBe(version.save_schema);
     expect(save.story_summary).toBeTruthy();
     expect(save.migration_history.some(item => item.version === 8)).toBeTruthy();
 });

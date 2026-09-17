@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import BASE_DIR
@@ -64,7 +64,7 @@ async def serve_index():
     index_path = BASE_DIR / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
-    return {"message": "Visual Novel API is running"}
+    return {"message": "TouHou API is running"}
 
 
 def mount_static_files(app):
@@ -76,6 +76,14 @@ def mount_static_files(app):
         app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
         print(f"✅ 挂载 /css -> {css_dir}")
     if avatars_dir.exists():
+        async def legacy_patchouli_avatar():
+            return RedirectResponse("/avatars/npc_patchouli.png", status_code=307)
+
+        app.add_api_route("/avatars/npc_patchouli_n.png", legacy_patchouli_avatar, methods=["GET", "HEAD"], include_in_schema=False)
         app.mount("/avatars", StaticFiles(directory=str(avatars_dir)), name="avatars")
         print(f"✅ 挂载 /avatars -> {avatars_dir}")
-    app.mount("/static", StaticFiles(directory=str(BASE_DIR)), name="static")
+    static_dir = BASE_DIR / "static"
+    if static_dir.exists():
+        # Cached clients used /static/static; neither mount may expose BASE_DIR.
+        app.mount("/static/static", StaticFiles(directory=str(static_dir)), name="static_legacy")
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")

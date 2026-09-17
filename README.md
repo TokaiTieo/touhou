@@ -2,8 +2,8 @@
 
 《东方异变录》是一款以自然语言对话驱动的 Touhou Project 同人互动游戏。玩家可以在幻想乡自由探索，通过行动与台词影响 NPC、任务、异变、关系、战斗结果和长期世界状态。
 
-当前版本：`v0.13.0`
-存档结构：`V8`
+当前版本：`v0.14.1`
+存档结构：`V10`
 运行平台：Windows
 
 ## 主要特性
@@ -16,7 +16,7 @@
 - 关系发展、消息重写、回复评分、剧情分支和存档快照。
 - 离屏 NPC 活动与延迟后果，让玩家行动持续影响世界。
 - LangGraph Functional API 回合恢复，断线或解析中断时避免重复调用和重复结算。
-- V1-V7 旧存档可自动、增量、幂等升级到 V8，并保留未知及自定义字段。
+- V1-V9 旧存档可自动、增量、幂等升级到 V10，并保留未知及自定义字段；帕秋莉旧身份自动合并，冲突原始值保留迁移快照。
 - 面向开发者的本地诊断、上下文预算、模型运行与恢复状态工具。
 
 ## 技术架构
@@ -37,7 +37,7 @@
 ### 运行发布版
 
 1. 双击 `touhou.exe` 或 `启动touhou.bat`。
-2. 首次启动时，在游戏设置窗口填写自己的 DeepSeek API Key。
+2. 本地未配置 Key 时优先读取系统环境变量 `DEEPSEEK_API_KEY`；仍未找到时，在游戏设置窗口填写自己的 Key。
 3. 创建或加载角色后即可开始游戏。
 
 API Key 由当前 Windows 用户加密保存在本机，不会写入角色存档或反馈导出包。AI 对话需要能够访问所配置的模型服务，其余游戏数据均保存在本地。
@@ -123,30 +123,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-release-worlds.
 python -m PyInstaller --noconfirm --clean api_release.spec
 ```
 
-构建产物位于 `dist/touhou.exe`。发布前可执行隔离冒烟测试：
+标识唯一来源为 `static/touhou-favicon.svg`。修改它后先运行 `npm run build:icons`，同步生成根目录 PNG、七种尺寸的 ICO 与资源校验清单；该命令需要本机 Edge（或通过 `TOUHOU_BROWSER` 指定已安装的 Playwright 浏览器通道）。EXE 显式使用 `static/touhou.ico`。
+
+构建产物位于 `dist/touhou.exe`。如需代码签名，先按下方步骤签名，再执行最终隔离冒烟测试；签名会改变 EXE 哈希：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-exe.ps1 -ExePath .\dist\touhou.exe
+Copy-Item -LiteralPath .\dist\touhou.exe -Destination .\touhou.exe -Force
 ```
 
 验证通过并更新根目录 EXE 后，可生成不含 API Key、存档、日志和 checkpoint 的测试压缩包：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-test.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-test-package.ps1
 ```
 
 默认输出为 `release/touhou-test-package.zip`。
 压缩包内含逐文件 `release-manifest.json`，旁边会生成 ZIP 自身的
 `touhou-test-package.zip.manifest.json`，可用其中的 SHA-256 校验分发文件。
 
-如已安装可信 Windows 代码签名证书，可在冒烟测试通过后执行：
+如已安装可信 Windows 代码签名证书，在构建后、最终冒烟测试前执行：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-release.ps1 `
   -CertificateThumbprint "你的证书指纹" -ExePath .\dist\touhou.exe
 ```
 
-签名脚本会再次读取 Authenticode 状态，只有验证为 `Valid` 才成功结束。
+签名脚本会再次读取 Authenticode 状态，只有验证为 `Valid` 才成功结束。若验证后再次签名或修改 EXE，必须重新执行冒烟、复制、打包和 ZIP 验证，不能复用旧验证回执。
 
 ## 项目结构
 
@@ -167,6 +171,7 @@ docs/             架构与迁移说明
 ## 隐私与安全
 
 - 本地服务默认只监听 `127.0.0.1`，并使用本地会话令牌保护 API。
+- 静态 HTTP 路由只允许 `js/`、`css/`、`avatars/` 和 `static/`；不会将项目根目录、`.env`、源码、日志或存档目录作为静态目录公开。旧 `/static/static/` 素材 URL 仅映射到素材目录。
 - LangSmith/LangChain 云端追踪默认关闭，不上传提示词、回复或角色状态。
 - checkpoint 位于本地 `runtime/`，成功提交后会清除对应回合数据。
 - 反馈导出与测试包采用白名单，不包含 API Key、角色存档或本地恢复数据。

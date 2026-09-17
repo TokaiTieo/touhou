@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Dict, Iterable, List
+from backend.services.npc_identity_service import canonical_npc_name
 
 
 GOALS_BY_LOCATION = {
@@ -102,7 +103,8 @@ def _goal(name: str, location: str, incident: Dict) -> str:
 
 def record_npc_activity(character: Dict, event: Dict) -> Dict:
     agency = ensure_npc_agency(character)
-    name = str(event.get("npc_name") or "").strip()
+    name = canonical_npc_name(str(event.get("npc_name") or "").strip())
+    event["npc_name"] = name
     if not name:
         return event
     location = str(event.get("location") or "幻想乡")
@@ -150,7 +152,7 @@ def record_player_interaction(
     names.extend(
         str(item.get("name") or "") for item in scene_npcs or [] if isinstance(item, dict)
     )
-    names = list(dict.fromkeys(name for name in names if name))[:5]
+    names = list(dict.fromkeys(canonical_npc_name(name) for name in names if name))[:5]
     now = datetime.now().isoformat()
     incident = character.get("incident_state", {}) or {}
     for name in names:
@@ -181,7 +183,7 @@ def format_npc_agency_context(
     character: Dict, names: Iterable[str], scene: str = "", limit: int = 6
 ) -> str:
     agency = ensure_npc_agency(character)
-    requested = list(dict.fromkeys(str(name) for name in names if name))
+    requested = list(dict.fromkeys(canonical_npc_name(str(name)) for name in names if name))
     lines = ["人物只知道其亲历、记忆和下列已接收的消息；远方世界回响不能自动视为本人已经知晓。"]
     for name in requested[:limit]:
         state = agency["npcs"].get(name, {})

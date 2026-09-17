@@ -38,7 +38,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--scene-background, url('/static/static/hakurei-shrine-hero-v1.png')) center / cover;
+    background: var(--scene-background, url('/static/hakurei-shrine-hero-v1.png')) center / cover;
     opacity: 0.16;
     pointer-events: none;
 }
@@ -1270,7 +1270,7 @@ label.file-drop:focus-within {
 .touhou-hero {
     background:
         radial-gradient(220px 220px at 76% 26%, rgba(255, 252, 244, 0.55), rgba(230, 205, 148, 0.14) 55%, transparent 78%),
-        url("/static/static/hakurei-shrine-hero-v1.png") center 44% / cover;
+        url("/static/hakurei-shrine-hero-v1.png") center 44% / cover;
 }
 
 .touhou-hero-seal {

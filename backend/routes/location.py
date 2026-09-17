@@ -206,14 +206,14 @@ async def get_npcs_by_scene(scene_name: str, character_id: str = None):
     
     from backend.world_manager import get_npcs_dir
     import json
+    from backend.services.npc_identity_service import load_npc_document
     
     npc_index_path = get_npcs_dir() / "npc_index.json"
     npcs = []
     
     if npc_index_path.exists():
         try:
-            with open(npc_index_path, 'r', encoding='utf-8-sig') as f:
-                npc_index = json.load(f)
+            npc_index = load_npc_document(npc_index_path)
             
             if not isinstance(npc_index, dict):
                 logger.warning("NPC index is not an object")
