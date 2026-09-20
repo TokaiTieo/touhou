@@ -4,19 +4,52 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+from functools import lru_cache
+from urllib.parse import quote
 
 
 NAME_ALIASES = {"帕秋莉·诺蕾姬": "帕秋莉"}
-ID_ALIASES = {"npc_patchouli_n": "npc_patchouli"}
+ID_ALIASES = {"npc_patchouli_n": "npc_patchouli", "hakurei_reimu": "npc_reimu"}
 KEY_ALIASES = {**NAME_ALIASES, "npc_patchouli_n": "帕秋莉", "npc_patchouli": "帕秋莉"}
 
 
+@lru_cache(maxsize=8)
+def _registry(path, modified):
+    document = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    records = {item["id"]: item for item in document.get("npcs", []) if isinstance(item, dict) and item.get("id")}
+    names = {item["name"]: identity for identity, item in records.items() if item.get("name")}
+    aliases = {**NAME_ALIASES, **document.get("aliases", {})}
+    ids = {**ID_ALIASES, **document.get("id_aliases", {})}
+    keys = {**aliases, **{identity: item["name"] for identity, item in records.items() if item.get("name")}}
+    keys.update({alias: records[target]["name"] for alias, target in ids.items() if target in records})
+    return records, names, keys, ids
+
+
+def npc_registry():
+    from backend.config import WORLDS_DIR, BASE_DIR, DEFAULT_WORLD_ID
+    path = WORLDS_DIR / DEFAULT_WORLD_ID / "npcs" / "npc_index.json"
+    if not path.is_file():
+        path = BASE_DIR / "worlds" / DEFAULT_WORLD_ID / "npcs" / "npc_index.json"
+    return _registry(str(path), path.stat().st_mtime_ns)
+
+
 def canonical_npc_name(name):
-    return KEY_ALIASES.get(name, name) if isinstance(name, str) else name
+    return npc_registry()[2].get(name, name) if isinstance(name, str) else name
 
 
 def canonical_npc_id(identity):
-    return ID_ALIASES.get(identity, identity) if isinstance(identity, str) else identity
+    return npc_registry()[3].get(identity, identity) if isinstance(identity, str) else identity
+
+
+def resolve_npc(identity):
+    records, names, _, _ = npc_registry()
+    key = canonical_npc_id(identity)
+    key = key if key in records else names.get(canonical_npc_name(identity))
+    if key not in records:
+        return None
+    result = copy.deepcopy(records[key])
+    result["avatar_url"] = "/avatars/" + quote(key, safe="") + ".png"
+    return result
 
 
 def _merge(primary, secondary, *, text=False):
@@ -46,11 +79,12 @@ def normalize_npcs(npcs):
             continue
         item = copy.deepcopy(npc)
         identity = canonical_npc_id(item.get("id"))
-        if identity != "npc_patchouli":
+        registered = resolve_npc(identity)
+        if not registered:
             result.append(item)
             continue
-        item.update(id=identity, name="帕秋莉")
-        if npc.get("id") in ID_ALIASES:
+        item.update(id=identity, name=registered["name"], avatar_url=registered["avatar_url"])
+        if npc.get("id") != identity:
             item.setdefault("legacy_identity_records", []).append(copy.deepcopy(npc))
         if identity not in positions:
             positions[identity] = len(result)
@@ -73,6 +107,7 @@ def load_npc_document(path):
 def migrate_npc_identities(character):
     """Archive conflicting originals; union memories, prefer latest dated state."""
     changed = False
+    affected = set()
 
     def references(value):
         if isinstance(value, list):
@@ -95,9 +130,12 @@ def migrate_npc_identities(character):
         nonlocal changed
         if not isinstance(mapping, dict):
             return
-        for alias, name in KEY_ALIASES.items():
+        for alias, name in npc_registry()[2].items():
+            if alias == name:
+                continue
             if alias not in mapping:
                 continue
+            affected.add(name)
             snapshots = character.setdefault("npc_identity_archive", {})
             snapshots.setdefault(path, copy.deepcopy(mapping))
             old = mapping.pop(alias)
@@ -147,26 +185,26 @@ def migrate_npc_identities(character):
     if changed:
         for field in ("npc_memories", "npc_memory_archive"):
             mapping = character.get(field)
-            bucket = mapping.get("帕秋莉", []) if isinstance(mapping, dict) else []
-            seen = {"id": set(), "archive_id": set()}
-            for item in bucket if isinstance(bucket, list) else []:
-                if not isinstance(item, dict):
-                    continue
-                for key, identities in seen.items():
-                    identity = item.get(key)
-                    if not isinstance(identity, str) or not identity:
+            for bucket in mapping.values() if isinstance(mapping, dict) else []:
+                seen = {"id": set(), "archive_id": set()}
+                for item in bucket if isinstance(bucket, list) else []:
+                    if not isinstance(item, dict):
                         continue
-                    if identity in identities:
-                        digest = hashlib.sha256(json.dumps(item, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
-                        item[key] = identity + "_merged_" + digest
-                    identities.add(item[key])
+                    for key, identities in seen.items():
+                        identity = item.get(key)
+                        if not isinstance(identity, str) or not identity:
+                            continue
+                        if identity in identities:
+                            digest = hashlib.sha256(json.dumps(item, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+                            item[key] = identity + "_merged_" + digest
+                        identities.add(item[key])
         progress_map = character.get("relationship_progress")
-        progress = progress_map.get("帕秋莉", {}) if isinstance(progress_map, dict) else {}
-        if isinstance(progress, dict) and progress.get("attitude"):
-            character.setdefault("relationships_map", {})["帕秋莉"] = progress["attitude"]
+        for name, progress in progress_map.items() if isinstance(progress_map, dict) else []:
+            if name in affected and isinstance(progress, dict) and progress.get("attitude"):
+                character.setdefault("relationships_map", {})[name] = progress["attitude"]
         for field in ("semantic_memory_index", "memory_index_meta"):
             mapping = character.get(field, {})
             if isinstance(mapping, dict):
-                for key in (*KEY_ALIASES, "帕秋莉"):
+                for key in (*npc_registry()[2], *npc_registry()[1]):
                     mapping.pop(key, None)
     return changed

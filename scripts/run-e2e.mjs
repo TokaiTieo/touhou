@@ -58,8 +58,8 @@ function runPlaywright() {
         );
         const timer = setTimeout(() => {
             child.kill();
-            reject(new Error('Playwright exceeded the 100 second E2E budget'));
-        }, 100_000);
+            reject(new Error('Playwright exceeded the 180 second E2E budget'));
+        }, 180_000);
         child.on('error', reject);
         child.on('exit', code => {
             clearTimeout(timer);

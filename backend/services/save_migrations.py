@@ -11,6 +11,8 @@ LATEST_SAVE_VERSION = SAVE_SCHEMA_VERSION
 
 
 def migrate_save_schema(character: Dict) -> bool:
+    from backend.services.storage_paths import require_supported_save
+    require_supported_save(character)
     changed = False
     try:
         version = int(character.get("save_version", 1) or 1)
@@ -167,6 +169,18 @@ def migrate_save_schema(character: Dict) -> bool:
         })
         changed = True
 
+    if version < 11:
+        from backend.services.character_view_service import command_result
+        for receipt in character.get("command_receipts", []):
+            if isinstance(receipt, dict) and isinstance(receipt.get("result"), dict):
+                receipt["result"] = command_result(receipt["result"])
+        character["save_version"] = 11
+        character.setdefault("migration_history", []).append({
+            "version": 11, "applied_at": datetime.now().isoformat(),
+            "summary": "完整剧情分块归档、跨人物记忆排序与统一身份映射升级",
+        })
+        changed = True
+
     from backend.services.npc_identity_service import migrate_npc_identities
     changed = migrate_npc_identities(character) or changed
 
@@ -174,6 +188,7 @@ def migrate_save_schema(character: Dict) -> bool:
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary
     v6_defaults = {
+        "conversation_archive": {"version": 1, "chunks": []},
         "npc_memory_archive": {},
         "npc_memory_layers": {},
         "npc_memory_legacy_summaries": {},

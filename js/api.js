@@ -685,7 +685,7 @@ async function loadCharacterJournal(characterId) {
     if (!characterId) {
         return { npc_memories: {}, open_events: [], spellcard_history: [] };
     }
-    return await apiCall(`/ghost/character_journal?character_id=${encodeURIComponent(characterId)}`);
+    return await apiCall(`/ghost/character_journal?character_id=${encodeURIComponent(characterId)}&view=summary`);
 }
 
 async function setSpellcardLoadout(characterId, spellcards) {
@@ -717,8 +717,8 @@ async function loadNPCMemories(characterId, npcName = '') {
     return await apiCall(`/ghost/npc_memories?character_id=${encodeURIComponent(characterId)}${suffix}`);
 }
 
-async function loadProducerConsoleState(characterId) {
-    return await apiCall(`/ghost/producer_console/state?character_id=${encodeURIComponent(characterId)}`);
+async function loadProducerConsoleState(characterId, memoryOffset = 0) {
+    return await apiCall(`/ghost/producer_console/state?character_id=${encodeURIComponent(characterId)}&memory_offset=${memoryOffset}`);
 }
 
 async function loadProducerContent(characterId, path = '') {
@@ -748,9 +748,10 @@ async function restoreProducerContentBackup(characterId, path, backupId) {
     });
 }
 
-async function runProducerEvaluation(characterId) {
+async function runProducerEvaluation(characterId, config = {}, signal = null) {
     return await apiCall('/ghost/producer_console/evaluation/run', {
-        method: 'POST', body: { character_id: characterId }, timeoutMs: 300000
+        method: 'POST', body: { character_id: characterId, ...config }, signal,
+        timeoutMs: Math.max(300000, Number(config.turn_count || 4) * 70000 + 15000)
     });
 }
 

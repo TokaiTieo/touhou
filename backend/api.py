@@ -14,6 +14,7 @@ from backend.routes.system import mount_static_files
 from backend.security import inject_session_token, require_local_session_token
 from backend.utils.logging_config import configure_logging
 from backend.version import APP_VERSION
+from backend.services.storage_paths import InvalidStoragePath, FutureSaveVersion
 
 configure_logging(DATA_DIR, DEBUG)
 logger = logging.getLogger(__name__)
@@ -47,6 +48,13 @@ app.add_middleware(
 )
 
 # 全局异常处理器
+@app.exception_handler(InvalidStoragePath)
+@app.exception_handler(FutureSaveVersion)
+async def storage_exception_handler(request: Request, exc: ValueError):
+    return JSONResponse(status_code=409 if isinstance(exc, FutureSaveVersion) else 400,
+                        content={"detail": str(exc)})
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """全局异常处理器，确保所有错误返回JSON"""

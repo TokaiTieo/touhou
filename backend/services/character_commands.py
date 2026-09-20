@@ -1,7 +1,6 @@
 """Durable, idempotent character commands sharing the player turn queue."""
 
 import hashlib
-import copy
 import inspect
 import json
 import uuid
@@ -9,6 +8,8 @@ from functools import wraps
 
 from fastapi import HTTPException
 from backend.services.turn_coordinator import turn_coordinator
+from backend.services.storage_paths import require_identifier
+from backend.services.character_view_service import command_result
 
 
 def serialize_character_access(handler):
@@ -19,12 +20,14 @@ def serialize_character_access(handler):
         owner = request.get("character_id") if isinstance(request, dict) else getattr(request, "character_id", request if isinstance(request, str) else None)
         if not owner:
             return await handler(*args, **kwargs)
+        require_identifier(owner)
         return await turn_coordinator.execute(character_id=str(owner), turn_id=f"access:{uuid.uuid4()}",
             kind="command", operation=lambda: handler(*args, **kwargs))
     return wrapped
 
 
 async def execute_character_command(character_id, operation_id, payload, change):
+    require_identifier(character_id)
     from backend import world_manager as storage
 
     identity = str(operation_id or uuid.uuid4())
@@ -40,15 +43,13 @@ async def execute_character_command(character_id, operation_id, payload, change)
             if item["id"] == identity:
                 if item["fingerprint"] != fingerprint:
                     raise HTTPException(409, "操作标识已用于其他内容，请刷新后重试")
-                return item["result"]
+                return command_result(item["result"])
         tasks = storage.load_tasks(character_id)
         char_revision, task_revision = character.get("state_revision", 0), tasks.get("state_revision", 0)
         result = change(character, tasks)
         if inspect.isawaitable(result):
             result = await result
-        result = copy.deepcopy(result)
-        if isinstance(result.get("character"), dict):
-            result["character"].pop("command_receipts", None)
+        result = command_result(result)
         receipts = character.setdefault("command_receipts", [])
         receipts.append({"id": identity, "fingerprint": fingerprint, "result": result})
         character["command_receipts"] = receipts[-60:]

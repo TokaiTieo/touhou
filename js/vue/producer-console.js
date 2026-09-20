@@ -1,4 +1,4 @@
-import { computed, defineComponent, onMounted, ref } from '../vendor/vue.esm-browser.prod.js';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref } from '../vendor/vue.esm-browser.prod.js';
 import { state } from '../ghost/core/state.js';
 import { openAppModal } from './app-store.js';
 import {
@@ -77,6 +77,14 @@ export const ProducerConsole = defineComponent({
         const contentMessage = ref('');
         const evaluationReport = ref(null);
         const evaluationMessage = ref('');
+        const evaluationTurns = ref(4);
+        const evaluationBudget = ref(400000);
+        const evaluationPrice = ref('');
+        const evaluationCost = ref('');
+        const evaluating = ref(false);
+        let evaluationAbort = null;
+        function stopEvaluation() { evaluationAbort?.abort(); }
+        onBeforeUnmount(stopEvaluation);
         const memoryReport = ref(null);
         const archive = ref({ items: [], total: 0 });
         const archiveOffset = ref(0);
@@ -105,8 +113,21 @@ export const ProducerConsole = defineComponent({
         const workflow = computed(() => turnRuntime.value.workflow || {});
         const playerPairs = computed(() => Object.entries(data.value.player_state || {}).slice(0, 12));
         const resourcePairs = computed(() => Object.entries(data.value.resources || {}).slice(0, 12));
-        const memoryGroups = computed(() => Object.entries(data.value.npc_memories || {}).slice(0, 8));
+        const memoryGroups = computed(() => Object.entries(data.value.npc_memories || {}));
+        const memoryPageOffset = ref(0);
+        async function memoryPage(offset) {
+            memoryPageOffset.value = Math.max(0, offset);
+            await run(async () => {}, '人物记忆已读取');
+        }
         const turnDiagnostics = computed(() => data.value.turn_diagnostics || {});
+        const diagnosticPage = ref(null);
+        async function loadDiagnostics(offset = 0) {
+            await run(async () => {
+                diagnosticPage.value = await apiCall('/ghost/producer_console/diagnostics?' + new URLSearchParams({
+                    character_id: state.currentSession.characterId, offset: String(Math.max(0, offset)), limit: '20'
+                }));
+            }, '回合记录已读取');
+        }
         const structuredCollections = computed(() => (
             (contentEditor.value.collections || []).filter(
                 item => item.type === 'array' && item.item_type === 'object'
@@ -130,7 +151,7 @@ export const ProducerConsole = defineComponent({
         });
 
         async function reload() {
-            data.value = await loadProducerConsoleState(state.currentSession.characterId);
+            data.value = await loadProducerConsoleState(state.currentSession.characterId, memoryPageOffset.value);
             remaining.value = data.value.time?.chapter_time_remaining ?? 72;
             nodeName.value = data.value.time?.chapter_node_name || '';
         }
@@ -317,16 +338,29 @@ export const ProducerConsole = defineComponent({
         }
 
         async function runEvaluation() {
-            if (!window.confirm('将调用当前 AI 服务运行 4 组隔离评测，是否继续？')) return;
+            if (evaluationCost.value !== '' && !(Number(evaluationPrice.value) > 0)) {
+                evaluationMessage.value = '填写费用上限时，需要填写每百万 Token 的保守单价。';
+                return;
+            }
+            if (!window.confirm(`将调用当前 AI 服务运行最多 ${evaluationTurns.value} 回合隔离评测，Token 预算 ${evaluationBudget.value}。费用按服务商结算，是否继续？`)) return;
             busy.value = true;
+            evaluating.value = true;
+            evaluationAbort = new AbortController();
             evaluationMessage.value = '正在运行真实模型评测…';
             try {
-                evaluationReport.value = await runProducerEvaluation(state.currentSession.characterId);
-                evaluationMessage.value = `评测完成：${evaluationReport.value.passed}/${evaluationReport.value.total} 通过`;
+                evaluationReport.value = await runProducerEvaluation(state.currentSession.characterId, {
+                    turn_count: evaluationTurns.value, token_budget: evaluationBudget.value,
+                    price_per_million: evaluationPrice.value === '' ? null : Number(evaluationPrice.value),
+                    cost_budget: evaluationCost.value === '' ? null : Number(evaluationCost.value)
+                }, evaluationAbort.signal);
+                const reason = { budget_reached: '预算已用尽', provider_error: '模型调用失败', cancelled: '已停止' }[evaluationReport.value.stopped_reason];
+                evaluationMessage.value = `${reason || '评测完成'}：${evaluationReport.value.passed}/${evaluationReport.value.total} 通过，预算用量 ${evaluationReport.value.budget_tokens_used}${evaluationReport.value.usage_estimated ? '（含估算）' : ''}`;
             } catch (error) {
-                evaluationMessage.value = error.message || '模型评测失败';
+                evaluationMessage.value = evaluationAbort.signal.aborted ? '已请求停止；当前调用结束后不再发起新回合。' : error.message || '模型评测失败';
             } finally {
                 busy.value = false;
+                evaluating.value = false;
+                evaluationAbort = null;
             }
         }
 
@@ -475,7 +509,9 @@ export const ProducerConsole = defineComponent({
             evaluationReport, eventDescription, eventTitle, eventType, loadContent, memoryGroups,
             memoryId, memoryImportance, memoryNpc, memoryReport, memoryRetrieval, memorySummary,
             memoryTags, nodeName, npcName, playerPairs, reason, referenceValues, remaining,
-            archive, archiveOffset, loadArchive, restoreArchived,
+            archive, archiveOffset, loadArchive, restoreArchived, memoryPage, memoryPageOffset,
+            evaluationTurns, evaluationBudget, evaluationPrice, evaluationCost, evaluating, stopEvaluation,
+            diagnosticPage, loadDiagnostics,
             removeStructuredRecord, resourceKey, resourcePairs, resourceValue, restore, restoreBackup,
             runEvaluation, runMemoryMaintenance, runtime, saveContent, scene, setAnomaly,
             setPlayerState, setRelationship, setResource, stateKey, stateValue, structuredCollections,
@@ -504,6 +540,7 @@ export const ProducerConsole = defineComponent({
                         <div v-for="item in archive.items" :key="item.archive_id" class="producer-memory-item"><span>{{ item.summary }}</span><small>{{ item.knowledge_type }} · {{ item.source_npc || item.source }} · {{ item.truth_status }}</small><button :disabled="busy" @click="restoreArchived(item)">恢复原文</button></div>
                         <div class="producer-tool-row"><button :disabled="busy || archiveOffset === 0" @click="loadArchive(Math.max(0, archiveOffset - 30))">上一页</button><button :disabled="busy || archiveOffset + 30 >= archive.total" @click="loadArchive(archiveOffset + 30)">下一页</button></div>
                     </section>
+                    <div class="producer-tool-row" v-if="data.memory_page?.total"><button :disabled="busy || memoryPageOffset === 0" @click="memoryPage(memoryPageOffset - 8)">上一组人物</button><span>{{ memoryPageOffset + 1 }} / {{ data.memory_page.total }}</span><button :disabled="busy || !data.memory_page.has_more" @click="memoryPage(memoryPageOffset + 8)">下一组人物</button></div>
                     <section class="producer-block producer-wide producer-content-editor">
                         <h3>世界内容编辑器</h3>
                         <div class="producer-content-toolbar"><select v-model="contentPath" :disabled="busy" @change="loadContent"><option v-for="item in contentFiles" :key="item.path" :value="item.path">{{ item.label }} · {{ item.path }}</option></select><button :disabled="busy || !contentPath" @click="loadContent">重新载入</button><button :disabled="busy || !contentPath" @click="validateContent">模拟校验</button><button class="producer-primary-btn" :disabled="busy || !contentPath" @click="saveContent">校验并保存</button></div>
@@ -519,9 +556,10 @@ export const ProducerConsole = defineComponent({
                         <div v-if="contentBackups.length" class="producer-backup-list"><strong>最近备份</strong><button v-for="item in contentBackups.slice(0, 6)" :key="item.backup_id" :disabled="busy" @click="restoreBackup(item.backup_id)">{{ new Date(item.created_at).toLocaleString() }} · {{ Math.ceil(item.size_bytes / 1024) }} KB</button></div>
                         <p v-if="contentMessage" class="dialog-status">{{ contentMessage }}</p>
                     </section>
-                    <section class="producer-block producer-wide"><h3>真实模型回归</h3><div class="producer-tool-row"><button class="producer-primary-btn" :disabled="busy" @click="runEvaluation">运行隔离评测</button><span>{{ evaluationMessage || '尚未运行' }}</span></div><div v-if="evaluationReport" class="producer-evaluation-list"><article v-for="item in evaluationReport.results" :key="item.id" :class="{ passed: item.passed }"><strong>{{ item.passed ? '通过' : '未通过' }} · {{ item.title }}</strong><span>{{ item.evaluation.score }} 分 · {{ item.runtime?.elapsed_ms || 0 }} ms · {{ item.usage?.total_tokens || 0 }} Token</span><small v-for="issue in item.evaluation.issues" :key="issue.code">{{ issue.message }}</small></article></div></section>
+                    <section class="producer-block producer-wide"><h3>真实模型回归</h3><div class="producer-tool-row"><label>回合数<select v-model.number="evaluationTurns" :disabled="busy"><option :value="4">4</option><option :value="24">24</option><option :value="60">60</option></select></label><label>Token 预算<input v-model.number="evaluationBudget" type="number" min="1" max="10000000" :disabled="busy"></label><label>每百万 Token 保守单价<input v-model="evaluationPrice" type="number" min="0" step="0.01" :disabled="busy"></label><label>费用上限<input v-model="evaluationCost" type="number" min="0" step="0.01" :disabled="busy"></label></div><div class="producer-tool-row"><button class="producer-primary-btn" :disabled="busy" @click="runEvaluation">运行隔离评测</button><button v-if="evaluating" @click="stopEvaluation">停止评测</button><span>{{ evaluationMessage || '尚未运行' }}</span></div><div v-if="evaluationReport" class="producer-evaluation-list"><article v-for="item in evaluationReport.results" :key="item.id" :class="{ passed: item.passed }"><strong>{{ item.passed ? '通过' : '未通过' }} · {{ item.title }}</strong><span>{{ item.evaluation.score }} 分 · {{ item.runtime?.elapsed_ms || 0 }} ms · {{ item.usage?.total_tokens || 0 }} Token</span><small v-for="issue in item.evaluation.issues" :key="issue.code">{{ issue.message }}</small></article></div></section>
                     <section class="producer-block producer-wide"><h3>最近 AI 调试</h3><div class="producer-state-preview">类型：{{ debug.kind || '暂无' }}<br>模型：{{ runtime.used_model || runtime.requested_model || '暂无' }} · 尝试 {{ runtime.attempts || 0 }} 次 · {{ runtime.fallback_used ? '已降级' : '未降级' }}<br>上下文：{{ runtime.prompt_chars || debug.prompt_chars || 0 }} 字符<span v-if="runtime.compressed">（由 {{ runtime.original_chars }} 压缩）</span><br>预算：{{ contextBudget.used_chars || 0 }} / {{ contextBudget.total_budget_chars || 0 }} 字符，约 {{ contextBudget.estimated_tokens || 0 }} Token<br>Token：{{ debug.actual_total_tokens || 0 }}（输入 {{ debug.usage?.prompt_tokens || 0 }} / 输出 {{ debug.usage?.completion_tokens || 0 }}）<br>世界书：{{ context.used_chars || 0 }} / {{ context.budget_chars || 0 }} 字符<br>注入：{{ (context.entries || []).map(item => item.title).join('、') || '无' }}</div><div class="producer-state-preview producer-memory-preview"><div v-for="item in memoryRetrieval" :key="item.npc_name + ':' + item.memory_id" class="producer-memory-item"><code>{{ item.memory_id }}</code><span>{{ item.npc_name }} · {{ item.reasons?.join('、') }} · {{ item.chars }} 字符 · {{ item.score }}</span></div></div><textarea rows="6" readonly :value="debug.prompt_preview || '普通模式未保存提示词内容'"></textarea><textarea rows="4" readonly :value="debug.response_preview || '普通模式未保存响应内容'"></textarea></section>
                     <section class="producer-block producer-wide"><h3>回合工作流与诊断</h3><div class="producer-tool-row"><button type="button" @click="downloadDiagnostics">导出脱敏诊断</button><span>{{ turnDiagnostics.turns || 0 }} 回合 · P50 {{ turnDiagnostics.p50_ms ?? '暂无' }} ms · P95 {{ turnDiagnostics.p95_ms ?? '暂无' }} ms · 回退 {{ turnDiagnostics.fallbacks || 0 }} · 失败 {{ turnDiagnostics.failures || 0 }}</span></div><div class="producer-state-preview">Functional API：{{ turnRuntime.langgraph_enabled ? '启用' : '回退路径' }} · 最近恢复：{{ workflow.recovered ? '是' : '否' }} · 本回合回退：{{ workflow.fallback ? '是' : '否' }}<br>工作流耗时：{{ workflow.workflow_ms || 0 }} ms · 检查点：{{ checkpoint.active_threads || 0 }} 个 · 数据库：{{ checkpoint.database_bytes || 0 }} bytes<br>最旧恢复数据：{{ checkpoint.oldest_age_seconds || 0 }} 秒 · 清理故障：{{ workflow.cleanup_error || '无' }}</div><div class="producer-state-preview producer-memory-preview"><div v-for="item in (turnRuntime.recent_turns || [])" :key="item.turn_id" class="producer-memory-item"><code>{{ item.turn_id }}</code><span>{{ item.kind }} · {{ item.state }} · {{ item.duration_ms || 0 }} ms<template v-if="item.recovered"> · 已恢复</template><small v-if="item.phase_durations_ms">{{ Object.entries(item.phase_durations_ms).map(([name,value]) => name + ' ' + value + 'ms').join(' · ') }}</small></span></div></div></section>
+                    <section class="producer-block producer-wide"><h3>历史回合诊断</h3><div class="producer-tool-row"><button :disabled="busy" @click="loadDiagnostics(0)">读取最近记录</button><template v-if="diagnosticPage"><button :disabled="busy || diagnosticPage.offset === 0" @click="loadDiagnostics(diagnosticPage.offset - 20)">上一页</button><span>{{ diagnosticPage.total }} 条</span><button :disabled="busy || !diagnosticPage.has_more" @click="loadDiagnostics(diagnosticPage.offset + 20)">下一页</button></template></div><div v-if="diagnosticPage" class="producer-memory-preview"><div class="producer-memory-item" v-for="item in diagnosticPage.items" :key="item.turn_id"><code>{{ item.turn_id }}</code><span>{{ item.kind }} · {{ item.state }} · {{ item.total_ms }} ms · {{ item.error_code || '正常' }}</span></div></div></section>
                 </div>
             </section>
         </div>

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict
 
 from backend.services.save_migrations import LATEST_SAVE_VERSION
+from backend.services.storage_paths import safe_identifier
 
 
 def inspect_character_payload(payload) -> Dict:
@@ -25,12 +26,19 @@ def inspect_character_payload(payload) -> Dict:
         errors.append("角色资料缺少名称")
     if not str(payload.get("character_id") or "").strip():
         warnings.append("缺少 character_id，导入时将自动生成")
+    elif not safe_identifier(payload.get("character_id")):
+        warnings.append("旧角色标识不能用作文件名，导入时将安全映射并保留来源")
     for field in ("conversation_history", "spellcard_history", "open_events"):
         if field in payload and not isinstance(payload[field], list):
             warnings.append(f"{field} 类型异常，自动升级时将尝试修复")
     for field in ("status", "time", "player_state", "npc_memories"):
         if field in payload and not isinstance(payload[field], dict):
             warnings.append(f"{field} 类型异常，自动升级时将尝试修复")
+    manifest = payload.get("conversation_archive", {"version": 1, "chunks": []})
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("chunks", []), list):
+        errors.append("剧情档案索引格式无效，请使用完整导出的角色文件")
+    elif any(not isinstance(chunk, dict) or not isinstance(chunk.get("count"), int) or chunk["count"] < 0 for chunk in manifest.get("chunks", [])):
+        errors.append("剧情档案索引条目无效")
     try:
         version = int(payload.get("save_version", 1) or 1)
     except (TypeError, ValueError):
@@ -38,12 +46,15 @@ def inspect_character_payload(payload) -> Dict:
         warnings.append("save_version 无效，将按旧版存档升级")
     if version < LATEST_SAVE_VERSION:
         warnings.append(f"旧版存档 v{version}，加载时将自动升级到 v{LATEST_SAVE_VERSION}")
+    if version > LATEST_SAVE_VERSION:
+        errors.append(f"存档 V{version} 高于当前支持的 V{LATEST_SAVE_VERSION}，请升级程序；不会改写原存档")
     serialized = json.dumps(payload, ensure_ascii=False, default=str)
     return {
         "status": "critical" if errors else "warning" if warnings else "healthy",
         "errors": errors,
         "warnings": warnings,
         "repairable": not errors,
+        "read_only": version > LATEST_SAVE_VERSION,
         "save_version": version,
         "target_save_version": LATEST_SAVE_VERSION,
         "history_count": len(payload.get("conversation_history", []))

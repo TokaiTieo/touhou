@@ -42,6 +42,8 @@ class TurnOrchestrator:
         tasks = load_tasks(turn.character_id)
         rebuild_story_summary(character, tasks)
         thread_id = self.workflow_thread_id(turn)
+        if character.get("timeline_epoch"):
+            thread_id += ":" + character["timeline_epoch"]
         return TurnContext(
             turn=turn,
             character=character,

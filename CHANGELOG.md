@@ -1,5 +1,15 @@
 # TouHou Changelog
 
+## v0.15.0
+
+- Hardened save IDs and resolved storage paths; future save schemas cannot be downgraded. No import file-size limit was added.
+- Expanded snapshot signatures and made imports/restores recoverable character/task transactions, with pre-restore backups and isolated workflow epochs.
+- Added V11 immutable conversation archives, complete portable exports, full-history search, stable paging and independent branch edits.
+- Ranked memory candidates globally across NPCs and unified canonical names, legacy IDs, portraits and evaluation personas through the NPC registry.
+- Added bounded state responses, compact command receipts, paginated producer records and synthetic long-save benchmarks.
+- Fixed mobile send-label clipping and added desktop/mobile, large-text and keyboard-height screenshot baselines.
+- Added opt-in 24/60-turn production-pipeline evaluations with token/cost budgets and cancellation; automated tests use mock providers only.
+
 ## v0.14.1
 
 - Restricted static routes to asset directories; cached asset URLs remain compatible without exposing the project root.

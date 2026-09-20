@@ -30,6 +30,9 @@ from backend.config import PROMPTS_DIR
 from backend.version import CONTENT_SCHEMA_VERSION, SAVE_SCHEMA_VERSION
 
 from backend.services.character_commands import serialize_character_access
+from backend.services.conversation_archive_service import all_history, history_page, history_count, portable_character
+from backend.services.character_view_service import character_state
+from backend.services.storage_paths import contained_path
 
 router = APIRouter()
 
@@ -550,9 +553,9 @@ async def load_character_endpoint(request: LoadCharacterRequest):
         "current_scene": character["status"].get("current_scene", "unknown"),
         "is_dead": character["status"].get("is_dead", False),
         "death_cause": character["status"].get("death_cause"),
-        "conversation_history": character.get("conversation_history", [])[-max(1, min(200, request.history_limit)):] if request.history_limit is not None else character.get("conversation_history", []),
-        "history_start": max(0, len(character.get("conversation_history", [])) - max(1, min(200, request.history_limit))) if request.history_limit is not None else 0,
-        "history_total": len(character.get("conversation_history", [])),
+        "conversation_history": history_page(character, limit=request.history_limit)["messages"] if request.history_limit is not None else all_history(character),
+        "history_start": max(0, history_count(character) - max(1, min(200, request.history_limit))) if request.history_limit is not None else 0,
+        "history_total": history_count(character),
         "unlocked_locations": character.get("unlocked_locations", {}),
         "time": character.get("time", {}),
         "incident_state": character.get("incident_state", {}),
@@ -589,13 +592,13 @@ async def list_characters_endpoint():
 async def delete_character_endpoint(character_id: str):
     """删除角色"""
     characters_dir = get_characters_dir()
-    char_path = characters_dir / f"{character_id}.json"
+    char_path = contained_path(characters_dir, f"{character_id}.json")
     
     if not char_path.exists():
         raise HTTPException(status_code=404, detail="角色不存在")
     
     # 移动到删除目录
-    deleted_dir = characters_dir / "_deleted"
+    deleted_dir = contained_path(characters_dir, "_deleted")
     deleted_dir.mkdir(exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -633,14 +636,14 @@ async def update_status_endpoint(request: CharacterStatusUpdateRequest):
 
 
 @router.get("/character/{character_id}")
-async def get_character_endpoint(character_id: str):
+async def get_character_endpoint(character_id: str, view: str = "full"):
     """获取角色详情"""
     character = load_character(character_id)
     
     if not character:
         raise HTTPException(status_code=404, detail="角色不存在")
     
-    return character
+    return portable_character(character) if view == "full" else character_state(character)
 
 
 @router.post("/convert_to_npc")

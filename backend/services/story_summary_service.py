@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Dict, Iterable, List
+from backend.services.conversation_archive_service import history_count
 
 
 SUMMARY_INTERVAL = 12
@@ -63,7 +64,8 @@ def _needs_refresh(character: Dict, force: bool) -> bool:
     if current_id and current_id == last_id:
         return False
     previous_count = int(summary.get("history_count", 0) or 0)
-    if len(history) - previous_count >= SUMMARY_INTERVAL or len(history) < previous_count:
+    count = history_count(character)
+    if count - previous_count >= SUMMARY_INTERVAL or count < previous_count:
         return True
     return any(word in _content(history[-1]) for word in IMPORTANT_WORDS)
 
@@ -123,7 +125,7 @@ def rebuild_story_summary(character: Dict, tasks_data: Dict = None, force: bool 
         "unresolved_threads": _unique_recent(unresolved, 10),
         "relationship_highlights": _unique_recent(relationship_lines, 12),
         "last_message_id": last_entry.get("message_id") if isinstance(last_entry, dict) else None,
-        "history_count": len(history),
+        "history_count": history_count(character),
         "updated_at": datetime.now().isoformat(),
     }
     character["story_summary"] = new_summary

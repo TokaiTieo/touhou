@@ -3,24 +3,18 @@
 import hashlib
 import json
 import uuid
+import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+from backend.services.storage_paths import contained_path, require_identifier, require_supported_save
+from backend.services.conversation_archive_service import history_count
 
 
-def snapshot_signature(data: Dict) -> str:
-    history = data.get("conversation_history", []) or []
-    if not isinstance(history, list):
-        history = []
-    status = data.get("status", {}) or {}
-    if not isinstance(status, dict):
-        status = {}
-    marker = {
-        "history_count": len(history),
-        "last_message": history[-1] if history else None,
-        "scene": status.get("current_scene"),
-        "is_dead": status.get("is_dead"),
-    }
+def snapshot_signature(data: Dict, tasks: Dict = None) -> str:
+    ignored = {"last_saved_at", "last_played", "command_receipts", "_migrated"}
+    marker = {"character": {key: value for key, value in data.items() if key not in ignored},
+              "tasks": {key: value for key, value in (tasks or {}).items() if key != "last_updated"}}
     raw = json.dumps(marker, ensure_ascii=False, sort_keys=True, default=str)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
@@ -38,7 +32,8 @@ def create_snapshot(
     force: bool = False,
 ) -> Optional[Dict]:
     snapshots_dir.mkdir(parents=True, exist_ok=True)
-    signature = snapshot_signature(data)
+    require_supported_save(data)
+    signature = snapshot_signature(data, tasks)
     existing = sorted(
         snapshots_dir.glob("*.json"), key=lambda path: path.stat().st_mtime, reverse=True
     )
@@ -63,8 +58,8 @@ def create_snapshot(
             "snapshot_id": snapshot_id,
             "character_id": character_id,
             "created_at": now.isoformat(),
-            "label": label or f"对话节点 {len(history)}",
-            "history_count": len(history),
+            "label": label or f"对话节点 {history_count(data)}",
+            "history_count": history_count(data),
             "scene": status.get("current_scene", "未知"),
             "signature": signature,
             "save_version": data.get("save_version", save_version),
@@ -95,7 +90,7 @@ def list_snapshots(snapshots_dir: Path) -> List[Dict]:
 
 
 def load_snapshot(snapshots_dir: Path, snapshot_id: str) -> Dict:
-    snapshot_path = snapshots_dir / f"{snapshot_id}.json"
+    snapshot_path = contained_path(snapshots_dir, f"{require_identifier(snapshot_id)}.json")
     if not snapshot_path.exists():
         raise FileNotFoundError("存档快照不存在")
     with open(snapshot_path, "r", encoding="utf-8") as handle:
@@ -115,9 +110,10 @@ def prepare_restore_payload(
     branch_name: Optional[str] = None,
     snapshot_id: str = "",
 ) -> Dict:
-    character = ensure_fields(payload.get("character", {}))
-    tasks = payload.get("tasks") or default_tasks()
+    character = ensure_fields(copy.deepcopy(payload.get("character", {})))
+    tasks = copy.deepcopy(payload.get("tasks") or default_tasks())
     target_id = character_id
+    character["character_id"] = character_id
     if branch:
         target_id = str(uuid.uuid4())
         character["character_id"] = target_id
@@ -129,5 +125,9 @@ def prepare_restore_payload(
             "snapshot_id": snapshot_id,
         }
     character.pop("_migrated", None)
+    character["command_receipts"] = []
+    character["resolved_turn_ids"] = []
+    character["turn_receipts"] = []
+    character["timeline_epoch"] = uuid.uuid4().hex
     tasks["last_updated"] = datetime.now().isoformat()
     return {"target_id": target_id, "character": character, "tasks": tasks}
