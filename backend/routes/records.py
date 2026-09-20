@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from backend.services.ai_service import call_ai_async, get_last_ai_runtime
+from backend.services.conversation_archive_service import hydrate_history, history_page, history_count, portable_character
 from backend.services.character_commands import execute_character_command
 from backend.services.incident_service import sync_incident_from_tasks
 from backend.services.narrative_evaluation_service import (
@@ -38,6 +39,8 @@ from backend.services.save_health_service import (
 from backend.services.story_summary_service import rebuild_story_summary
 from backend.utils.ai_json import safe_json_loads
 from backend.version import DISPLAY_VERSION
+from backend.services.storage_paths import safe_identifier, require_identifier, contained_path
+from backend.services.save_upgrade_service import write_upgrade_artifacts
 from backend.world_manager import (
     create_character_snapshot,
     ensure_character_fields,
@@ -49,6 +52,7 @@ from backend.world_manager import (
     restore_character_snapshot,
     save_character,
     save_tasks,
+    save_turn_bundle,
 )
 
 from backend.services.character_commands import serialize_character_access
@@ -138,12 +142,11 @@ async def append_conversation(request: AppendConversationRequest):
             "rewrite_candidates": [],
         }
         history.append(message)
-        character["conversation_history"] = history[-500:]
         rebuild_story_summary(character, tasks)
         return {
             "status": "ok",
             "message_id": message["message_id"],
-            "message_index": len(character["conversation_history"]) - 1,
+            "message_index": history_count(character) - 1,
             "rewrite_candidates": [],
         }
     payload = request.model_dump(exclude={"operation_id"})
@@ -155,7 +158,7 @@ async def append_conversation(request: AppendConversationRequest):
 async def rewrite_message(request: RewriteMessageRequest):
     async def change(character, tasks):
         """Create a prose-only alternative without replaying game state."""
-        history = character.setdefault("conversation_history", [])
+        history = hydrate_history(character)
         target_index = None
         if request.message_id:
             target_index = next(
@@ -228,7 +231,7 @@ async def rewrite_message(request: RewriteMessageRequest):
 @router.post("/delete_history")
 async def delete_history(request: DeleteHistoryRequest):
     async def change(character, tasks):
-        history = character.setdefault("conversation_history", [])
+        history = hydrate_history(character)
         index = request.from_index
         if request.message_id:
             index = next((i for i, item in enumerate(history) if item.get("message_id") == request.message_id), -1)
@@ -364,10 +367,10 @@ async def update_onboarding(request: OnboardingRequest):
 
 
 @router.get("/character_journal")
-async def get_character_journal(character_id: str):
+async def get_character_journal(character_id: str, view: str = "full"):
     character = _require_character(character_id)
     ensure_progression_profile(character)
-    return {
+    result = {
         "profile": character.get("profile", {}),
         "status": character.get("status", {}),
         "player_state": character.get("player_state", {}),
@@ -403,6 +406,12 @@ async def get_character_journal(character_id: str):
         "narrative_feedback": summarize_rated_samples(character),
         "gm_mode": character.get("gm_mode", False),
     }
+    if view == "summary":
+        for key in ("npc_memories", "npc_memory_summaries", "turn_diagnostics", "memory_maintenance", "npc_agency", "world_state"):
+            result.pop(key, None)
+        for key in ("open_events", "spellcard_history", "consequence_log", "reputation_history", "incident_history"):
+            result[key] = result[key][-20:]
+    return result
 
 
 @router.get("/snapshots")
@@ -433,10 +442,10 @@ async def restore_snapshot(request: RestoreSnapshotRequest):
 @router.get("/save_health")
 async def get_save_health(character_id: str):
     characters_dir = get_characters_dir()
-    report = inspect_character_file(characters_dir / f"{character_id}.json")
+    report = inspect_character_file(contained_path(characters_dir, f"{require_identifier(character_id)}.json"))
     snapshots = list_character_snapshots(character_id)
     report["snapshot_count"] = len(snapshots)
-    report["repairable"] = bool(report.get("repairable") or snapshots)
+    report["repairable"] = not report.get("read_only", False) and bool(report.get("repairable") or snapshots)
     report.pop("payload", None)
     return report
 
@@ -448,7 +457,9 @@ async def repair_save(request: dict):
     if not character_id:
         raise HTTPException(status_code=400, detail="缺少 character_id")
     characters_dir = get_characters_dir()
-    report = inspect_character_file(characters_dir / f"{character_id}.json")
+    report = inspect_character_file(contained_path(characters_dir, f"{require_identifier(character_id)}.json"))
+    if report.get("read_only"):
+        raise HTTPException(409, "请使用更新版本的程序读取此存档；原文件未修改")
     if report.get("status") == "critical":
         snapshots = list_character_snapshots(character_id)
         if not snapshots:
@@ -471,7 +482,7 @@ async def repair_save(request: dict):
 @router.get("/export_character/{character_id}")
 async def export_character(character_id: str):
     character = _require_character(character_id)
-    exported = json.loads(json.dumps(character, ensure_ascii=False, default=str))
+    exported = portable_character(character)
     exported["tasks_export"] = load_tasks(character_id)
     exported["export_metadata"] = {
         "app_version": DISPLAY_VERSION,
@@ -490,20 +501,29 @@ async def import_character(request: dict):
             "message": "角色存档预检未通过", "errors": report.get("errors", [])
         })
     character = json.loads(json.dumps(payload, ensure_ascii=False, default=str))
+    if character.get("conversation_archive", {}).get("chunks"):
+        raise HTTPException(422, "该文件引用外部剧情档案，请在原游戏中使用导出角色后重新导入")
     characters_dir = get_characters_dir()
-    source_id = str(character.get("character_id") or "").strip()
-    target_id = source_id or str(uuid.uuid4())
-    if (characters_dir / f"{target_id}.json").exists():
+    source_id = str(character.get("character_id") or "")
+    target_id = source_id if safe_identifier(source_id) else str(uuid.uuid4())
+    reason = "invalid_id" if target_id != source_id else None
+    if contained_path(characters_dir, f"{target_id}.json").exists() or contained_path(characters_dir, f"{target_id}_tasks.json").exists():
         target_id = str(uuid.uuid4())
-        character["import_origin"] = {"character_id": source_id, "reason": "id_conflict"}
+        reason = "id_conflict"
+    if reason:
+        if not isinstance(character.get("import_origin_history", []), list):
+            character.setdefault("recovered_invalid_fields", {})["import_origin_history"] = character["import_origin_history"]
+            character["import_origin_history"] = []
+        character.setdefault("import_origin_history", []).append({"character_id": source_id, "reason": reason})
+        character.setdefault("import_origin", {"character_id": source_id, "reason": reason})
     character["character_id"] = target_id
     character["world_id"] = "world_touhou"
     character["imported_at"] = datetime.now().isoformat()
-    character = ensure_character_fields(character)
+    character = ensure_character_fields(repair_character_payload_types(character)["payload"])
     character.pop("_migrated", None)
     tasks = character.get("tasks_export") if isinstance(character.get("tasks_export"), dict) else get_default_tasks()
-    save_character(target_id, character)
-    save_tasks(target_id, tasks)
+    write_upgrade_artifacts(characters_dir, target_id, payload, character)
+    save_turn_bundle(target_id, character, tasks, expected_character_revision=0, expected_tasks_revision=0)
     return {"status": "ok", "character_id": target_id, "profile": character.get("profile", {}), "preflight": report}
 
 
@@ -524,10 +544,10 @@ async def archive_character(request: dict):
     character_id = str(request.get("character_id") or "").strip()
     _require_character(character_id)
     characters_dir = get_characters_dir()
-    archive_dir = characters_dir / "_archived" / f"{character_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    archive_dir = contained_path(characters_dir, "_archived", f"{character_id}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}")
     archive_dir.mkdir(parents=True, exist_ok=True)
     moved = []
-    for path in (characters_dir / f"{character_id}.json", characters_dir / f"{character_id}_tasks.json"):
+    for path in (contained_path(characters_dir, f"{character_id}.json"), contained_path(characters_dir, f"{character_id}_tasks.json")):
         if path.exists():
             destination = archive_dir / path.name
             path.replace(destination)
@@ -536,35 +556,37 @@ async def archive_character(request: dict):
 
 
 @router.get("/npc_memories")
-async def get_npc_memories(character_id: str, npc_name: Optional[str] = None):
+async def get_npc_memories(character_id: str, npc_name: Optional[str] = None, offset: int = 0, limit: Optional[int] = None):
     character = _require_character(character_id)
     memories = character.get("npc_memories", {})
     summaries = character.get("npc_memory_summaries", {})
     if npc_name:
+        from backend.services.npc_identity_service import canonical_npc_name
+        npc_name = canonical_npc_name(npc_name)
+        items = memories.get(npc_name, [])
+        start = max(0, offset)
+        count = len(items) if limit is None else max(1, min(200, limit))
         return {
             "npc_name": npc_name,
             "summary": summaries.get(npc_name, ""),
-            "memories": memories.get(npc_name, []),
+            "memories": list(reversed(items))[start:start + count],
+            "total": len(items), "offset": start, "has_more": start + count < len(items),
         }
     return {"memories": memories, "summaries": summaries}
 
 
 @router.get("/conversation_history")
-async def conversation_page(character_id: str, before_id: Optional[str] = None, limit: int = 80):
+async def conversation_page(character_id: str, before_id: Optional[str] = None, limit: int = 80, query: str = ""):
     character = _require_character(character_id)
-    history = character.get("conversation_history", [])
-    end = len(history)
-    if before_id:
-        end = next((i for i, item in enumerate(history) if item.get("message_id") == before_id), -1)
-        if end < 0:
-            raise HTTPException(409, "剧情记录已改变，请重新加载角色")
-    start = max(0, end - max(1, min(200, limit)))
-    return {"messages": history[start:end], "start": start, "total": len(history), "has_more": start > 0}
+    try:
+        return history_page(character, before_id, limit, query)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @router.get("/export_feedback")
 async def export_feedback(character_id: str):
-    character = _require_character(character_id)
+    character = portable_character(_require_character(character_id))
     tasks = load_tasks(character_id)
     payload = {
         "exported_at": datetime.now().isoformat(),
@@ -627,7 +649,7 @@ async def end_session(request: dict):
 @router.post("/rate_message")
 async def rate_message(request: RateMessageRequest):
     async def change(character, tasks):
-        history = character.get("conversation_history", [])
+        history = hydrate_history(character)
         index = request.message_index
         if request.message_id:
             index = next((i for i, item in enumerate(history) if item.get("message_id") == request.message_id), -1)

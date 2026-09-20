@@ -9,6 +9,7 @@ import {
 } from '../vendor/vue.esm-browser.prod.js';
 import { state } from '../ghost/core/state.js';
 import VirtualHistory from './virtual-history.js';
+import HistorySearch from './history-search.js';
 import { renderMarkdownLite, softenPublicText } from '../ghost/ui/text.js';
 import { showToast } from '../ghost/ui/components.js';
 import { accessibilityState, speakText } from './accessibility.js';
@@ -272,7 +273,7 @@ const NpcPanel = defineComponent({
             </button>
             <article v-for="npc in npcs" :key="npc.id" class="th-npc" :style="{ '--npc-accent': npcAccent(npc.name || npc.id) }">
                 <div class="th-npc-avatar">
-                    <img :src="'/avatars/' + encodeURIComponent(npc.id) + '.png'" :alt="npc.name" @error="$event.target.style.display='none'">
+                    <img :src="npc.avatar_url || '/avatars/' + encodeURIComponent(npc.id) + '.png'" :alt="npc.name" @error="$event.target.style.display='none'">
                     <span>{{ (npc.name || '?').slice(0, 1) }}</span>
                 </div>
                 <div class="th-npc-copy"><strong>{{ npc.name }}</strong><small>{{ npc.profile?.identity || '幻想乡居民' }}</small><small v-if="npc.schedule_status">{{ npc.schedule_status }}</small></div>
@@ -313,7 +314,7 @@ const TaskPanel = defineComponent({
 
 export const GameScreen = defineComponent({
     name: 'GameScreen',
-    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory },
+    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory, HistorySearch },
     setup() {
         const chatRef = ref(null);
         const actionRef = ref(null);
@@ -510,6 +511,7 @@ export const GameScreen = defineComponent({
         <div class="th-game">
             <section class="th-story-stage">
                 <div ref="chatRef" class="th-chat-scroll" aria-label="剧情记录" @scroll.passive="onChatScroll">
+                    <HistorySearch />
                     <button v-if="hasEarlier" type="button" class="th-history-more" :disabled="earlierLoading" @click="earlier">{{ earlierLoading ? '正在翻阅' : '翻阅更早记录' }}</button>
                     <div v-if="!messages.length" class="th-opening"><span>東</span><strong>异变记录尚未落笔</strong><small>第一段叙事正在生成</small></div>
                     <VirtualHistory :items="messages" :scroll-parent="chatRef" v-slot="{ message, index }">

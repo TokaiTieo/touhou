@@ -1,7 +1,7 @@
 // js/ghost/core/session.js
 import { state } from './state.js';
 import { events, Events } from './events.js';
-import { loadCharacter as apiLoadCharacter, loadTasks as apiLoadTasks, loadRelationships as apiLoadRelationships, endGhostSession as apiEndSession } from '../../api.js';
+import { apiCall, loadCharacter as apiLoadCharacter, loadTasks as apiLoadTasks, loadRelationships as apiLoadRelationships, endGhostSession as apiEndSession } from '../../api.js';
 import { CURRENT_CHAPTER_INDEX } from './constants.js';
 
 // 加载角色进入幽灵模式
@@ -162,7 +162,7 @@ export async function exitGhostMode() {
 // 刷新角色时间
 export async function refreshCharacterTime() {
     try {
-        const result = await apiLoadCharacter(state.currentSession.characterId, CURRENT_CHAPTER_INDEX);
+        const result = await apiCall('/ghost/character/' + encodeURIComponent(state.currentSession.characterId) + '?view=state');
         if (result?.time) {
             state.currentSession.time = result.time;
             state.currentSession.playerState = result.player_state || state.currentSession.playerState || {};

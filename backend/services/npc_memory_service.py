@@ -142,28 +142,30 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
         lines = [f"长期印象：{summaries[npc_name]}"] if summaries.get(npc_name) else []
         lines.extend(_memory_line(item) for item in selected)
         return "\n".join(lines) if lines else f"{npc_name}: 暂无关键记忆"
-    lines = []
-    for name in dict.fromkeys([*archives, *memories, *legacy]):
+    ranked = []
+    for name in sorted(set([*archives, *memories, *legacy])):
         items = candidates(name)
-        diagnostics_start = len(retrieval_diagnostics)
+        diagnostics = []
         selected = rank_memories(
             items,
             query,
-            2,
+            limit,
             index_root.setdefault(name, {}),
             meta_root.setdefault(name, {}),
-            retrieval_diagnostics,
+            diagnostics,
         )
-        for item in retrieval_diagnostics[diagnostics_start:]:
-            item["npc_name"] = name
-        touch(selected)
-        recent = [_memory_line(item).removeprefix("- ") for item in selected if item.get("summary")]
-        if summaries.get(name):
-            recent.insert(0, f"长期印象：{summaries[name]}")
-        if recent:
-            lines.append(f"{name}: " + "；".join(recent))
-    character["_last_memory_retrieval"] = retrieval_diagnostics
-    return "\n".join(lines[-limit:]) if lines else "暂无关键NPC记忆"
+        for item, diagnostic in zip(selected, diagnostics):
+            diagnostic["npc_name"] = name
+            if name and name in query:
+                diagnostic["score"] += 6
+                diagnostic["reasons"].append("当前提及人物")
+            ranked.append((diagnostic["score"], name, diagnostic["memory_id"], item, diagnostic))
+    ranked.sort(key=lambda entry: (-entry[0], entry[1], entry[2]))
+    chosen = ranked[:max(0, limit)]
+    touch([entry[3] for entry in chosen])
+    character["_last_memory_retrieval"] = [entry[4] for entry in chosen]
+    lines = [f"{name}: {_memory_line(item).removeprefix('- ')}" for _, name, _, item, _ in chosen]
+    return "\n".join(lines) if lines else "暂无关键NPC记忆"
 
 
 def estimate_memory_importance(summary: str, tags=None, source: str = "interaction", explicit=None) -> int:

@@ -146,7 +146,7 @@
 .th-message.is-player .th-message-body { background: rgba(105, 31, 44, 0.96); }
 .th-message.is-dialogue .th-message-body { border-left-color: var(--th-lake); background: rgba(27, 31, 42, 0.97); }
 .th-message.is-system { width: min(620px, 88%); margin-right: auto; margin-left: auto; }
-.th-message.is-system .th-message-body { border: 1px solid rgba(212, 166, 85, 0.28); background: rgba(45, 38, 26, 0.92); text-align: center; }
+.th-message.is-system .th-message-body { border: 1px solid rgba(212, 166, 85, 0.28); background: rgba(45, 38, 26, 0.92); text-align: left; }
 .th-message.is-system .th-message-rail { display: none; }
 .th-message.is-system { grid-template-columns: 1fr; }
 .th-message.is-dead { opacity: 0.7; }
@@ -254,7 +254,7 @@
 
 .th-composer {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 104px;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
     gap: 10px 12px;
     padding: 12px clamp(16px, 2vw, 28px) 14px;
     border-top: 1px solid rgba(212, 166, 85, 0.28);
@@ -547,7 +547,7 @@ body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 }
 
 @media (max-width: 560px) {
-    .th-composer { grid-template-columns: minmax(0, 1fr) 76px; }
+    .th-composer { grid-template-columns: minmax(0, 1fr) 5.25rem; }
     .th-send { min-width: 76px; grid-template-columns: 25px minmax(0, 1fr); padding-right: 5px; }
     .th-send span { width: 23px; height: 25px; }
     .th-send strong { font-size: 0.64rem; }
@@ -1433,9 +1433,9 @@ label.file-drop:focus-within {
 
 .th-message.is-system .th-message-body {
     border: 1px solid rgba(138, 114, 180, 0.32);
-    border-radius: 999px;
+    border-radius: 8px;
     background: rgba(177, 156, 216, 0.12);
-    text-align: center;
+    text-align: left;
 }
 
 .th-message-body > header {
@@ -2159,11 +2159,19 @@ label.file-drop:focus-within {
 .th-send {
     min-width: 0;
     width: 100%;
+    min-height: 3rem;
+    padding-block: 10px;
+    overflow: visible;
 }
 
 .th-send strong {
     letter-spacing: 0;
     white-space: nowrap;
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    min-height: 1.6em;
+    overflow: visible;
 }
 
 @media (max-width: 560px) {
@@ -2171,6 +2179,21 @@ label.file-drop:focus-within {
     .th-send strong {
         letter-spacing: 0;
     }
+}
+
+.th-history-search { margin-bottom: 18px; color: var(--ink-soft); font-size: 0.85rem; letter-spacing: 0; }
+.th-history-search summary { cursor: pointer; width: fit-content; padding-block: 6px; }
+.th-history-search form { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 8px; }
+.th-history-search input { flex: 1 1 120px; min-width: 0; width: 100%; padding: 8px; }
+.th-history-search button { padding: 6px 10px; color: var(--shu); background: var(--washi); border: 1px solid var(--kin-line); border-radius: 4px; cursor: pointer; }
+.th-history-results { max-height: 20rem; overflow: auto; overflow-wrap: anywhere; }
+.th-history-results article { border-block-end: 1px solid var(--kin-line); padding-block: 10px; }
+.th-history-results p { white-space: pre-wrap; line-height: 1.7; margin-block: 6px; }
+@media (max-width: 820px) and (max-height: 560px) {
+    .th-story-stage:focus-within .th-onboarding,
+    .th-story-stage:focus-within .th-suggestions { display: none; }
+    .th-story-stage:focus-within .th-composer { padding-block: 8px; }
+    .th-story-stage:focus-within .th-composer textarea { height: 3rem; min-height: 3rem; }
 }
 
 /* 成长与符卡配置：统一主题层扩展 */

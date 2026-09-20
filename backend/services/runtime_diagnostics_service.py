@@ -3,6 +3,7 @@
 import hashlib
 from datetime import datetime
 from typing import Any, Dict
+from backend.services.conversation_archive_service import history_count
 
 
 SENSITIVE_KEYS = {
@@ -90,7 +91,7 @@ def build_diagnostic_bundle(character: Dict, tasks: Dict, app_version: str) -> D
         "turns": diagnostics_summary(character),
         "memory_maintenance": character.get("memory_maintenance", {}),
         "save_counts": {
-            "messages": len(character.get("conversation_history", []) or []),
+            "messages": history_count(character),
             "memories": sum(len(items) for items in (character.get("npc_memories", {}) or {}).values() if isinstance(items, list)),
             "active_tasks": len(tasks.get("active_tasks", []) or []),
             "completed_tasks": len(tasks.get("completed_tasks", []) or []),

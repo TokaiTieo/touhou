@@ -15,6 +15,7 @@ from typing import Optional, Dict, List, Any
 from backend.config import BASE_DIR, WORLDS_DIR, DATA_DIR, DEFAULT_WORLD_ID as CONFIG_DEFAULT_WORLD_ID
 from backend.services.save_migrations import LATEST_SAVE_VERSION, migrate_save_schema
 from backend.services.save_upgrade_service import write_upgrade_artifacts
+from backend.services.storage_paths import contained_path, require_identifier, require_supported_save, FutureSaveVersion
 from backend.services.snapshot_service import (
     create_snapshot,
     list_snapshots,
@@ -37,6 +38,7 @@ class StaleTurnError(RuntimeError):
 
 
 def _lock_key(character_id: str, world_id: str = None) -> str:
+    require_identifier(character_id)
     return f"{world_id or DEFAULT_WORLD_ID}:{character_id}"
 
 
@@ -115,7 +117,7 @@ def _apply_world_changes(world_changes: Dict, world_id: str = None) -> None:
 
 
 def get_character_snapshots_dir(character_id: str, world_id: str = None) -> Path:
-    path = get_characters_dir(world_id) / "_snapshots" / character_id
+    path = contained_path(get_characters_dir(world_id), "_snapshots", require_identifier(character_id))
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -161,8 +163,20 @@ def restore_character_snapshot(character_id: str, snapshot_id: str, branch: bool
     target_id = restored["target_id"]
     character = restored["character"]
     tasks = restored["tasks"]
-    _atomic_json_write(get_characters_dir(world_id) / f"{target_id}.json", character)
-    _atomic_json_write(get_tasks_path(target_id, world_id), tasks)
+    from backend.services.conversation_archive_service import all_history
+    all_history(character, get_characters_dir(world_id))
+    if not branch:
+        current_path = contained_path(get_characters_dir(world_id), f"{character_id}.json")
+        if current_path.exists():
+            try:
+                current = json.loads(current_path.read_text(encoding="utf-8"))
+                require_supported_save(current)
+                create_character_snapshot(character_id, current, world_id, label="恢复前备份", force=True)
+            except json.JSONDecodeError:
+                backup = contained_path(get_characters_dir(world_id), "_recovery", f"{character_id}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json")
+                backup.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(current_path, backup)
+    save_turn_bundle(target_id, character, tasks, world_id, recover_corrupt=not branch)
     create_character_snapshot(target_id, character, world_id, label="分支起点" if branch else "恢复点", force=True)
     return {"character_id": target_id, "branched": branch, "profile": character.get("profile", {})}
 
@@ -884,13 +898,20 @@ def ensure_character_fields(character: Dict) -> Dict:
 def load_character(character_id: str, world_id: str = None) -> Optional[Dict]:
     """加载角色数据（自动补全缺失字段）"""
     characters_dir = get_characters_dir(world_id)
-    char_path = characters_dir / f"{character_id}.json"
-    transaction_path = characters_dir / "_transactions" / f"{character_id}.json"
+    char_path = contained_path(characters_dir, f"{require_identifier(character_id)}.json")
+    transaction_path = contained_path(characters_dir, "_transactions", f"{character_id}.json")
     with character_write_lock(character_id, world_id):
         if transaction_path.exists():
             try:
                 with open(transaction_path, "r", encoding="utf-8") as handle:
                     pending = json.load(handle)
+                require_supported_save(pending.get("character") or {})
+                if char_path.exists():
+                    try:
+                        existing = json.loads(char_path.read_text(encoding="utf-8"))
+                    except json.JSONDecodeError:
+                        existing = {}
+                    require_supported_save(existing)
                 _apply_world_changes(pending.get("world_changes", {}), world_id)
                 if isinstance(pending.get("character"), dict):
                     _atomic_json_write(char_path, pending["character"])
@@ -955,17 +976,24 @@ def save_character(character_id: str, data: Dict, world_id: str = None):
         print(f"警告：尝试保存无效的角色数据 {character_id}")
         return
     
-    char_path = characters_dir / f"{character_id}.json"
+    require_supported_save(data)
+    char_path = contained_path(characters_dir, f"{require_identifier(character_id)}.json")
     with character_write_lock(character_id, world_id):
         current_revision = 0
         if char_path.exists():
             try:
                 with open(char_path, "r", encoding="utf-8") as handle:
-                    current_revision = int(json.load(handle).get("state_revision", 0) or 0)
+                    persisted = json.load(handle)
+                    require_supported_save(persisted)
+                    current_revision = int(persisted.get("state_revision", 0) or 0)
+            except FutureSaveVersion:
+                raise
             except (OSError, json.JSONDecodeError, TypeError, ValueError):
                 current_revision = int(data.get("state_revision", 0) or 0)
         data["state_revision"] = current_revision + 1
         data["last_saved_at"] = datetime.now().isoformat()
+        from backend.services.conversation_archive_service import compact_history
+        compact_history(data, characters_dir)
         _atomic_json_write(char_path, data)
         create_character_snapshot(character_id, data, world_id)
 
@@ -1035,7 +1063,7 @@ def _load_characters_from_dir(characters_dir: Path) -> List[Dict]:
 def get_tasks_path(character_id: str, world_id: str = None) -> Path:
     """获取任务文件路径"""
     characters_dir = get_characters_dir(world_id)
-    return characters_dir / f"{character_id}_tasks.json"
+    return contained_path(characters_dir, f"{require_identifier(character_id)}_tasks.json")
 
 
 def load_tasks(character_id: str, world_id: str = None) -> Dict:
@@ -1057,6 +1085,9 @@ def save_tasks(character_id: str, data: Dict, world_id: str = None):
     tasks_path = get_tasks_path(character_id, world_id)
     
     with character_write_lock(character_id, world_id):
+        character_path = contained_path(get_characters_dir(world_id), f"{character_id}.json")
+        if character_path.exists():
+            require_supported_save(json.loads(character_path.read_text(encoding="utf-8")))
         current_revision = 0
         if tasks_path.exists():
             try:
@@ -1067,6 +1098,8 @@ def save_tasks(character_id: str, data: Dict, world_id: str = None):
         data["state_revision"] = current_revision + 1
         data["last_updated"] = datetime.now().isoformat()
         _atomic_json_write(tasks_path, data)
+        if character_path.exists():
+            create_character_snapshot(character_id, json.loads(character_path.read_text(encoding="utf-8")), world_id)
 
 
 def save_turn_bundle(
@@ -1078,25 +1111,34 @@ def save_turn_bundle(
     expected_character_revision: int = None,
     expected_tasks_revision: int = None,
     world_changes: Dict = None,
+    recover_corrupt: bool = False,
 ):
     """Commit character and task state as a recoverable two-file transaction."""
+    require_identifier(character_id)
+    require_supported_save(character)
     characters_dir = get_characters_dir(world_id)
-    transaction_path = characters_dir / "_transactions" / f"{character_id}.json"
+    transaction_path = contained_path(characters_dir, "_transactions", f"{character_id}.json")
     with character_write_lock(character_id, world_id):
-        char_path = characters_dir / f"{character_id}.json"
+        char_path = contained_path(characters_dir, f"{character_id}.json")
         tasks_path = get_tasks_path(character_id, world_id)
         persisted_character_revision = 0
         persisted_tasks_revision = 0
         if char_path.exists():
-            with open(char_path, "r", encoding="utf-8") as handle:
-                persisted_character_revision = int(
-                    json.load(handle).get("state_revision", 0) or 0
-                )
+            try:
+                with open(char_path, "r", encoding="utf-8") as handle:
+                    persisted = json.load(handle)
+                    require_supported_save(persisted)
+                    persisted_character_revision = int(persisted.get("state_revision", 0) or 0)
+            except json.JSONDecodeError:
+                if not recover_corrupt:
+                    raise
         if tasks_path.exists():
-            with open(tasks_path, "r", encoding="utf-8") as handle:
-                persisted_tasks_revision = int(
-                    json.load(handle).get("state_revision", 0) or 0
-                )
+            try:
+                with open(tasks_path, "r", encoding="utf-8") as handle:
+                    persisted_tasks_revision = int(json.load(handle).get("state_revision", 0) or 0)
+            except json.JSONDecodeError:
+                if not recover_corrupt:
+                    raise
         if (
             expected_character_revision is not None
             and persisted_character_revision != expected_character_revision
@@ -1118,6 +1160,8 @@ def save_turn_bundle(
         tasks["state_revision"] = persisted_tasks_revision + 1
         character["last_saved_at"] = datetime.now().isoformat()
         tasks["last_updated"] = datetime.now().isoformat()
+        from backend.services.conversation_archive_service import compact_history
+        compact_history(character, characters_dir)
         transaction = {
             "transaction_version": 2,
             "character_id": character_id,

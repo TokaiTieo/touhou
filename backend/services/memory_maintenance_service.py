@@ -21,7 +21,8 @@ def maintain_memories(character: Dict, *, force: bool = False) -> Dict:
     if not isinstance(maintenance, dict):
         maintenance = {}
         character["memory_maintenance"] = maintenance
-    history_count = len(character.get("conversation_history", []) or [])
+    from backend.services.conversation_archive_service import history_count as count_history
+    history_count = count_history(character)
     maintenance["pending_turns"] = int(maintenance.get("pending_turns", 0) or 0) + 1
     total_before = sum(len(items) for items in memories.values() if isinstance(items, list))
     if not force and maintenance["pending_turns"] < 12 and maintenance.get("runs", 0):

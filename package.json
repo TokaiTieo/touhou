@@ -2,7 +2,7 @@
   "name": "touhou-ai-adventure-ui",
   "private": true,
   "type": "module",
-  "version": "0.14.1",
+  "version": "0.15.0",
   "description": "Vue 3 frontend shell for TouHou - 东方异变录",
   "scripts": {
     "build:icons": "node scripts/build-icons.mjs",
@@ -16,6 +16,7 @@
     "quality": "npm run check && npm run check:ruff && npm run test:narrative && npm run test:python",
     "test:python": "python -m unittest discover -p \"test_*.py\" -v",
     "test:e2e": "node scripts/run-e2e.mjs",
+    "benchmark:saves": "python scripts/benchmark-long-saves.py",
     "test": "npm run check && npm run test:python && npm run test:e2e"
   },
   "dependencies": {

@@ -237,7 +237,7 @@ class AIService:
             return True
         return False
     
-    def call(self, prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
+    def call(self, prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False) -> str:
         """调用 AI API（同步阻塞）"""
         if E2E_MOCK_AI:
             self._remember_error()
@@ -270,17 +270,22 @@ class AIService:
         fallbacks.extend(model for model in self.available_models if model != requested_model and model not in fallbacks)
         models = [requested_model] + fallbacks
         max_attempts = max(1, min(4, int(os.environ.get("TOUHOU_AI_MAX_ATTEMPTS", "2") or 2)))
+        if single_attempt:
+            models, max_attempts = models[:1], 1
+        client = self.client.with_options(max_retries=0) if single_attempt else self.client
+        request_limits = {"max_tokens": max(1, int(max_output_tokens))} if max_output_tokens is not None else {}
         attempts = []
         final_error = None
         for model_index, model_name in enumerate(models):
             for attempt in range(1, max_attempts + 1):
                 try:
                     self._remember_error()
-                    response = self.client.chat.completions.create(
+                    response = client.chat.completions.create(
                         model=model_name,
                         messages=[{"role": "user", "content": compacted}],
                         temperature=temperature,
                         timeout=AI_TIMEOUT,
+                        **request_limits,
                     )
                     self._remember_usage(getattr(response, "usage", None))
                     attempts.append({"model": model_name, "attempt": attempt, "status": "ok"})
@@ -471,14 +476,16 @@ def call_ai(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
     return ai_service.call(prompt, temperature)
 
 
-async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
+async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False) -> str:
     """便捷函数：异步调用 AI（在线程池中执行，不阻塞事件循环，带总超时保护）"""
     loop = asyncio.get_running_loop()
     started_at = time.perf_counter()
     stream_context = _stream_context.get()
     caller = ai_service.call
+    if max_output_tokens is not None or single_attempt:
+        caller = partial(caller, max_output_tokens=max_output_tokens, single_attempt=single_attempt)
     args = (prompt, temperature)
-    if stream_context:
+    if stream_context and max_output_tokens is None and not single_attempt:
         caller = partial(
             ai_service.call_streaming,
             on_chunk=stream_context.on_chunk,
@@ -528,6 +535,13 @@ async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -
 def get_last_ai_usage():
     """Return usage for the most recent AI call in the current request context."""
     return dict(_last_usage_context.get() or {})
+
+
+def reset_ai_diagnostics():
+    """Clear request-local observations before an opt-in evaluation call."""
+    _last_usage_context.set({})
+    _last_error_context.set({})
+    _last_runtime_context.set({})
 
 
 def get_last_ai_error():

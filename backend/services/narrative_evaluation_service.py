@@ -146,9 +146,12 @@ def evaluate_narrative_text(
 
 def build_rated_samples(character: Dict[str, Any], limit: int = 100) -> List[Dict[str, Any]]:
     """Build a local, bounded dataset from explicit player ratings."""
-    history = character.get("conversation_history", []) or []
+    from backend.services.conversation_archive_service import all_history
+    history = all_history(character)
+    safe_limit = max(1, min(500, int(limit or 100)))
     samples = []
-    for index, message in enumerate(history):
+    for index in range(len(history) - 1, -1, -1):
+        message = history[index]
         rating = message.get("rating") if isinstance(message, dict) else None
         if rating not in ("up", "down"):
             continue
@@ -176,8 +179,9 @@ def build_rated_samples(character: Dict[str, Any], limit: int = 100) -> List[Dic
                 recent_responses=[item["content"] for item in context],
             ),
         })
-    safe_limit = max(1, min(500, int(limit or 100)))
-    return samples[-safe_limit:]
+        if len(samples) >= safe_limit:
+            break
+    return list(reversed(samples))
 
 
 def summarize_rated_samples(character: Dict[str, Any]) -> Dict[str, Any]:

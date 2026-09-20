@@ -6,7 +6,7 @@ import re
 import zipfile
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from backend.config import DATA_DIR, DEFAULT_WORLD_ID, WORLDS_DIR
@@ -59,9 +59,13 @@ def _number(value, default=0):
 
 
 @router.get("/producer_console/state")
-async def state(character_id: str):
+async def state(character_id: str, memory_offset: int = 0, memory_limit: int = 8):
     character = _character(character_id)
     checkpoint_metrics = await get_checkpoint_metrics()
+    memories = character.get("npc_memories", {})
+    names = sorted(memories)
+    offset, limit = max(0, memory_offset), max(1, min(30, memory_limit))
+    selected = names[offset:offset + limit]
     return {
         "status": character.get("status", {}),
         "time": character.get("time", {}),
@@ -69,8 +73,9 @@ async def state(character_id: str):
         "resources": character.get("resources", {}),
         "relationships": character.get("relationships_map", {}),
         "relationship_progress": character.get("relationship_progress", {}),
-        "npc_memories": character.get("npc_memories", {}),
-        "npc_memory_summaries": character.get("npc_memory_summaries", {}),
+        "npc_memories": {name: memories[name][-30:] for name in selected},
+        "npc_memory_summaries": {name: character.get("npc_memory_summaries", {}).get(name, "") for name in selected},
+        "memory_page": {"offset": offset, "total": len(names), "limit": limit, "has_more": offset + limit < len(names)},
         "open_events": character.get("open_events", []),
         "current_goals": character.get("current_goals", []),
         "usage_stats": character.get("usage_stats", {}),
@@ -159,9 +164,14 @@ async def content_restore_backup(request: dict):
 
 
 @router.post("/producer_console/evaluation/run")
-async def run_evaluation(request: dict):
+async def run_evaluation(request: dict, http_request: Request = None):
     character = _character(request.get("character_id"))
-    report = await run_live_evaluation(character, load_tasks(request.get("character_id")))
+    try:
+        report = await run_live_evaluation(character, load_tasks(request.get("character_id")),
+            **{key: request[key] for key in ("turn_count", "token_budget", "max_output_tokens", "price_per_million", "cost_budget") if key in request},
+            cancelled=http_request.is_disconnected if http_request is not None else None)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(422, str(exc)) from exc
     path = DATA_DIR / "evaluations" / f"live_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -198,6 +208,15 @@ async def diagnostic_bundle(character_id: str):
         media_type="application/zip",
         headers={"Content-Disposition": 'attachment; filename="touhou_diagnostics.zip"'},
     )
+
+
+@router.get("/producer_console/diagnostics")
+async def diagnostic_page(character_id: str, offset: int = 0, limit: int = 20):
+    character = _character(character_id)
+    items = list(reversed(character.get("turn_diagnostics_history", [])))
+    start, count = max(0, offset), max(1, min(100, limit))
+    return {"items": items[start:start + count], "total": len(items), "offset": start,
+            "has_more": start + count < len(items)}
 
 
 @router.post("/producer_console/restore")
