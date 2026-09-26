@@ -83,6 +83,7 @@ router = APIRouter()
 
 # ========== Pydantic 模型 ==========
 class EnvironmentInteractRequest(BaseModel):
+    record_history: bool = False
     character_id: str
     chapter_index: int = 1
     scene: str
@@ -94,6 +95,7 @@ class EnvironmentInteractRequest(BaseModel):
 
 
 class NPCDialogueRequest(BaseModel):
+    record_history: bool = False
     character_id: str
     chapter_index: int = 1
     scene: str
@@ -519,6 +521,7 @@ async def environment_interact(request: EnvironmentInteractRequest):
             scene=request.scene,
             player_name=request.player_name,
             action_text=user_input_text,
+            record_history=request.record_history,
             turn_id=request.turn_id,
             scene_npcs=request.scene_npcs,
         )
@@ -723,6 +726,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
         scene=request.scene,
         player_name=request.player_name,
         action_text=request.user_input,
+        record_history=request.record_history,
         turn_id=request.turn_id,
         npc_id=request.npc_id,
         npc_name=request.npc_name,
@@ -974,7 +978,7 @@ async def get_turn_status(character_id: str, turn_id: str):
     active = turn_coordinator.get_status(character_id, turn_id)
     if active is not None:
         return active.public_dict(include_result=active.state == "committed")
-    persisted = await get_persisted_turn_status(character_id, turn_id)
+    persisted = await get_persisted_turn_status(character_id, turn_id, character.get("timeline_epoch", ""))
     return {
         "character_id": character_id,
         "turn_id": turn_id,
@@ -987,14 +991,18 @@ async def cancel_turn(request: TurnControlRequest):
     """Explicitly cancel a player-requested turn; transport loss alone does not cancel."""
     status = turn_coordinator.get_status(request.character_id, request.turn_id)
     cancelled = await turn_coordinator.cancel(request.character_id, request.turn_id)
-    if status is not None:
+    if cancelled and status is not None:
         thread_id = f"{request.character_id}:{status.kind}:{request.turn_id}"
+        character = load_character(request.character_id)
+        if character and character.get("timeline_epoch"):
+            thread_id += ":" + character["timeline_epoch"]
         await clear_turn_checkpoint(thread_id)
+    current = await get_turn_status(request.character_id, request.turn_id)
     return {
         "character_id": request.character_id,
         "turn_id": request.turn_id,
         "cancelled": cancelled,
-        "state": "cancelled" if cancelled else "not_running",
+        "state": "cancelled" if cancelled else current["state"],
     }
 
 

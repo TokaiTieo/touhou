@@ -29,6 +29,11 @@ try {
     $EnvLines = Get-Content -LiteralPath (Join-Path $Extract '.env')
     if (@($EnvLines | Where-Object { $_ -match '^DEEPSEEK_API_KEY=\s*$' }).Count -ne 1) { throw "Package Key is not blank" }
     & (Join-Path $PSScriptRoot 'smoke-exe.ps1') -ExePath (Join-Path $Extract 'touhou.exe')
+    [pscustomobject]@{
+        build_id = $Build.build_id
+        version = $Build.version
+        sha256 = (Get-FileHash -LiteralPath $Zip -Algorithm SHA256).Hash
+    } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ProjectRoot 'release\verified-package.json') -Encoding UTF8
     Write-Host 'ZIP whitelist, blank Key, checksums and extracted executable smoke passed.'
 } finally {
     if (Test-Path -LiteralPath $Extract) {

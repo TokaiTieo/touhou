@@ -2,6 +2,7 @@ import { nextTick, reactive } from '../vendor/vue.esm-browser.prod.js';
 
 export const gameUi = reactive({
     active: false,
+    recovery: null,
     inputDisabled: false,
     allowCancel: false,
     actionDraft: '',

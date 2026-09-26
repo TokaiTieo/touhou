@@ -28,11 +28,20 @@ def benchmark(count):
         page = history_page(loaded, limit=80)
         page_ms = (time.perf_counter() - started) * 1000
         started = time.perf_counter()
+        history_page(loaded, query="合成剧情", limit=30)
+        index_build_ms = (time.perf_counter() - started) * 1000
+        search_times = []
+        for _ in range(5):
+            started = time.perf_counter()
+            history_page(loaded, before_id=f"msg_{count // 2}", query="合成剧情", limit=30)
+            search_times.append((time.perf_counter() - started) * 1000)
+        started = time.perf_counter()
         storage.save_turn_bundle("benchmark", loaded, {})
         save_ms = (time.perf_counter() - started) * 1000
         return {"messages": count, "inline_bytes": inline_bytes, "main_file_bytes": (Path(folder) / "benchmark.json").stat().st_size,
             "initial_archive_ms": round(initial_ms, 2), "load_ms": round(load_ms, 2), "subsequent_save_ms": round(save_ms, 2),
             "page_ms": round(page_ms, 2), "page_bytes": len(json.dumps(page, ensure_ascii=False).encode()),
+            "index_build_ms": round(index_build_ms, 2), "warm_search_ms": round(sum(search_times) / len(search_times), 2),
             "state_bytes": len(json.dumps(character_state(loaded), ensure_ascii=False).encode()),
             "receipt_bytes": len(json.dumps(command_result({"character": loaded}), ensure_ascii=False).encode())}
 

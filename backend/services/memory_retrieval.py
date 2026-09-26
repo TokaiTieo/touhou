@@ -4,6 +4,7 @@ import math
 import os
 import re
 from collections import Counter
+from functools import lru_cache
 from datetime import datetime
 from typing import Dict, List
 
@@ -97,6 +98,11 @@ def _normalize(text: str) -> str:
 
 
 def local_embedding(text: str) -> Dict[str, float]:
+    return dict(_embedding_features(str(text or "")))
+
+
+@lru_cache(maxsize=8192)
+def _embedding_features(text):
     """Create a sparse local embedding using Chinese n-grams and concept expansion."""
     normalized = _normalize(text)
     features = Counter()
@@ -108,7 +114,7 @@ def local_embedding(text: str) -> Dict[str, float]:
         if hits:
             features[f"concept:{concept}"] += 2.5 + hits
     norm = math.sqrt(sum(value * value for value in features.values())) or 1.0
-    return {key: value / norm for key, value in features.items()}
+    return tuple((key, value / norm) for key, value in features.items())
 
 
 def cosine_similarity(left: Dict[str, float], right: Dict[str, float]) -> float:

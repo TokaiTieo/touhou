@@ -47,6 +47,7 @@ from backend.world_manager import (
     get_characters_dir,
     get_default_tasks,
     list_character_snapshots,
+    inspect_character_snapshots,
     load_character,
     load_tasks,
     restore_character_snapshot,
@@ -443,9 +444,11 @@ async def restore_snapshot(request: RestoreSnapshotRequest):
 async def get_save_health(character_id: str):
     characters_dir = get_characters_dir()
     report = inspect_character_file(contained_path(characters_dir, f"{require_identifier(character_id)}.json"))
-    snapshots = list_character_snapshots(character_id)
+    snapshots = inspect_character_snapshots(character_id)
     report["snapshot_count"] = len(snapshots)
-    report["repairable"] = not report.get("read_only", False) and bool(report.get("repairable") or snapshots)
+    report["recoverable_snapshot_count"] = sum(item["recoverable"] for item in snapshots)
+    report["snapshot_health"] = snapshots
+    report["repairable"] = not report.get("read_only", False) and bool(report.get("repairable") or report["recoverable_snapshot_count"])
     report.pop("payload", None)
     return report
 
@@ -461,7 +464,7 @@ async def repair_save(request: dict):
     if report.get("read_only"):
         raise HTTPException(409, "请使用更新版本的程序读取此存档；原文件未修改")
     if report.get("status") == "critical":
-        snapshots = list_character_snapshots(character_id)
+        snapshots = [item for item in inspect_character_snapshots(character_id) if item["recoverable"]]
         if not snapshots:
             raise HTTPException(status_code=422, detail="主存档损坏且没有可用快照，无法自动修复")
         restored = restore_character_snapshot(character_id, snapshots[0]["snapshot_id"])

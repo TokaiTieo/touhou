@@ -21,6 +21,8 @@ def _root(root=None):
 
 
 def _read(chunk, root):
+    if not isinstance(chunk, dict):
+        raise ValueError("剧情档案索引条目无效")
     identity = chunk.get("id", "")
     if not isinstance(identity, str) or not re.fullmatch(r"[a-f0-9]{64}", identity):
         raise ValueError("剧情档案标识无效")
@@ -35,6 +37,18 @@ def _read(chunk, root):
     if not isinstance(messages, list) or len(messages) != chunk.get("count"):
         raise ValueError("剧情档案条目不完整")
     return messages
+
+
+def verify_archive(character, root):
+    """Check actual dependencies, never treat missing history as an empty list."""
+    errors = []
+    chunks = character.get("conversation_archive", {}).get("chunks", [])
+    for chunk in chunks:
+        try:
+            _read(chunk, root)
+        except (OSError, ValueError, TypeError) as exc:
+            errors.append({"id": chunk.get("id") if isinstance(chunk, dict) else None, "message": str(exc)})
+    return {"checked_chunks": len(chunks), "errors": errors}
 
 
 def history_count(character):
@@ -88,6 +102,19 @@ def portable_character(character, root=None):
 
 
 def history_page(character, before_id=None, limit=80, query="", root=None):
+    import sqlite3
+    from backend.services.history_index_service import indexed_history_page
+    root = _root(root)
+    limit = max(1, min(200, limit))
+    if character.get("conversation_archive", {}).get("chunks") and (before_id or query.strip()):
+        try:
+            return indexed_history_page(character, root, before_id, limit, query)
+        except (sqlite3.DatabaseError, OSError):
+            pass
+    return _scan_history_page(character, before_id, limit, query, root)
+
+
+def _scan_history_page(character, before_id=None, limit=80, query="", root=None):
     root = _root(root)
     limit = max(1, min(200, limit))
     total = history_count(character)

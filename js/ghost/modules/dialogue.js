@@ -9,6 +9,7 @@ import { callAIAndRespond } from './chat.js';
 import { getTaskDisplayName } from '../ui/text.js';
 import { refreshCharacterTime } from '../core/session.js';
 import { beginGeneration, endGeneration } from '../core/generation.js';
+import { rememberTurn, finishTurn, readPendingTurn, checkPendingTurn } from '../core/pending-turn.js';
 import {
     scrollGameChatToBottom as scrollChatToBottom,
     setComposerDisabled as updateInputsDisabled
@@ -186,7 +187,7 @@ export async function observeNPC(npcId, npcName) {
 }
 
 // 调用NPC对话AI
-export async function callAIForDialogue(action, speech, isGreeting = false, isContinue = false) {
+export async function callAIForDialogue(action, speech, isGreeting = false, isContinue = false, userMsg = null) {
     state.isWaitingForAI = true;
     renderChatHistory();
     updateInputsDisabled(true, true);
@@ -261,6 +262,7 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
         ];
 
         let data;
+        rememberTurn('npc_dialogue', { ...requestBody, record_history: true, turn_id: turnId });
         let hasStreamedText = false;
         try {
             data = await npcDialogueStream(...requestArgs, {
@@ -304,6 +306,7 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
         removeLoadingIndicator(loadingIndicator);
         
         let npcResponse = '';
+        finishTurn(requestBody.character_id, turnId);
         let exitDialogue = false;
         
         if (typeof data === 'object') {
@@ -331,7 +334,11 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
             });
         }
         
-        const savedMessage = await appendToConversationHistory(
+        if (userMsg && data.conversation?.user) {
+            userMsg.messageId = data.conversation.user.message_id;
+            userMsg.conversationIndex = data.conversation.user.message_index;
+        }
+        const savedMessage = data.conversation?.assistant || await appendToConversationHistory(
             state.currentSession.characterId,
             state.currentDialogueNPC.name,
             npcResponse,
@@ -423,6 +430,7 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
         showToast('对话失败，请重试', 3000, 'error');
     } finally {
         endGeneration(controller);
+        if (readPendingTurn(state.currentSession.characterId)) await checkPendingTurn(state.currentSession.characterId);
         state.isWaitingForAI = false;
         updateInputsDisabled(state.currentSession.isDead);
         // 移除加载指示器

@@ -149,6 +149,11 @@ def list_character_snapshots(character_id: str, world_id: str = None) -> List[Di
     return list_snapshots(get_character_snapshots_dir(character_id, world_id))
 
 
+def inspect_character_snapshots(character_id: str, world_id: str = None) -> List[Dict]:
+    from backend.services.snapshot_service import inspect_snapshots
+    return inspect_snapshots(get_character_snapshots_dir(character_id, world_id), get_characters_dir(world_id))
+
+
 def restore_character_snapshot(character_id: str, snapshot_id: str, branch: bool = False, branch_name: str = None, world_id: str = None) -> Dict:
     payload = load_snapshot(get_character_snapshots_dir(character_id, world_id), snapshot_id)
     restored = prepare_restore_payload(
@@ -928,9 +933,9 @@ def load_character(character_id: str, world_id: str = None) -> Optional[Dict]:
                 character = json.load(f)
         except (OSError, json.JSONDecodeError) as exc:
             print(f"⚠️ 主存档读取失败，尝试从快照恢复: {exc}")
-            snapshots = list_character_snapshots(character_id, world_id)
+            snapshots = [item for item in inspect_character_snapshots(character_id, world_id) if item["recoverable"]]
             if not snapshots:
-                return None
+                raise ValueError("主存档损坏且没有完整可恢复快照，请恢复完整备份；原文件未改写") from exc
             restore_character_snapshot(character_id, snapshots[0]["snapshot_id"], world_id=world_id)
             with open(char_path, 'r', encoding='utf-8') as f:
                 character = json.load(f)

@@ -10,6 +10,7 @@ import {
 import { state } from '../ghost/core/state.js';
 import VirtualHistory from './virtual-history.js';
 import HistorySearch from './history-search.js';
+import TurnRecovery from './turn-recovery.js';
 import { renderMarkdownLite, softenPublicText } from '../ghost/ui/text.js';
 import { showToast } from '../ghost/ui/components.js';
 import { accessibilityState, speakText } from './accessibility.js';
@@ -145,7 +146,7 @@ const GameToolbar = defineComponent({
         <div v-if="gameUi.active" class="th-toolbar">
             <div class="th-player-summary">
                 <span class="th-player-seal" aria-hidden="true">人</span>
-                <span class="th-player-copy"><strong>{{ snapshot.name }}</strong><small>{{ snapshot.identity }}</small></span>
+                <span class="th-player-copy"><strong :title="snapshot.name">{{ snapshot.name }}</strong><small>{{ snapshot.identity }}</small></span>
                 <span class="th-toolbar-divider"></span>
                 <span class="th-scene-name">{{ snapshot.scene }}</span>
                 <span class="th-life-state" :class="snapshot.dead ? 'is-dead' : 'is-alive'">{{ snapshot.dead ? '退场' : '在场' }}</span>
@@ -314,7 +315,7 @@ const TaskPanel = defineComponent({
 
 export const GameScreen = defineComponent({
     name: 'GameScreen',
-    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory, HistorySearch },
+    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory, HistorySearch, TurnRecovery },
     setup() {
         const chatRef = ref(null);
         const actionRef = ref(null);
@@ -522,7 +523,8 @@ export const GameScreen = defineComponent({
                 </div>
                 <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</p>
 
-                <aside v-if="onboarding.enabled && !onboarding.dismissed && onboarding.step" class="th-onboarding" aria-live="polite">
+                <TurnRecovery v-if="gameUi.recovery" />
+                <aside v-else-if="onboarding.enabled && !onboarding.dismissed && onboarding.step" class="th-onboarding" aria-live="polite">
                     <span class="th-onboarding-seal">初</span><div><strong>{{ onboarding.step.title }}</strong><p>{{ onboarding.step.description }}</p></div>
                     <button type="button" class="primary" @click="onboardingPrimary">{{ onboarding.step.id === 'first_action' ? '填入行动' : onboarding.step.id === 'first_dialogue' ? '查看人物' : '打开档案' }}</button>
                     <button type="button" title="跳过引导" @click="dismissOnboarding">跳过</button>
