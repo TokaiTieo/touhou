@@ -18,6 +18,7 @@ class TurnInput(BaseModel):
     scene: str
     player_name: str
     action_text: str = ""
+    record_history: bool = False
     turn_id: Optional[str] = None
     npc_id: Optional[str] = None
     npc_name: Optional[str] = None

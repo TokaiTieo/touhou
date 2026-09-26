@@ -11,6 +11,8 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
     showLoading('加载角色中...');
     
     try {
+        const { checkPendingTurn } = await import('./pending-turn.js');
+        await checkPendingTurn(characterId);
         const result = await apiLoadCharacter(characterId, CURRENT_CHAPTER_INDEX, sceneId);
         //console.log('API response:', result);
         

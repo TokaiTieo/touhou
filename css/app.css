@@ -598,6 +598,7 @@ button:disabled {
     inset: 0;
     z-index: 100;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     place-items: center;
     padding: 18px;
     background: rgba(8, 6, 9, 0.78);
@@ -609,7 +610,10 @@ button:disabled {
 .api-key-dialog,
 .producer-console-dialog {
     width: min(820px, 96vw);
+    min-width: 0;
+    max-width: 100%;
     max-height: min(860px, 92vh);
+    overflow-wrap: anywhere;
     overflow: hidden;
     border: 1px solid rgba(209, 162, 78, 0.34);
     border-radius: 6px;
@@ -638,6 +642,7 @@ button:disabled {
 .vue-snapshot-dialog > header > div,
 .dialog-header > div {
     display: flex;
+    min-width: 0;
     flex-direction: column;
 }
 

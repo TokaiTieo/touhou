@@ -139,6 +139,15 @@ test('opens the V8 producer tools without exposing them to ordinary players', as
     await expect(consoleDialog).toContainText('去重');
     await consoleDialog.getByRole('button', { name: '运行隔离评测' }).click();
     await expect(consoleDialog.locator('.producer-evaluation-list article')).toHaveCount(4, { timeout: 30_000 });
+    const review = consoleDialog.locator('.producer-evaluation-list article').first();
+    await review.locator('select').first().selectOption('4');
+    await review.locator('textarea').fill('测试人工复核备注');
+    await consoleDialog.getByRole('button', { name: '保存人工评分' }).click();
+    await expect(consoleDialog.getByRole('status')).toContainText('人工评分已保存');
+    await page.evaluate(async () => (await import('/js/vue/app-store.js')).closeAppModal());
+    await page.getByTitle('高级控制台').click();
+    await expect(consoleDialog.locator('.producer-evaluation-list article').first().locator('select').first()).toHaveValue('4');
+    await expect(consoleDialog.locator('.producer-evaluation-list article').first().locator('textarea')).toHaveValue('测试人工复核备注');
 });
 
 

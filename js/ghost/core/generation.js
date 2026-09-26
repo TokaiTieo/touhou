@@ -8,15 +8,20 @@ export function beginGeneration(turn = null) {
     return activeController;
 }
 
-export function cancelActiveGeneration() {
+export async function cancelActiveGeneration() {
     if (!activeController || activeController.signal.aborted) return false;
     if (activeTurn?.characterId && activeTurn?.turnId) {
-        import('../../api.js').then(({ cancelTurn }) => (
-            cancelTurn(activeTurn.characterId, activeTurn.turnId)
-        )).catch(error => console.warn('取消回合失败:', error));
+        const controller = activeController;
+        const turn = activeTurn;
+        const { cancelTurn } = await import('../../api.js');
+        const result = await cancelTurn(turn.characterId, turn.turnId);
+        if (!result.cancelled || result.state !== 'cancelled') return false;
+        const { finishTurn } = await import('./pending-turn.js');
+        finishTurn(turn.characterId, turn.turnId);
+        controller.abort();
+        return true;
     }
-    activeController.abort();
-    return true;
+    return false;
 }
 
 export function endGeneration(controller) {

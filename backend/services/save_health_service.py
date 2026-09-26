@@ -7,9 +7,10 @@ from typing import Dict
 
 from backend.services.save_migrations import LATEST_SAVE_VERSION
 from backend.services.storage_paths import safe_identifier
+from backend.services.conversation_archive_service import verify_archive
 
 
-def inspect_character_payload(payload) -> Dict:
+def inspect_character_payload(payload, archive_root=None) -> Dict:
     errors = []
     warnings = []
     if not isinstance(payload, dict):
@@ -37,8 +38,12 @@ def inspect_character_payload(payload) -> Dict:
     manifest = payload.get("conversation_archive", {"version": 1, "chunks": []})
     if not isinstance(manifest, dict) or not isinstance(manifest.get("chunks", []), list):
         errors.append("剧情档案索引格式无效，请使用完整导出的角色文件")
-    elif any(not isinstance(chunk, dict) or not isinstance(chunk.get("count"), int) or chunk["count"] < 0 for chunk in manifest.get("chunks", [])):
+    elif any(not isinstance(chunk, dict) or type(chunk.get("count")) is not int or chunk["count"] < 0 for chunk in manifest.get("chunks", [])):
         errors.append("剧情档案索引条目无效")
+    archive_report = {"checked_chunks": 0, "errors": []}
+    if not errors and archive_root is not None:
+        archive_report = verify_archive(payload, archive_root)
+        errors.extend(item["message"] for item in archive_report["errors"])
     try:
         version = int(payload.get("save_version", 1) or 1)
     except (TypeError, ValueError):
@@ -57,8 +62,11 @@ def inspect_character_payload(payload) -> Dict:
         "read_only": version > LATEST_SAVE_VERSION,
         "save_version": version,
         "target_save_version": LATEST_SAVE_VERSION,
-        "history_count": len(payload.get("conversation_history", []))
-        if isinstance(payload.get("conversation_history", []), list) else 0,
+        "history_count": (len(payload.get("conversation_history", []))
+                          if isinstance(payload.get("conversation_history", []), list) else 0)
+                         + sum(chunk.get("count", 0) for chunk in (manifest.get("chunks", []) if isinstance(manifest, dict) and isinstance(manifest.get("chunks"), list) else [])
+                               if isinstance(chunk, dict) and type(chunk.get("count")) is int and chunk["count"] >= 0),
+        "archive": archive_report,
         "size_bytes": len(serialized.encode("utf-8")),
     }
 
@@ -114,4 +122,4 @@ def inspect_character_file(path: Path) -> Dict:
             "repairable": False,
             "size_bytes": path.stat().st_size if path.exists() else 0,
         }
-    return {**report, **inspect_character_payload(payload), "payload": payload}
+    return {**report, **inspect_character_payload(payload, path.parent), "payload": payload}

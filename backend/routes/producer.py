@@ -4,6 +4,7 @@ import io
 import json
 import re
 import zipfile
+import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Request
@@ -36,6 +37,9 @@ from backend.services.runtime_diagnostics_service import (
 )
 from backend.version import DISPLAY_VERSION
 from backend.world_manager import load_tasks
+from backend.world_manager import _atomic_json_write
+from backend.services.storage_paths import contained_path, require_identifier
+from backend.services.play_quality_service import apply_manual_reviews
 
 
 router = APIRouter()
@@ -172,10 +176,51 @@ async def run_evaluation(request: dict, http_request: Request = None):
             cancelled=http_request.is_disconnected if http_request is not None else None)
     except (TypeError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from exc
-    path = DATA_DIR / "evaluations" / f"live_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report["report_id"] = "live_" + uuid.uuid4().hex
+    report["character_id"] = character["character_id"]
+    path = DATA_DIR / "evaluations" / (report["report_id"] + ".json")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    _atomic_json_write(path, report)
     return report
+
+
+@router.post("/producer_console/evaluation/review")
+async def review_evaluation(request: dict):
+    character = _character(request.get("character_id"))
+    try:
+        path = contained_path(DATA_DIR / "evaluations", require_identifier(request.get("report_id")) + ".json")
+    except ValueError as exc:
+        raise HTTPException(422, "评测报告标识无效") from exc
+    if not path.exists():
+        raise HTTPException(404, "评测报告不存在")
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise HTTPException(422, "评测报告损坏，请重新运行隔离评测") from exc
+    if not isinstance(report, dict) or not isinstance(report.get("results"), list):
+        raise HTTPException(422, "评测报告格式无效")
+    if report.get("character_id") != character["character_id"]:
+        raise HTTPException(403, "评测报告不属于当前角色")
+    try:
+        apply_manual_reviews(report, request.get("reviews"))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    _atomic_json_write(path, report)
+    return report
+
+
+@router.get("/producer_console/evaluation/latest")
+async def latest_evaluation(character_id: str):
+    _character(character_id)
+    paths = sorted((DATA_DIR / "evaluations").glob("live_*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    for path in paths:
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+            if report.get("character_id") == character_id:
+                return report
+        except (OSError, ValueError, AttributeError):
+            continue
+    return None
 
 
 @router.post("/producer_console/memory/maintain")

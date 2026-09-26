@@ -46,6 +46,26 @@ class APIIntegrationTests(unittest.TestCase):
         response = self.client.get("/api/ghost/locations/all")
         self.assertEqual(response.status_code, 403)
 
+    def test_evaluation_review_is_owner_scoped_and_keeps_automatic_grade(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            (directory / 'evaluations').mkdir()
+            report_path = directory / 'evaluations' / 'live_test.json'
+            report_path.write_text(json.dumps({'character_id': 'owner', 'report_id': 'live_test', 'results': [{'id': 'one', 'passed': False, 'evaluation': {'score': 60}}]}))
+            endpoint = '/api/ghost/producer_console/evaluation/review'
+            body = {'character_id': 'owner', 'report_id': 'live_test', 'reviews': [{'id': 'one', 'scores': {'persona': 4}, 'note': 'review'}]}
+            with patch('backend.routes.producer.DATA_DIR', directory), patch('backend.routes.producer.load_character', return_value={'character_id': 'owner', 'gm_mode': True}):
+                result = self.client.post(endpoint, headers=self.headers, json=body)
+                self.assertEqual(result.status_code, 200, result.text)
+                self.assertFalse(result.json()['results'][0]['passed'])
+                latest = self.client.get('/api/ghost/producer_console/evaluation/latest?character_id=owner', headers=self.headers)
+                self.assertEqual(latest.json()['results'][0]['manual_review']['scores']['persona'], 4)
+                self.assertEqual(self.client.post(endpoint, headers=self.headers, json={**body, 'report_id': '../escape'}).status_code, 422)
+            with patch('backend.routes.producer.DATA_DIR', directory), patch('backend.routes.producer.load_character', return_value={'character_id': 'other', 'gm_mode': True}):
+                self.assertEqual(self.client.post(endpoint, headers=self.headers, json=body).status_code, 403)
+            with patch('backend.routes.producer.load_character', return_value={'character_id': 'owner', 'gm_mode': False}):
+                self.assertEqual(self.client.post(endpoint, headers=self.headers, json=body).status_code, 403)
+
     def test_message_rewrite_adds_candidate_without_replaying_turn_state(self):
         with tempfile.TemporaryDirectory() as root:
             characters_dir = Path(root)

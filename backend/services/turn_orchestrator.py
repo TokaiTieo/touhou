@@ -14,6 +14,7 @@ from backend.services.relationship_service import update_relationships
 from backend.services.story_summary_service import rebuild_story_summary
 from backend.services.campaign_service import finalize_incident_history
 from backend.services.turn_models import TurnContext, TurnInput, TurnOutcome
+from backend.services.turn_history_service import append_turn_history
 from backend.services.turn_resolution_service import apply_turn_resolution
 from backend.services.turn_service import apply_task_updates
 from backend.world_manager import (
@@ -101,6 +102,8 @@ class TurnOrchestrator:
         final_result = self._public_result(turn.kind, result)
         if not persist:
             return TurnOutcome(result=final_result, committed=False, workflow_thread_id=context.workflow_thread_id)
+        append_turn_history(context, final_result)
+        rebuild_story_summary(character, tasks)
         record_turn_receipt(character, turn.turn_id, final_result)
         save_turn_bundle(
             turn.character_id,
@@ -118,6 +121,7 @@ class TurnOrchestrator:
 
     def commit_contract_failure(self, context: TurnContext, result: Dict) -> TurnOutcome:
         """Persist diagnostics once without applying gameplay mutations."""
+        append_turn_history(context, result)
         record_turn_receipt(context.character, context.turn.turn_id, result)
         save_turn_bundle(
             context.turn.character_id,

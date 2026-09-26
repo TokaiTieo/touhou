@@ -1,0 +1,131 @@
+/* toolbar: component styles and responsive states. */
+
+
+.th-toolbar {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.th-player-summary { min-width: 0; display: flex; align-items: center; gap: 8px; }
+
+.th-player-seal { width: 27px; height: 30px; display: grid; place-items: center; flex: 0 0 auto; font: 800 0.65rem 'Yu Mincho', serif; }
+
+.th-player-copy { min-width: 0; display: flex; flex-direction: column; }
+
+.th-player-copy strong { font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.th-player-copy small { font-size: 0.58rem; }
+
+.th-toolbar-divider { width: 1px; height: 26px; }
+
+.th-scene-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.68rem; }
+
+.th-life-state, .th-gm-badge { flex: 0 0 auto; padding: 2px 5px; font-size: 0.56rem; }
+
+.th-time-summary { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+
+.th-time-summary strong { font-size: 0.7rem; }
+
+.th-time-summary span { font-size: 0.6rem; }
+
+.th-time-summary small { font-size: 0.58rem; }
+
+.th-toolbar-actions { display: flex; gap: 5px; }
+
+.th-toolbar-actions button { width: 27px; height: 27px; cursor: pointer; font-size: 0.62rem; }
+
+@media (max-width: 1080px) {
+    .th-time-summary small { display: none; }
+}
+
+@media (max-width: 820px) {
+    .th-toolbar { gap: 8px; }
+    .th-time-summary { display: none; }
+}
+
+@media (max-width: 560px) {
+    .th-toolbar-divider, .th-life-state, .th-player-copy small { display: none; }
+    .th-scene-name { max-width: 98px; }
+}
+
+.th-player-seal {
+    border-top: 5px solid var(--shu);
+    border-radius: 5px;
+    background: #FFFDF9;
+    color: var(--shu);
+    box-shadow: 0 3px 10px rgba(192, 90, 104, 0.16);
+}
+
+.th-player-copy strong {
+    color: var(--ink);
+}
+
+.th-player-copy small {
+    color: var(--ink-faint);
+}
+
+.th-toolbar-divider {
+    background: rgba(183, 143, 69, 0.28);
+}
+
+.th-scene-name {
+    color: var(--tsuki-deep);
+    letter-spacing: 0.08em;
+}
+
+.th-life-state,
+.th-gm-badge {
+    border: 1px solid rgba(120, 168, 138, 0.5);
+    border-radius: 999px;
+    color: #4E8267;
+}
+
+.th-life-state.is-dead {
+    border-color: rgba(192, 90, 104, 0.5);
+    color: var(--shu);
+}
+
+.th-gm-badge {
+    border-color: var(--kin-line);
+    color: var(--kin);
+}
+
+.th-time-summary strong {
+    color: var(--ink);
+}
+
+.th-time-summary span {
+    color: var(--ink-faint);
+}
+
+.th-time-summary small {
+    color: var(--kin);
+}
+
+.th-toolbar-actions button {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--ink-soft);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        box-shadow 0.3s var(--ease-drift);
+}
+
+.th-toolbar-actions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+    box-shadow: 0 4px 12px rgba(223, 137, 165, 0.22);
+}
+
+.th-player-seal {
+    border: 1px solid rgba(192, 90, 104, 0.5);
+    border-radius: 7px;
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--shu);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75),
+        0 4px 12px rgba(122, 92, 104, 0.12);
+}

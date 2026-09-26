@@ -2,7 +2,7 @@
 
 《东方异变录》是一款以自然语言对话驱动的 Touhou Project 同人互动游戏。玩家可以在幻想乡自由探索，通过行动与台词影响 NPC、任务、异变、关系、战斗结果和长期世界状态。
 
-当前版本：`v0.15.0`
+当前版本：`v0.16.0`
 存档结构：`V11`
 运行平台：Windows
 
@@ -116,6 +116,21 @@ python scripts/benchmark-turn-workflow.py
 
 ## 构建与打包
 
+推荐使用统一入口（完整构建依赖见 `requirements-dev.txt`，前端依赖通过 `npm ci` 安装）：
+
+```powershell
+# 只读检查源码、根目录 EXE 和 ZIP 是否一致，不触发构建
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Mode Status
+# 检查、构建、冒烟通过后替换根目录 EXE；不更新 ZIP
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Mode Exe
+# 同上，并生成、解压验证后替换无存档测试 ZIP
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1 -Mode Package
+```
+
+可选 `-CertificateThumbprint` 在冒烟之前签名。构建模式始终运行质量门禁及模拟 AI 浏览器回归；失败时不会把未验证候选替换为正式产物。EXE 与 ZIP 分别标记为 `current`、`outdated`、`unverified` 或 `missing`，构建后写入 `release/artifact-status.json`。只更新 EXE 不代表 ZIP 已更新，版本号一致也不能代替哈希验证，不设置文件大小门槛。
+
+以下独立脚本仍可用于逐步排查：
+
 安装完整构建依赖后，先生成不含玩家存档的世界资源，再构建 EXE：
 
 ```powershell
@@ -184,6 +199,7 @@ docs/             架构与迁移说明
 - 版本摘要：[CHANGELOG.md](CHANGELOG.md)
 - LangGraph 迁移说明：[docs/langgraph-migration.md](docs/langgraph-migration.md)
 - V11 档案、备份与评测说明：[docs/long-play-v11.md](docs/long-play-v11.md)
+- 回合恢复、历史索引与发布状态：[docs/reliability-v016.md](docs/reliability-v016.md)
 
 ## 同人说明
 

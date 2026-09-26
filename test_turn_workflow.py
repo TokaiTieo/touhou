@@ -8,6 +8,21 @@ from backend.services import turn_workflow
 
 
 class TurnWorkflowTests(unittest.IsolatedAsyncioTestCase):
+    async def test_persisted_status_is_scoped_to_restored_timeline(self):
+        with tempfile.TemporaryDirectory() as root:
+            checkpoint = Path(root) / 'epochs.sqlite3'
+            model = AsyncMock(return_value=json.dumps({'description': '等待提交', 'time_cost': 0}))
+            with patch.object(turn_workflow, 'CHECKPOINT_PATH', checkpoint), patch.object(turn_workflow, 'call_ai_async', new=model):
+                try:
+                    await turn_workflow.run_turn_workflow(kind='environment', prompt='test', thread_id='owner:environment:turn:branch-a')
+                    await turn_workflow.close_workflow_runtime(checkpoint)
+                    status = await turn_workflow.get_persisted_turn_status('owner', 'turn', 'branch-a')
+                    self.assertEqual(status['state'], 'parsed')
+                    self.assertEqual((await turn_workflow.get_persisted_turn_status('owner', 'turn', 'branch-b'))['state'], 'unknown')
+                    self.assertEqual((await turn_workflow.get_persisted_turn_status('owner', 'turn'))['state'], 'unknown')
+                finally:
+                    await turn_workflow.close_workflow_runtime(checkpoint)
+
     async def test_failed_contract_step_resumes_without_second_model_call(self):
         response = json.dumps({
             "description": "灵梦确认结界暂时稳定。",

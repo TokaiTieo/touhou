@@ -6,7 +6,17 @@
 const DEFAULT_API_TIMEOUT_MS = 30000;
 const DEFAULT_STREAM_CONNECT_TIMEOUT_MS = 20000;
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 45000;
-const pendingCommands = new Map();
+const COMMAND_STORAGE = 'touhou:pending-commands:v1';
+const pendingCommands = new Map((() => {
+    try {
+        const entries = JSON.parse(sessionStorage.getItem(COMMAND_STORAGE) || '[]');
+        return Array.isArray(entries) ? entries.filter(item => Array.isArray(item) && item.length === 2 && item.every(value => typeof value === 'string')) : [];
+    } catch { return []; }
+})());
+function savePendingCommands() {
+    try { sessionStorage.setItem(COMMAND_STORAGE, JSON.stringify([...pendingCommands])); }
+    catch { console.warn('Pending command identifiers could not be stored'); }
+}
 
 function timeoutError(message) {
     const error = new Error(message);
@@ -52,6 +62,7 @@ async function apiCall(endpoint, options = {}) {
             commandKey = url + ':' + mergedOptions.body;
             const id = pendingCommands.get(commandKey) || crypto.randomUUID();
             pendingCommands.set(commandKey, id);
+            savePendingCommands();
             mergedOptions.body = JSON.stringify({ ...payload, operation_id: id });
         }
     }
@@ -61,7 +72,7 @@ async function apiCall(endpoint, options = {}) {
         const response = await fetch(url, mergedOptions);
         
         if (!response.ok) {
-            if (commandKey && response.status < 500) pendingCommands.delete(commandKey);
+            if (commandKey && response.status < 500 && response.status !== 409) { pendingCommands.delete(commandKey); savePendingCommands(); }
             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
             try {
                 const errorData = await response.json();
@@ -73,11 +84,12 @@ async function apiCall(endpoint, options = {}) {
         }
         
         if (response.status === 204) {
+            if (commandKey) { pendingCommands.delete(commandKey); savePendingCommands(); }
             return null;
         }
         
         const result = await response.json();
-        if (commandKey) pendingCommands.delete(commandKey);
+        if (commandKey) { pendingCommands.delete(commandKey); savePendingCommands(); }
         return result;
     } catch (err) {
         if (linked.controller.signal.aborted && !fetchOptions.signal?.aborted) {
@@ -282,6 +294,7 @@ async function environmentInteract(characterId, chapterIndex, scene, playerName,
     return await apiCall('/ghost/environment_interact', {
         method: 'POST',
         body: {
+            record_history: true,
             character_id: characterId,
             chapter_index: chapterIndex,
             scene: scene,
@@ -296,6 +309,7 @@ async function environmentInteract(characterId, chapterIndex, scene, playerName,
 
 async function environmentInteractStream(characterId, chapterIndex, scene, playerName, userInput, history, sceneNPCs, turnId = null, streamOptions = {}) {
     return await streamApiCall('/ghost/environment_interact_stream', {
+        record_history: true,
         character_id: characterId,
         chapter_index: chapterIndex,
         scene,
@@ -535,6 +549,7 @@ async function npcDialogue(characterId, chapterIndex, scene, playerName, npcId, 
     return await apiCall('/ghost/npc_dialogue', {
         method: 'POST',
         body: {
+            record_history: true,
             character_id: characterId,
             chapter_index: chapterIndex || 1,
             scene: scene,
@@ -553,6 +568,7 @@ async function npcDialogue(characterId, chapterIndex, scene, playerName, npcId, 
 
 async function npcDialogueStream(characterId, chapterIndex, scene, playerName, npcId, npcName, userInput, isGreeting, isContinue, history, sceneNPCs, turnId = null, streamOptions = {}) {
     return await streamApiCall('/ghost/npc_dialogue_stream', {
+        record_history: true,
         character_id: characterId,
         chapter_index: chapterIndex || 1,
         scene,

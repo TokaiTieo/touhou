@@ -1,0 +1,16 @@
+/* Shared visual tokens. */
+
+:root {
+    --th-ink: #171218;
+    --th-ink-soft: #221a22;
+    --th-paper: #f4ead9;
+    --th-paper-muted: #cdbfae;
+    --th-vermilion: #ae293d;
+    --th-vermilion-bright: #d34455;
+    --th-gold: #d4a655;
+    --th-moss: #527966;
+    --th-lake: #477b92;
+    --th-line: rgba(244, 234, 217, 0.14);
+    --th-panel: rgba(24, 18, 24, 0.96);
+    --th-panel-soft: rgba(35, 26, 34, 0.94);
+}

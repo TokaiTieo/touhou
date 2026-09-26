@@ -8,7 +8,7 @@ from datetime import datetime
 
 from backend.services.ai_service import call_ai_async, get_last_ai_error, get_last_ai_runtime, get_last_ai_usage, reset_ai_diagnostics
 from backend.services.evaluation_context import EvaluationContext, evaluation_context
-from backend.services.narrative_evaluation_service import evaluate_narrative_text
+from backend.services.play_quality_service import evaluate_play_quality, RUBRIC
 from backend.services.npc_identity_service import resolve_npc
 
 
@@ -28,6 +28,10 @@ LONG_CASES = tuple({**case, "scene": "博丽神社"} for case in LIVE_CASES) + (
     {"id": "return_promise", "title": "跨地点返回后的承诺", "scene": "博丽神社", "npc": "博丽灵梦", "action": "回到神社，询问我们之前关于修复结界的约定", "expected_fact": "evaluation_promise"},
     {"id": "recovery", "title": "带伤休息后的状态", "scene": "博丽神社", "action": "暂时不战斗，在神社休息一小时恢复体力"},
     {"id": "relationship_followup", "title": "关系边界的后续承接", "scene": "魔法之森", "npc": "爱丽丝", "action": "以普通朋友身份再次问候爱丽丝，询问她今天的计划", "expected_boundary": "closed"},
+    {"id": "marisa_secret_probe", "title": "未被告知的私下记录", "scene": "雾雨魔法店", "npc": "雾雨魔理沙", "action": "向魔理沙询问最近的见闻，不提我与其他人的私下谈话"},
+    {"id": "quiet_daily", "title": "没有异变推进的日常", "scene": "人间之里", "action": "找一处安静茶摊休息，只聊镇上的日常，不接取任务"},
+    {"id": "gift_followup", "title": "礼物与人物反应", "scene": "魔法之森", "npc": "爱丽丝", "action": "询问爱丽丝最近缺什么材料，由她决定是否需要帮助"},
+    {"id": "reimu_return", "title": "再会时的口吻与记忆", "scene": "博丽神社", "npc": "博丽灵梦", "action": "回到神社自然地向灵梦问候，谈谈离开期间的经历"},
 )
 
 
@@ -120,6 +124,7 @@ async def run_live_evaluation(character=None, tasks=None, *, turn_count=4, token
             turn_id = str(uuid.uuid4())
             ruling = preview_turn_ruling(owner, case["action"], npcs)
             error = None
+            text = ""
             try:
                 common = dict(character_id=owner["character_id"], scene=scene,
                               player_name=owner["profile"]["name"], scene_npcs=npcs, turn_id=turn_id)
@@ -131,7 +136,8 @@ async def run_live_evaluation(character=None, tasks=None, *, turn_count=4, token
                     request = ghost.EnvironmentInteractRequest(**common, user_input={"action": case["action"]})
                     result = await ghost.environment_interact.__wrapped__(request)
                 text = result.get("description", "")
-                evaluation = evaluate_narrative_text(text, forbidden_terms=case.get("forbidden_terms"))
+                evaluation = evaluate_play_quality(text, case["id"],
+                    recent=[row["response_text"] for row in results[-5:]], forbidden=case.get("forbidden_terms", ()))
                 contract_ok = bool(result.get("contract_valid", bool(case.get("npc"))))
                 state_ok = not ruling.get("is_battle") or result.get("spellcard_result", {}).get("outcome") == ruling.get("outcome")
                 evaluation["passed"] = bool(evaluation["passed"] and contract_ok and state_ok)
@@ -165,6 +171,8 @@ async def run_live_evaluation(character=None, tasks=None, *, turn_count=4, token
             results.append({
                 "id": f"{case['id']}:{index + 1}", "case_id": case["id"], "title": case["title"], "passed": evaluation["passed"], "evaluation": evaluation,
                 "scene": scene, "npc_id": npc["id"] if case.get("npc") else None,
+                "action": case["action"], "response_text": text,
+                "manual_review": {"scores": {key: None for key in RUBRIC}, "note": ""},
                 "runtime": calls[-1]["runtime"] if len(calls) > call_start else {},
                 "usage": calls[-1]["usage"] if len(calls) > call_start else {},
                 "error": error or (calls[-1]["error"] if len(calls) > call_start else None),
@@ -180,7 +188,8 @@ async def run_live_evaluation(character=None, tasks=None, *, turn_count=4, token
     finally:
         evaluation_context.reset(token)
     return {
-        "mode": "real_provider_opt_in", "prompt_version": 3, "pipeline": "production_handlers_dry_run",
+        "mode": "real_provider_opt_in", "prompt_version": 4, "pipeline": "production_handlers_dry_run",
+        "review_rubric": RUBRIC, "human_review_required": True,
         "requested_turns": turn_count, "stopped_reason": stopped_reason, "token_budget": token_budget,
         "budget_tokens_used": spent, "usage_estimated": any(item["estimated"] for item in calls),
         "estimated_cost": round(spent * price / 1_000_000, 6) if price else None,

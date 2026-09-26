@@ -8,6 +8,7 @@ import { appendToConversationHistory, environmentInteract, environmentInteractSt
 import { refreshCharacterTime } from '../core/session.js';
 import { beginGeneration, cancelActiveGeneration, endGeneration, hasActiveGeneration } from '../core/generation.js';
 import { switchScene } from './location.js';
+import { rememberTurn, finishTurn, readPendingTurn, checkPendingTurn } from '../core/pending-turn.js';
 import { getTaskDisplayName } from '../ui/text.js';
 import {
     clearComposer,
@@ -19,11 +20,15 @@ import {
 // 发送消息
 export async function handleSendMessage() {
     if (state.isWaitingForAI) {
-        if (hasActiveGeneration() && cancelActiveGeneration()) {
-            showToast('正在停止生成...', 1200);
-        } else {
-            showToast('请等待上一条消息处理完成', 1500);
-        }
+        showToast('正在确认回合状态...', 1200);
+        try {
+            if (!hasActiveGeneration() || !await cancelActiveGeneration()) showToast('回合可能已完成或正在结算，请等待结果', 2000);
+        } catch { showToast('未能确认停止，仍保留原回合', 2000); }
+        return;
+    }
+    if (readPendingTurn(state.currentSession.characterId)) {
+        await checkPendingTurn(state.currentSession.characterId);
+        showToast('请先确认上一回合的结果', 1800);
         return;
     }
     
@@ -42,7 +47,10 @@ export async function handleSendMessage() {
     
     // 对话模式
     if (state.isInDialogue && state.currentDialogueNPC && speech) {
-        await sendDialogueMessage(action, speech);
+        state.isWaitingForAI = true;
+        updateInputsDisabled(true, false);
+        try { await sendDialogueMessage(action, speech); }
+        finally { state.isWaitingForAI = false; updateInputsDisabled(state.currentSession.isDead); }
         return;
     }
     
@@ -53,45 +61,33 @@ export async function handleSendMessage() {
     }
     
     // 环境交互
-    await sendEnvironmentMessage(action, speech);
+    state.isWaitingForAI = true;
+    updateInputsDisabled(true, false);
+    try { await sendEnvironmentMessage(action, speech); }
+    finally { state.isWaitingForAI = false; updateInputsDisabled(state.currentSession.isDead); }
 }
 
 // 发送环境交互消息
 async function sendEnvironmentMessage(action, speech) {
     let displayContent = '';
-    let storageContent = '';
     
     if (action && speech) {
         displayContent = `（${action}）"${speech}"`;
-        storageContent = `（${action}）"${speech}"`;
     } else if (action) {
         displayContent = `（${action}）`;
-        storageContent = action;
     } else if (speech) {
         displayContent = `"${speech}"`;
-        storageContent = speech;
     }
     
     // 添加用户消息
-    const userMsg = {
+    const userMsg = state.addChatMessage({
         role: 'user',
         speaker: state.currentSession.profile?.name || '我',
         content: displayContent,
         timestamp: Date.now(),
         isDead: false
-    };
-    state.addChatMessage(userMsg);
+    });
     
-    const savedUser = await appendToConversationHistory(
-        state.currentSession.characterId,
-        state.currentSession.profile?.name || '我',
-        storageContent,
-        state.currentSession.currentScene,
-        false
-    );
-    
-    userMsg.messageId = savedUser.message_id;
-    userMsg.conversationIndex = savedUser.message_index;
     renderChatHistory();
     scrollChatToBottom();
     
@@ -99,45 +95,29 @@ async function sendEnvironmentMessage(action, speech) {
     clearComposer();
     
     // 调用AI
-    await callAIAndRespond({ action, speech });
+    await callAIAndRespond({ action, speech }, userMsg);
 }
 
 // 发送对话消息
 async function sendDialogueMessage(action, speech) {
-    // 构建显示内容和存储内容
     let displayContent = '';
-    let storageContent = '';
     
     if (action && speech) {
         displayContent = `（${action}）"${speech}"`;
-        storageContent = `（${action}）"${speech}"`;
     } else if (action) {
         displayContent = `（${action}）`;
-        storageContent = action;
     } else if (speech) {
         displayContent = `"${speech}"`;
-        storageContent = speech;
     }
     
-    const userMsg = {
+    const userMsg = state.addChatMessage({
         role: 'user',
         speaker: state.currentSession.profile?.name || '我',
         content: displayContent,
         timestamp: Date.now(),
         isDead: false
-    };
-    state.addChatMessage(userMsg);
+    });
     
-    const savedUser = await appendToConversationHistory(
-        state.currentSession.characterId,
-        state.currentSession.profile?.name || '我',
-        storageContent,
-        state.currentSession.currentScene,
-        false
-    );
-    
-    userMsg.messageId = savedUser.message_id;
-    userMsg.conversationIndex = savedUser.message_index;
     renderChatHistory();
     scrollChatToBottom();
     
@@ -145,11 +125,11 @@ async function sendDialogueMessage(action, speech) {
     
     // 传递 action 和 speech
     const { callAIForDialogue } = await import('./dialogue.js');
-    await callAIForDialogue(action, speech, false);
+    await callAIForDialogue(action, speech, false, false, userMsg);
 }
 
 // 调用AI并响应
-export async function callAIAndRespond(userInput) {
+export async function callAIAndRespond(userInput, userMsg = null) {
     state.isWaitingForAI = true;
     renderChatHistory();
     updateInputsDisabled(true, true);
@@ -192,6 +172,10 @@ export async function callAIAndRespond(userInput) {
         ];
 
         let response;
+        rememberTurn('environment_interact', {
+            record_history: true, character_id: requestArgs[0], chapter_index: requestArgs[1], scene: requestArgs[2],
+            player_name: requestArgs[3], user_input: requestArgs[4], history: requestArgs[5], scene_npcs: requestArgs[6], turn_id: turnId
+        });
         try {
             response = await environmentInteractStream(...requestArgs, {
                 signal: controller.signal,
@@ -235,6 +219,7 @@ export async function callAIAndRespond(userInput) {
         removeLoadingIndicator(loadingIndicator);
         
         const description = response.description || '世界没有给出回应。';
+        finishTurn(requestArgs[0], turnId);
         const isDead = response.is_dead === true;
         const newLocation = response.new_location;
         const turnSummary = buildTurnSummary(response, userInput);
@@ -279,7 +264,11 @@ export async function callAIAndRespond(userInput) {
             });
         }
         
-        const savedMessage = await appendToConversationHistory(
+        if (userMsg && response.conversation?.user) {
+            userMsg.messageId = response.conversation.user.message_id;
+            userMsg.conversationIndex = response.conversation.user.message_index;
+        }
+        const savedMessage = response.conversation?.assistant || await appendToConversationHistory(
             state.currentSession.characterId,
             '旁白',
             description,
@@ -349,6 +338,7 @@ export async function callAIAndRespond(userInput) {
         showToast('AI调用失败，请重试', 3000, 'error');
     } finally {
         endGeneration(controller);
+        if (readPendingTurn(state.currentSession.characterId)) await checkPendingTurn(state.currentSession.characterId);
         state.isWaitingForAI = false;
         updateInputsDisabled(state.currentSession.isDead);
     }

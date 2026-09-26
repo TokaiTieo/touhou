@@ -13,7 +13,7 @@ def digest(path):
     return value.hexdigest()
 
 
-def build_identity(root):
+def build_identity(root, *, source_worlds=False):
     root = Path(root).resolve()
     files = {}
     for name in ("version.json", "index.html", "api_release.spec", "build_identity.py", "requirements.txt"):
@@ -27,13 +27,15 @@ def build_identity(root):
             if name == "backend" and path.suffix not in {".py", ".json"}:
                 continue
             files[path.relative_to(root).as_posix()] = digest(path)
-    world_root = root / "release" / "build_worlds_clean"
+    world_root = root / "worlds" if source_worlds else root / "release" / "build_worlds_clean"
     if not world_root.exists():
         raise ValueError("Prepare clean release worlds before building")
     for path in sorted(world_root.rglob("*")):
         if not path.is_file():
             continue
         relative = path.relative_to(world_root)
+        if source_worlds and "sessions" in relative.parts:
+            continue
         if "sessions" in relative.parts or path.name.startswith("."):
             raise ValueError("Release world contains runtime files")
         files["worlds/" + relative.as_posix()] = digest(path)

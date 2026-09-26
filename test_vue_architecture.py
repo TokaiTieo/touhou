@@ -104,7 +104,10 @@ class VueArchitectureTests(unittest.TestCase):
         game_css = (ROOT / "css/vue-game.css").read_text(encoding="utf-8")
         self.assertNotIn("唯美主题覆写层", app_css)
         self.assertEqual(game_css.count("东方异变录 · 统一主题层"), 1)
-        self.assertGreater(game_css.find("东方异变录 · 统一主题层"), len(game_css) // 4)
+        self.assertLess(game_css.find('./components/messages.css'), game_css.find("东方异变录 · 统一主题层"))
+        for component in ("messages", "composer", "sidebar", "toolbar", "tokens"):
+            self.assertIn(f"./components/{component}.css", game_css)
+            self.assertTrue((ROOT / f"css/components/{component}.css").exists())
         self.assertNotRegex(game_css, r"(?m)^\+")
 
     def test_accessibility_settings_and_local_tts_are_vue_owned(self):

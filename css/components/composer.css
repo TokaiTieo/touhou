@@ -1,0 +1,242 @@
+/* composer: component styles and responsive states. */
+
+
+.th-composer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+}
+
+.th-suggestions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+}
+
+.th-suggestions button {
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    padding: 4px 9px 4px 5px;
+    cursor: pointer;
+    font-size: 0.72rem;
+}
+
+.th-suggestions button span { width: 20px; height: 20px; display: grid; place-items: center; font: 700 0.62rem 'Yu Mincho', serif; }
+
+.th-composer-fields {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.th-composer-fields label {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+}
+
+.th-composer-fields label > span { display: grid; place-items: center; font: 700 0.7rem 'Yu Mincho', serif; }
+
+.th-composer textarea {
+    width: 100%;
+    min-height: 58px;
+    max-height: 130px;
+    resize: vertical;
+    padding: 9px 10px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+}
+
+.th-composer textarea:disabled { opacity: 0.55; }
+
+.th-voice { position: absolute; right: 5px; bottom: 5px; width: 25px; height: 25px; cursor: pointer; }
+
+.th-send {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    padding: 0 9px 0 5px;
+    cursor: pointer;
+}
+
+.th-send:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.th-send span { width: 29px; height: 29px; display: grid; place-items: center; font: 800 0.8rem 'Yu Mincho', serif; }
+
+body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
+
+@media (max-width: 1080px) {
+    .th-composer-fields { grid-template-columns: 1fr; }
+    .th-composer textarea { min-height: 42px; }
+}
+
+@media (max-width: 820px) {
+    .th-composer { padding: 10px; }
+}
+
+@media (max-width: 560px) {
+    .th-composer { grid-template-columns: minmax(0, 1fr) 5.25rem; }
+    .th-send { min-width: 76px; grid-template-columns: 25px minmax(0, 1fr); padding-right: 5px; }
+    .th-send span { width: 23px; height: 25px; }
+    .th-send strong { font-size: 0.64rem; }
+}
+
+.th-composer {
+    gap: 12px 14px;
+    padding: 16px clamp(18px, 2.4vw, 32px) 18px;
+    border-top: 1px solid var(--kin-line);
+    background: rgba(255, 253, 249, 0.94);
+    box-shadow: 0 -14px 36px rgba(122, 92, 104, 0.1);
+    backdrop-filter: blur(6px);
+}
+
+.th-suggestions button {
+    border: 1px solid rgba(183, 143, 69, 0.26);
+    border-radius: 999px;
+    background: #FFFDF9;
+    color: var(--ink-soft);
+    transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
+        box-shadow 0.3s var(--ease-drift);
+}
+
+.th-suggestions button:hover {
+    border-color: var(--sakura-deep);
+    color: var(--shu);
+    box-shadow: 0 4px 12px rgba(223, 137, 165, 0.2);
+}
+
+.th-composer-fields label {
+    border: 1px solid rgba(183, 143, 69, 0.28);
+    border-radius: var(--radius-m);
+    background: #FFFFFF;
+    overflow: hidden;
+    transition: border-color 0.3s var(--ease-drift), box-shadow 0.3s var(--ease-drift);
+}
+
+.th-composer-fields label:focus-within {
+    border-color: var(--sakura-deep);
+    box-shadow: 0 0 0 3px rgba(248, 196, 213, 0.32);
+}
+
+.th-composer-fields label > span {
+    border-right: 1px solid rgba(183, 143, 69, 0.2);
+    color: var(--kin);
+}
+
+.th-composer textarea {
+    color: var(--ink);
+    font: 0.86rem/1.7 var(--font-mincho);
+    letter-spacing: 0.03em;
+}
+
+.th-composer textarea::placeholder {
+    color: #B8A9AE;
+}
+
+.th-voice {
+    border: 1px solid rgba(94, 150, 172, 0.4);
+    border-radius: 50%;
+    background: rgba(168, 216, 232, 0.2);
+    color: var(--tsuki-deep);
+}
+
+.th-send {
+    border: 1px solid rgba(255, 241, 246, 0.6);
+    border-radius: var(--radius-m);
+    background: linear-gradient(140deg, var(--sakura-deep), var(--shu));
+    color: #FFFBF7;
+    box-shadow: 0 10px 24px rgba(192, 90, 104, 0.3);
+    transition: box-shadow 0.32s var(--ease-drift), transform 0.32s var(--ease-drift),
+        filter 0.32s var(--ease-drift);
+}
+
+.th-send:hover:not(:disabled) {
+    background: linear-gradient(140deg, #E89AB2, #C96474);
+    box-shadow: 0 14px 30px rgba(192, 90, 104, 0.4);
+    transform: translateY(-1px);
+}
+
+.th-send.cancel {
+    background: linear-gradient(140deg, #B9A8C6, var(--fuji-deep));
+}
+
+.th-suggestions button span {
+    border: 1px solid rgba(192, 90, 104, 0.5);
+    border-radius: 50%;
+    background: rgba(255, 253, 249, 0.92);
+    color: var(--shu);
+}
+
+.th-send span {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(2px);
+}
+
+.th-suggestions::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.th-suggestions::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(183, 143, 69, 0.28);
+}
+
+.th-suggestions::-webkit-scrollbar-thumb:hover {
+    background: rgba(223, 137, 165, 0.45);
+}
+
+.th-suggestions::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.th-send {
+    min-width: 0;
+    width: 100%;
+    min-height: 3rem;
+    padding-block: 10px;
+    overflow: visible;
+}
+
+.th-send strong {
+    letter-spacing: 0;
+    white-space: nowrap;
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    min-height: 1.6em;
+    overflow: visible;
+}
+
+@media (max-width: 560px) {
+    .th-send { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; gap: 8px; }
+    .th-send strong {
+        letter-spacing: 0;
+    }
+}
+
+.th-turn-recovery { padding: 12px 20px; border-top: 1px solid var(--kin-line); color: var(--ink); background: var(--washi); }
+
+.th-turn-recovery div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+.th-turn-recovery button { padding: 7px 10px; border: 1px solid var(--kin-line); border-radius: 6px; background: var(--washi); color: var(--shu); cursor: pointer; }
+
+.th-turn-recovery p { overflow-wrap: anywhere; }
+
+@media (max-width: 820px) and (max-height: 560px) {
+    .th-story-stage:focus-within .th-suggestions { display: none; }
+    .th-story-stage:focus-within .th-composer { padding-block: 8px; }
+    .th-story-stage:focus-within .th-composer textarea { height: 3rem; min-height: 3rem; }
+}
+
+.touhou-high-contrast .th-composer { border-color: currentColor; box-shadow: none; }
+
+.touhou-high-contrast .th-composer textarea { color: #fff; }

@@ -1,5 +1,16 @@
 # TouHou Changelog
 
+## v0.16.0
+
+- Commit player actions, AI replies, state and turn receipts in one recoverable transaction; legacy clients can retain the existing append API.
+- Preserve active coordinator stages during pruning and confirm cancellation before discarding pending turns.
+- Verify every referenced history chunk and select only dependency-complete recovery snapshots.
+- Recover pending turn IDs across reloads without automatically starting paid generation.
+- Add rebuildable SQLite full-history search and bounded immutable memory-feature caching.
+- Add scenario fact/isolation checks, response review, separate human scores and report export.
+- Split high-frequency component styles and fix narrow/short viewport dialogs and long names.
+- Add one-command local release orchestration and independent source/EXE/ZIP verification status. Save schema remains V11.
+
 ## v0.15.0
 
 - Hardened save IDs and resolved storage paths; future save schemas cannot be downgraded. No import file-size limit was added.

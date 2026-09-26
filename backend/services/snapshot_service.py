@@ -81,12 +81,13 @@ def list_snapshots(snapshots_dir: Path) -> List[Dict]:
     for path in snapshots_dir.glob("*.json"):
         try:
             with open(path, "r", encoding="utf-8") as handle:
-                metadata = json.load(handle).get("metadata", {})
-            if metadata:
-                snapshots.append(metadata)
-        except (OSError, json.JSONDecodeError):
+                payload = json.load(handle)
+            metadata = payload.get("metadata", {}) if isinstance(payload, dict) else {}
+            if isinstance(metadata, dict) and metadata:
+                snapshots.append({**metadata, "snapshot_id": path.stem})
+        except (OSError, ValueError):
             continue
-    return sorted(snapshots, key=lambda item: item.get("created_at", ""), reverse=True)
+    return sorted(snapshots, key=lambda item: str(item.get("created_at", "")), reverse=True)
 
 
 def load_snapshot(snapshots_dir: Path, snapshot_id: str) -> Dict:
@@ -95,9 +96,29 @@ def load_snapshot(snapshots_dir: Path, snapshot_id: str) -> Dict:
         raise FileNotFoundError("存档快照不存在")
     with open(snapshot_path, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
-    if not isinstance(payload.get("character"), dict):
+    if not isinstance(payload, dict) or not isinstance(payload.get("character"), dict):
         raise ValueError("存档快照缺少角色数据")
+    if not isinstance(payload.get("tasks", {}), dict):
+        raise ValueError("存档快照任务数据无效")
     return payload
+
+
+def inspect_snapshots(snapshots_dir: Path, archive_root: Path) -> List[Dict]:
+    from backend.services.save_health_service import inspect_character_payload
+    reports = []
+    for path in snapshots_dir.glob("*.json"):
+        metadata = {"snapshot_id": path.stem, "created_at": ""}
+        try:
+            payload = load_snapshot(snapshots_dir, path.stem)
+            if isinstance(payload.get("metadata"), dict):
+                metadata.update(payload["metadata"])
+                metadata["snapshot_id"] = path.stem
+            report = inspect_character_payload(payload["character"], archive_root)
+            errors = report["errors"]
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            errors = [str(exc)]
+        reports.append({**metadata, "recoverable": not errors, "errors": errors})
+    return sorted(reports, key=lambda item: str(item.get("created_at", "")), reverse=True)
 
 
 def prepare_restore_payload(

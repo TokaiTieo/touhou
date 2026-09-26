@@ -150,15 +150,21 @@ class TurnCoordinator:
         current = self._inflight.get(key)
         if current is task:
             self._inflight.pop(key, None)
+        if not any(item[:2] == key[:2] for item in self._inflight):
+            self._character_locks.pop(key[:2], None)
+        if not task.cancelled():
+            task.exception()
         self._prune_statuses()
 
     def _prune_statuses(self, *, max_entries: int = 300) -> None:
         if len(self._statuses) <= max_entries:
             return
-        ordered = sorted(self._statuses.items(), key=lambda item: item[1].updated_at)
-        for key, status in ordered[: len(self._statuses) - max_entries]:
-            if status.state not in ("queued", "running"):
-                self._statuses.pop(key, None)
+        active = {(owner, identity) for (_, owner, identity), task in self._inflight.items() if not task.done()}
+        ended = [(key, status) for key, status in self._statuses.items()
+                 if status.state in {"committed", "failed", "cancelled"} and key not in active]
+        ended.sort(key=lambda item: item[1].updated_at)
+        for key, _ in ended[:max(0, len(self._statuses) - max_entries)]:
+            self._statuses.pop(key, None)
 
     def get_status(self, character_id: str, turn_id: str) -> Optional[TurnStatus]:
         return self._statuses.get((character_id, turn_id))
@@ -171,6 +177,8 @@ class TurnCoordinator:
             status = self._statuses.get((character_id, turn_id))
             if task is None or task.done():
                 return False
+            if status is not None and status.state in {"settling", "checkpoint_cleanup", "committed"}:
+                return False
             if status is not None:
                 status.state = "cancelling"
                 status.updated_at = time.time()
@@ -179,7 +187,7 @@ class TurnCoordinator:
             await task
         except asyncio.CancelledError:
             pass
-        return True
+        return task.cancelled()
 
     def set_state(self, character_id: str, turn_id: str, state: str, **updates: Any) -> None:
         status = self.get_status(character_id, turn_id)

@@ -505,14 +505,15 @@ async def get_checkpoint_metrics() -> Dict[str, Any]:
         }
 
 
-async def get_persisted_turn_status(character_id: str, turn_id: str) -> Dict[str, Any]:
+async def get_persisted_turn_status(character_id: str, turn_id: str, timeline_epoch: str = "") -> Dict[str, Any]:
     """Read recovery state after a process restart without exposing prompt data."""
     if not CHECKPOINT_PATH.exists():
         return {"state": "unknown"}
     try:
         runtime = await _get_runtime("environment")
+        suffix = ":" + timeline_epoch if timeline_epoch else ""
         candidates = [
-            _runtime_thread_id(f"{character_id}:{kind}:{turn_id}")
+            _runtime_thread_id(f"{character_id}:{kind}:{turn_id}{suffix}")
             for kind in ("environment", "npc_dialogue")
         ]
         placeholders = ",".join("?" for _ in candidates)
