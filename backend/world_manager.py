@@ -156,6 +156,15 @@ def inspect_character_snapshots(character_id: str, world_id: str = None) -> List
 
 def restore_character_snapshot(character_id: str, snapshot_id: str, branch: bool = False, branch_name: str = None, world_id: str = None) -> Dict:
     payload = load_snapshot(get_character_snapshots_dir(character_id, world_id), snapshot_id)
+    current_path = contained_path(get_characters_dir(world_id), f"{character_id}.json")
+    memory_corrections = {}
+    if current_path.exists():
+        try:
+            current = json.loads(current_path.read_text(encoding="utf-8"))
+            require_supported_save(current)
+            memory_corrections = current.get("npc_memory_corrections", {})
+        except json.JSONDecodeError:
+            pass
     restored = prepare_restore_payload(
         character_id,
         payload,
@@ -164,6 +173,7 @@ def restore_character_snapshot(character_id: str, snapshot_id: str, branch: bool
         branch=branch,
         branch_name=branch_name,
         snapshot_id=snapshot_id,
+        memory_corrections=memory_corrections,
     )
     target_id = restored["target_id"]
     character = restored["character"]

@@ -1,5 +1,12 @@
 # TouHou Changelog
 
+## v0.16.1
+
+- Preserve historical scene, speaker, participant, visibility and NPC identities through prompt formatting and budgeting.
+- Stop distributing private interactions to bystanders; quarantine unverified model memory proposals instead of promoting prose to facts.
+- Bind profiles, current records and recalled memories to canonical NPC IDs; reject mismatched dialogue identities.
+- Add additive V12 attribution metadata and correction records that survive archive compression and snapshot restore. Keep legacy originals and custom fields.
+
 ## v0.16.0
 
 - Commit player actions, AI replies, state and turn receipts in one recoverable transaction; legacy clients can retain the existing append API.

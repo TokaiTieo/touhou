@@ -9,8 +9,10 @@ from threading import Event
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, field_validator
-from backend.services.npc_identity_service import canonical_npc_id, canonical_npc_name, load_npc_document
+from pydantic import BaseModel, field_validator, model_validator
+from backend.services.npc_identity_service import canonical_npc_id, canonical_npc_name, load_npc_document, resolve_npc
+from backend.services.history_context_service import select_history
+from backend.services.npc_attribution_service import format_current_npc_snapshot, interaction_targets, npc_label, validate_scene_npcs
 from typing import List, Dict, Optional, Any
 
 from backend.world_manager import (
@@ -92,6 +94,7 @@ class EnvironmentInteractRequest(BaseModel):
     history: List[Dict] = []
     scene_npcs: List[Dict] = []
     turn_id: Optional[str] = None
+    _scene_identities = field_validator("scene_npcs")(validate_scene_npcs)
 
 
 class NPCDialogueRequest(BaseModel):
@@ -108,6 +111,7 @@ class NPCDialogueRequest(BaseModel):
     history: List[Dict] = []
     scene_npcs: List[Dict] = []
     turn_id: Optional[str] = None
+    _scene_identities = field_validator("scene_npcs")(validate_scene_npcs)
 
     @field_validator("npc_id", mode="before")
     @classmethod
@@ -118,6 +122,13 @@ class NPCDialogueRequest(BaseModel):
     @classmethod
     def resolve_name(cls, value):
         return canonical_npc_name(value) if isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def consistent_identity(self):
+        by_id, by_name = resolve_npc(self.npc_id), resolve_npc(self.npc_name)
+        if (by_id and by_id["name"] != self.npc_name) or (by_name and by_name["id"] != self.npc_id):
+            raise ValueError("NPC 名称与 ID 不一致，请刷新人物列表后重试")
+        return self
 
 
 class TurnControlRequest(BaseModel):
@@ -558,14 +569,13 @@ async def environment_interact(request: EnvironmentInteractRequest):
             npc.get("name"): npc.get("profile", {})
             for npc in scene_npcs if npc.get("name")
         }
-        for npc_name in npc_profiles:
-            if npc_name in user_input_text:
-                observe_relationship_boundaries(character, npc_name, user_input_text)
+        for npc_name in interaction_targets(user_input_text, scene_npcs=scene_npcs):
+            observe_relationship_boundaries(character, npc_name, user_input_text)
         relationship_policy_context = format_relationship_policy_context(
             character, npc_profiles.keys(), npc_profiles
         )
         history = character.get("conversation_history", [])
-        history_text = format_history_for_ai(history + request.history)
+        history_text = format_history_for_ai(select_history(history, request.history))
         story_summary_text = format_story_summary_for_ai(character)
         story_director_text = format_story_director_for_ai(character)
         world_info = get_world_info_context(
@@ -760,7 +770,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
     if world_info["text"]:
         worldview = f"{worldview}\n\n## 动态世界书\n{world_info['text']}"
     history = character.get("conversation_history", [])
-    history_text = format_history_for_ai(history + request.history)
+    history_text = format_history_for_ai(select_history(history, request.history))
     story_summary_text = format_story_summary_for_ai(character)
     story_director_text = format_story_director_for_ai(character)
     
@@ -782,7 +792,8 @@ async def npc_dialogue(request: NPCDialogueRequest):
         [request.npc_name],
         {request.npc_name: npc_profile},
     )
-    npc_info = f"- 名称：{request.npc_name}\n"
+    npc_info = f"- 人物：{npc_label(request.npc_name, request.npc_id)}\n"
+    npc_info += format_current_npc_snapshot(character, request.npc_name, request.npc_id) + "\n"
     npc_info += f"- 身份：{npc_profile.get('identity', '普通人')}\n"
     npc_info += f"- 性格：{npc_profile.get('personality', '未知')}\n"
     npc_info += f"- 背景：{npc_profile.get('background', '未知')}\n"

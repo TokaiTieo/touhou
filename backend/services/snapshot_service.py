@@ -130,8 +130,11 @@ def prepare_restore_payload(
     branch: bool = False,
     branch_name: Optional[str] = None,
     snapshot_id: str = "",
+    memory_corrections: Optional[Dict] = None,
 ) -> Dict:
     character = ensure_fields(copy.deepcopy(payload.get("character", {})))
+    from backend.services.npc_memory_service import apply_memory_corrections
+    apply_memory_corrections(character, memory_corrections)
     tasks = copy.deepcopy(payload.get("tasks") or default_tasks())
     target_id = character_id
     character["character_id"] = character_id

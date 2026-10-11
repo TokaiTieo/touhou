@@ -1,6 +1,7 @@
 """Producer-mode API isolated from ordinary player turn routes."""
 
 import io
+import copy
 import json
 import re
 import zipfile
@@ -329,7 +330,7 @@ async def upsert_memory(request: dict):
         if not character.get("gm_mode", False):
             raise HTTPException(403, "需要高权限模式")
         character_id = request.get("character_id")
-        npc_name = str(request.get("npc_name") or "").strip()
+        npc_name = memory_runtime.canonical_npc_name(str(request.get("npc_name") or "").strip())
         summary = str(request.get("summary") or "").strip()
         memory_id = str(request.get("memory_id") or "").strip()
         tags = request.get("tags", [])
@@ -340,16 +341,18 @@ async def upsert_memory(request: dict):
         bucket = character.setdefault("npc_memories", {}).setdefault(npc_name, [])
         item = next((entry for entry in bucket if str(entry.get("id")) == memory_id), None) if memory_id else None
         if item:
-            item.update({
-                "summary": summary[:300], "tags": tags,
-                "importance": memory_runtime.estimate_memory_importance(summary, tags, "producer_console", request.get("importance")),
-                "emotion": memory_runtime.infer_memory_emotion(summary, tags), "updated_at": datetime.now().isoformat(),
-            })
-        else:
-            memory_runtime.record_npc_memories(character, [{
-                "npc_name": npc_name, "summary": summary, "tags": tags,
-                "importance": request.get("importance"), "source": "producer_console",
-            }], "producer_console")
+            memory_runtime.delete_npc_memory(character, npc_name, memory_id)
+        memory_runtime.record_npc_memories(character, [{
+            "npc_name": npc_name, "summary": summary, "tags": tags,
+            "importance": request.get("importance"), "source": "producer_console",
+            "attribution_status": "confirmed",
+            "fact_key": item.get("fact_key") if item else None,
+        }], "producer_console")
+        if item:
+            replacement = character["npc_memories"][npc_name][-1]
+            for key, value in item.items():
+                if key not in replacement and key != "archive_identity":
+                    replacement[key] = copy.deepcopy(value)
         return {"status": "ok", "npc_name": npc_name, "memories": character["npc_memories"][npc_name], "summary": character.get("npc_memory_summaries", {}).get(npc_name, "")}
     payload = {key: value for key, value in request.items() if key != "operation_id"}
     return await execute_character_command(request.get("character_id"), request.get("operation_id"),
@@ -362,12 +365,11 @@ async def delete_memory(request: dict):
         if not character.get("gm_mode", False):
             raise HTTPException(403, "需要高权限模式")
         character_id = request.get("character_id")
-        npc_name, memory_id = str(request.get("npc_name") or "").strip(), str(request.get("memory_id") or "").strip()
+        npc_name, memory_id = memory_runtime.canonical_npc_name(str(request.get("npc_name") or "").strip()), str(request.get("memory_id") or "").strip()
         if not npc_name or not memory_id:
             raise HTTPException(status_code=400, detail="缺少 NPC 名称或记忆 ID")
-        bucket = character.setdefault("npc_memories", {}).setdefault(npc_name, [])
-        character["npc_memories"][npc_name] = [item for item in bucket if str(item.get("id")) != memory_id]
-        return {"status": "ok", "deleted": len(bucket) - len(character["npc_memories"][npc_name]), "memories": character["npc_memories"][npc_name]}
+        deleted = memory_runtime.delete_npc_memory(character, npc_name, memory_id)
+        return {"status": "ok", "deleted": deleted, "memories": character.get("npc_memories", {}).get(npc_name, [])}
     payload = {key: value for key, value in request.items() if key != "operation_id"}
     return await execute_character_command(request.get("character_id"), request.get("operation_id"),
         {"command": "delete_memory", **payload}, change)

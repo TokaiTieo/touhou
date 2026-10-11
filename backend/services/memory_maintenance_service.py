@@ -41,7 +41,7 @@ def maintain_memories(character: Dict, *, force: bool = False) -> Dict:
             if not isinstance(item, dict):
                 continue
             key = (_fingerprint(item.get("summary")), item.get("knowledge_type"), item.get("source_npc"),
-                   item.get("truth_status"), item.get("fact_key"), item.get("confidence"))
+                   item.get("truth_status"), item.get("fact_key"), item.get("confidence"), item.get("attribution_status"))
             if key and key in seen:
                 previous = seen[key]
                 archive_memories(character, npc_name, [item])

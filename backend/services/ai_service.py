@@ -68,17 +68,26 @@ def compress_prompt(prompt: str, max_chars: int = None):
         return text, {"compressed": False, "original_chars": len(text), "prompt_chars": len(text)}
     head_size = int(limit * 0.32)
     tail_size = int(limit * 0.56)
+    # Do not detach a structured record's body from its identity at a cut.
+    head_end = text.rfind("\n", 0, head_size) + 1
+    tail_break = text.find("\n", len(text) - tail_size)
+    tail_start = tail_break + 1 if tail_break >= 0 else len(text)
     middle_budget = max(200, limit - head_size - tail_size - 120)
-    middle = text[head_size: len(text) - tail_size]
+    middle = text[head_end:tail_start]
     anchors = [
         line.strip() for line in middle.splitlines()
         if line.strip().startswith(("##", "- ID:", "重要经历：", "尚未解决：", "关系要点："))
     ]
     anchor_text = "\n".join(anchors)
     if len(anchor_text) > middle_budget:
-        anchor_text = anchor_text[:middle_budget]
+        kept, used = [], 0
+        for line in anchors:
+            if used + len(line) + 1 <= middle_budget:
+                kept.append(line)
+                used += len(line) + 1
+        anchor_text = "\n".join(kept)
     marker = "\n\n[中段上下文已由本地压缩，保留章节标题和关键索引]\n"
-    compacted = text[:head_size] + marker + anchor_text + "\n\n" + text[-tail_size:]
+    compacted = text[:head_end] + marker + anchor_text + "\n\n" + text[tail_start:]
     compacted = compacted[:limit]
     return compacted, {
         "compressed": True,

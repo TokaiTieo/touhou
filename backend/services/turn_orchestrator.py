@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -10,12 +11,14 @@ from backend.services import npc_memory_service as memory_runtime
 from backend.services.consequence_service import record_turn_consequence
 from backend.services.dynamic_event_service import select_dynamic_event, select_npc_initiative
 from backend.services.incident_service import apply_resolution_path, sync_incident_from_tasks
-from backend.services.relationship_service import update_relationships
+from backend.services.relationship_service import ATTITUDE_SCORES, update_relationships
 from backend.services.story_summary_service import rebuild_story_summary
 from backend.services.campaign_service import finalize_incident_history
 from backend.services.turn_models import TurnContext, TurnInput, TurnOutcome
 from backend.services.turn_history_service import append_turn_history
 from backend.services.turn_resolution_service import apply_turn_resolution
+from backend.services.npc_attribution_service import interaction_targets, prepare_model_memories
+from backend.services.npc_identity_service import canonical_npc_name
 from backend.services.turn_service import apply_task_updates
 from backend.world_manager import (
     get_current_world_path,
@@ -79,6 +82,7 @@ class TurnOrchestrator:
         turn = context.turn
         character = context.character
         tasks = context.tasks
+        result["memory_updates"] = prepare_model_memories(result.get("memory_updates"), turn.action_text, turn.npc_name, turn.scene_npcs)
         apply_turn_resolution(
             character,
             result,
@@ -155,6 +159,17 @@ class TurnOrchestrator:
         if not isinstance(relationship_update, str):
             return ""
         relationship_update = relationship_update.strip()
+        targets = set(interaction_targets(turn.action_text, turn.npc_name, turn.scene_npcs))
+        parts = []
+        for part in re.split(r"[,，、]\s*", relationship_update):
+            pair = re.split(r"[:：]", part, maxsplit=1)
+            if len(pair) == 2 and canonical_npc_name(pair[0].strip()) in targets:
+                attitude = re.split(r"[(（]", pair[1], maxsplit=1)[0]
+                label = next((word for words, _, _ in ATTITUDE_SCORES for word in words if word in attitude), None)
+                if label:
+                    parts.append(f"{canonical_npc_name(pair[0].strip())}:{label}(本回合与玩家互动)")
+        relationship_update = ",".join(parts)
+        result["relationship_update"] = relationship_update or None
         if ":" not in relationship_update or len(relationship_update) <= 2:
             return ""
         current_hour = character.get("time", {}).get("current_hour", 0)
@@ -165,6 +180,9 @@ class TurnOrchestrator:
             interaction_text=turn.action_text,
             turn_id=turn.turn_id,
         )
+        accepted = result["relationship_progress_delta"]
+        relationship_update = ",".join(f"{name}:{entry['attitude']}" for name, entry in accepted.items())
+        result["relationship_update"] = relationship_update or None
         return relationship_update
 
     @staticmethod

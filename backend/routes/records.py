@@ -37,6 +37,8 @@ from backend.services.save_health_service import (
     repair_character_payload_types,
 )
 from backend.services.story_summary_service import rebuild_story_summary
+from backend.services.history_context_service import format_history_for_ai, format_history_record
+from backend.services.npc_attribution_service import ATTRIBUTION_RULES
 from backend.utils.ai_json import safe_json_loads
 from backend.version import DISPLAY_VERSION
 from backend.services.storage_paths import safe_identifier, require_identifier, contained_path
@@ -177,10 +179,7 @@ async def rewrite_message(request: RewriteMessageRequest):
             raise HTTPException(status_code=400, detail="仅可改写叙事或 NPC 回复")
 
         context_start = max(0, target_index - 5)
-        context_lines = [
-            f"{item.get('speaker', '未知')}: {item.get('content', '')}"
-            for item in history[context_start:target_index]
-        ]
+        context_text = format_history_for_ai(history[context_start:target_index])
         instruction = (request.instruction or "改善文风、节奏和角色语气").strip()[:500]
         prompt = f"""你是《东方异变录》的文字润色器。请为下方原回复生成一个不同措辞的候选版本。
 
@@ -192,10 +191,11 @@ async def rewrite_message(request: RewriteMessageRequest):
 
     改写偏好：{instruction}
     最近上下文：
-    {chr(10).join(context_lines) or "无"}
+    {context_text}
 
     原回复：
-    {target.get("content", "")}
+    {format_history_record(target)}
+    {ATTRIBUTION_RULES}
     """
         rewritten = (await call_ai_async(prompt, temperature=0.85)).strip()
         parsed = safe_json_loads(rewritten, rewritten)

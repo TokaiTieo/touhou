@@ -1,6 +1,7 @@
 """Allocate prompt context by semantic section with local diagnostics."""
 
 import math
+import json
 from typing import Dict, Iterable, Tuple
 
 
@@ -38,6 +39,35 @@ def _truncate(text: str, limit: int, *, tail: bool = False) -> str:
     return text[:keep] + marker
 
 
+def _truncate_records(text: str, limit: int, *, tail: bool = False) -> str:
+    if len(text) <= limit:
+        return text
+    lines, selected, used = text.splitlines(), [], 0
+    for line in reversed(lines) if tail else lines:
+        cost = len(line) + bool(selected)
+        if used + cost > limit:
+            try:
+                record = json.loads(line)
+            except (ValueError, TypeError):
+                continue
+            if not isinstance(record, dict) or "content" not in record:
+                continue
+            content = str(record["content"])
+            record["content"] = "…（正文按预算截断，归属保留）"
+            remaining = limit - used - bool(selected) - len(json.dumps(record, ensure_ascii=False))
+            if remaining < 1:
+                continue
+            record["content"] = content[:remaining] + record["content"]
+            line = json.dumps(record, ensure_ascii=False)
+            while len(line) + used + bool(selected) > limit:
+                record["content"] = record["content"][:-1]
+                line = json.dumps(record, ensure_ascii=False)
+            cost = len(line) + bool(selected)
+        selected.append(line)
+        used += cost
+    return "\n".join(reversed(selected) if tail else selected)
+
+
 def budget_context_sections(
     sections: Dict[str, object],
     *,
@@ -64,7 +94,8 @@ def budget_context_sections(
         original = normalized[key]
         own_limit = max(0, int(section_limits.get(key, len(original))))
         allowed = min(own_limit, remaining)
-        value = _truncate(original, allowed, tail=key in TAIL_SECTIONS) if allowed else ""
+        truncate = _truncate_records if key in {"history_text", "npc_memories"} else _truncate
+        value = truncate(original, allowed, tail=key in TAIL_SECTIONS) if allowed else ""
         allocated[key] = value
         used = len(value)
         remaining -= used

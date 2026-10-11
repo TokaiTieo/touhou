@@ -392,7 +392,7 @@ def perform_inventory_action(
             result["relationship"] = apply_relationship_delta(
                 character, npc_name.strip(), amount, f"收到玩家赠送的{name}：{reason}"
             )
-            record_npc_memories(character, [{"npc_name": npc_name.strip(), "summary": f"收到玩家赠送的{name}，{reason}", "tags": ["赠礼", "关系"]}], "gift")
+            record_npc_memories(character, [{"npc_name": npc_name.strip(), "summary": f"收到玩家赠送的{name}，{reason}", "tags": ["赠礼", "关系"], "attribution_status": "confirmed"}], "gift")
             result["message"] = f"已将「{name}」赠给{npc_name.strip()}（{reason}）"
         else:
             result["message"] = f"已丢弃「{name}」"
