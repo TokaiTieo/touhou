@@ -4,11 +4,13 @@ import re
 import copy
 import hashlib
 import json
+import uuid
 from datetime import datetime
 from typing import Dict, List
 
 from backend.services.memory_retrieval import rank_memories
 from backend.services.npc_identity_service import canonical_npc_name
+from backend.services.npc_attribution_service import interaction_targets, npc_identity, npc_label
 
 
 def _number(value, default=0):
@@ -46,10 +48,23 @@ def _default_confidence(knowledge_type: str) -> float:
 def upgrade_npc_memory_metadata(character: Dict) -> bool:
     """Add provenance metadata to old memories without replacing their content."""
     changed = False
-    memories = character.get("npc_memories", {})
-    if not isinstance(memories, dict):
-        return False
-    for items in memories.values():
+    buckets = []
+    for field in ("npc_memories", "npc_memory_archive"):
+        mapping = character.get(field) or {}
+        if not isinstance(mapping, dict):
+            continue
+        if field == "npc_memory_archive":
+            for items in mapping.values():
+                for item in items if isinstance(items, list) else []:
+                    if isinstance(item, dict) and "archive_identity" not in item:
+                        item["archive_identity"] = memory_identity(item)
+                        changed = True
+        buckets.extend(mapping.items())
+    layer_mapping = character.get("npc_memory_layers") or {}
+    for name, layers in (layer_mapping if isinstance(layer_mapping, dict) else {}).items():
+        if isinstance(layers, dict):
+            buckets.extend((name, items) for items in layers.values())
+    for name, items in buckets:
         if not isinstance(items, list):
             continue
         for item in items:
@@ -65,6 +80,9 @@ def upgrade_npc_memory_metadata(character: Dict) -> bool:
                 "truth_status": "accepted",
                 "fact_key": None,
                 "superseded_by": None,
+                "owner_npc_id": npc_identity(name)["npc_id"],
+                "owner_npc_name": canonical_npc_name(name),
+                "attribution_status": "legacy_unverified",
             }
             for key, value in defaults.items():
                 if key not in item:
@@ -78,10 +96,67 @@ def _memory_line(item: Dict) -> str:
     status = TRUTH_LABELS.get(item.get("truth_status"), "有效")
     confidence = round(max(0, min(1, float(item.get("confidence", 0.85) or 0.85))) * 100)
     source_npc = f"·来自{item.get('source_npc')}" if item.get("source_npc") else ""
-    return f"- [{kind}{source_npc}·可信{confidence}%·{status}] {item.get('summary', '')}"
+    attribution = {"confirmed": "来源明确，主语以原文为准", "pending": "待核实，不作事实", "legacy_unverified": "旧记录归属未核实"}.get(item.get("attribution_status"), "归属未核实")
+    summary = json.dumps(str(item.get('summary', '')), ensure_ascii=False)
+    confidence_label = "旧标注置信度" if item.get("attribution_status") == "legacy_unverified" else "可信"
+    return f"- [{kind}{source_npc}·{confidence_label}{confidence}%·{status}·{attribution}] {summary}"
+
+
+def _recalled(character, name, item):
+    if not isinstance(item, dict) or item.get("attribution_status") == "pending" or item.get("truth_status") == "superseded":
+        return False
+    return not _is_corrected(character, name, item)
+
+
+def _is_corrected(character, name, item):
+    for correction in character.get("npc_memory_corrections", {}).get(name, []):
+        if str(item.get("id")) == correction.get("memory_id"):
+            return True
+        if item.get("summary") in correction.get("summaries", []) and not (
+            item.get("attribution_status") == "confirmed" and str(item.get("source", "")).startswith("producer")
+        ):
+            return True
+    return False
+
+
+def delete_npc_memory(character, npc_name, memory_id):
+    """Explicit corrections persist across archive compression and old snapshots."""
+    name = canonical_npc_name(npc_name)
+    originals = [copy.deepcopy(item) for field in ("npc_memories", "npc_memory_archive")
+                 for item in character.get(field, {}).get(name, []) if str(item.get("id")) == str(memory_id)]
+    if not originals:
+        return 0
+    character.setdefault("npc_memory_corrections", {}).setdefault(name, []).append({
+        "memory_id": str(memory_id), "summaries": list(dict.fromkeys(item.get("summary", "") for item in originals)),
+        "originals": originals, "corrected_at": datetime.now().isoformat(),
+    })
+    apply_memory_corrections(character)
+    return len(originals)
+
+
+def apply_memory_corrections(character, inherited=None):
+    corrections = character.setdefault("npc_memory_corrections", {})
+    for name, records in (inherited or {}).items():
+        bucket = corrections.setdefault(canonical_npc_name(name), [])
+        bucket.extend(copy.deepcopy(item) for item in records if item not in bucket)
+    for name in corrections:
+        for field in ("npc_memories", "npc_memory_archive"):
+            bucket = character.get(field, {}).get(name)
+            if bucket is not None:
+                # Pending proposals are retained for review, not implicitly deleted.
+                character[field][name] = [item for item in bucket if not isinstance(item, dict) or not _is_corrected(character, name, item)]
+        for field in ("npc_memory_layers", "semantic_memory_index", "memory_index_meta"):
+            character.get(field, {}).pop(name, None)
+        # Keep unstructured legacy summaries as originals, but do not recall them
+        # after a correction: there is no safe way to subtract their source facts.
+        if character.get("npc_memory_summaries", {}).get(name):
+            character.setdefault("npc_memory_legacy_summaries", {}).setdefault(name, character["npc_memory_summaries"][name])
+            character["npc_memory_summaries"][name] = ""
 
 
 def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
+    if new_entry.get("attribution_status") == "pending":
+        return
     fact_key = new_entry.get("fact_key")
     if not fact_key:
         return
@@ -89,7 +164,7 @@ def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
     for previous in bucket:
         if not isinstance(previous, dict) or previous.get("fact_key") != fact_key:
             continue
-        if previous.get("truth_status", "accepted") == "superseded":
+        if previous.get("truth_status", "accepted") == "superseded" or previous.get("attribution_status") == "pending":
             continue
         old_confidence = float(previous.get("confidence", 0.75) or 0.75)
         if abs(new_confidence - old_confidence) <= 0.15:
@@ -110,11 +185,12 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
     summaries = character.setdefault("npc_memory_summaries", {})
     legacy = character.get("npc_memory_legacy_summaries", {})
     def candidates(name):
-        items = archives.get(name, []) + memories.get(name, [])
-        if legacy.get(name):
-            items = items + [{"id": f"legacy-summary:{name}", "summary": legacy[name],
+        items = [item for item in archives.get(name, []) + memories.get(name, []) if _recalled(character, name, item)]
+        old_summary = legacy.get(name) or (summaries.get(name) if not character.get("npc_memory_layers", {}).get(name) else "")
+        if old_summary and not character.get("npc_memory_corrections", {}).get(name):
+            items = items + [{"id": f"legacy-summary:{name}", "summary": old_summary,
                               "importance": 7, "source": "legacy_summary", "knowledge_type": "reported",
-                              "confidence": 0.6, "truth_status": "accepted"}]
+                              "confidence": 0.6, "truth_status": "disputed", "attribution_status": "legacy_unverified"}]
         return items
     index_root = character.setdefault("semantic_memory_index", {})
     meta_root = character.setdefault("memory_index_meta", {})
@@ -139,11 +215,10 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
             item["npc_name"] = npc_name
         character["_last_memory_retrieval"] = retrieval_diagnostics
         touch(selected)
-        lines = [f"长期印象：{summaries[npc_name]}"] if summaries.get(npc_name) else []
-        lines.extend(_memory_line(item) for item in selected)
-        return "\n".join(lines) if lines else f"{npc_name}: 暂无关键记忆"
+        lines = [f"记忆持有人 {npc_label(npc_name)}（不等于事实主语）：{_memory_line(item)}" for item in selected]
+        return "\n".join(lines) if lines else f"{npc_label(npc_name)}: 暂无已确认关键记忆"
     ranked = []
-    for name in sorted(set([*archives, *memories, *legacy])):
+    for name in sorted(set([*archives, *memories, *legacy, *summaries])):
         items = candidates(name)
         diagnostics = []
         selected = rank_memories(
@@ -164,7 +239,7 @@ def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, q
     chosen = ranked[:max(0, limit)]
     touch([entry[3] for entry in chosen])
     character["_last_memory_retrieval"] = [entry[4] for entry in chosen]
-    lines = [f"{name}: {_memory_line(item).removeprefix('- ')}" for _, name, _, item, _ in chosen]
+    lines = [f"记忆持有人 {npc_label(name)}（不等于事实主语）：{_memory_line(item)}" for _, name, _, item, _ in chosen]
     return "\n".join(lines) if lines else "暂无关键NPC记忆"
 
 
@@ -196,6 +271,8 @@ def infer_memory_emotion(summary: str, tags=None) -> str:
 
 
 def memory_identity(item: Dict) -> str:
+    if item.get("archive_identity"):
+        return item["archive_identity"]
     stable = {key: value for key, value in item.items() if key not in {"used_count", "access_count", "retrieval_count", "last_accessed_at", "last_recalled_at", "last_used_at"}}
     return hashlib.sha256(json.dumps(stable, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
 
@@ -241,7 +318,7 @@ def compress_npc_memory_bucket(character: Dict, npc_name: str, keep_recent: int 
     all_items = character["npc_memory_archive"][npc_name] + recent
     layers = {"facts": [], "relationships": [], "events": []}
     for item in all_items:
-        if not isinstance(item, dict) or item.get("truth_status") == "superseded":
+        if not _recalled(character, npc_name, item):
             continue
         layer = "facts" if item.get("fact_key") else (
             "relationships" if any(word in str(item.get("tags", [])) + str(item.get("summary", ""))
@@ -288,7 +365,7 @@ def record_npc_memories(
         source_name = str(item.get("source", source))
         knowledge_type = item.get("knowledge_type") or _default_knowledge_type(source_name, item.get("source_npc"))
         entry = {
-            "id": item.get("id") or f"mem_{int(datetime.now().timestamp() * 1000)}_{len(bucket)}",
+            "id": item.get("id") or f"mem_{uuid.uuid4().hex}",
             "summary": summary[:300], "tags": tags, "source": source_name,
             "importance": estimate_memory_importance(summary, tags, source_name, item.get("importance")),
             "emotion": item.get("emotion") or infer_memory_emotion(summary, tags),
@@ -301,6 +378,12 @@ def record_npc_memories(
             "truth_status": item.get("truth_status", "accepted"),
             "fact_key": item.get("fact_key"),
             "superseded_by": item.get("superseded_by"),
+            "owner_npc_id": npc_identity(name)["npc_id"],
+            "owner_npc_name": name,
+            "attribution_status": item.get("attribution_status", "confirmed" if source_name.startswith(("producer", "system")) else "legacy_unverified"),
+            "attribution_reason": item.get("attribution_reason", ""),
+            "proposed_npc_id": item.get("proposed_npc_id"),
+            "evidence_text": item.get("evidence_text"),
         }
         _resolve_fact_conflicts(character.get("npc_memory_archive", {}).get(name, []) + bucket, entry)
         bucket.append(entry)
@@ -321,39 +404,26 @@ def _relationship_names(value: str) -> List[str]:
 
 
 def build_auto_memory_updates(character: Dict, result: Dict, user_input_text: str, scene: str, source: str, npc_name: str = None, scene_npcs: List[Dict] = None, relationship_update: str = None, task_updates=None) -> List[Dict]:
-    updates, targets = [], []
-    if npc_name:
-        targets.append(npc_name)
-    for name in _relationship_names(relationship_update or result.get("relationship_update")):
-        if name not in targets:
-            targets.append(name)
-    if not targets:
-        targets.extend([npc.get("name") for npc in (scene_npcs or [])[:2] if npc.get("name")])
+    updates = []
+    targets = interaction_targets(user_input_text, npc_name, scene_npcs)
 
     def add(target, summary, tags, importance, fact_key=None):
         if target and summary:
-            updates.append({"npc_name": target, "summary": summary[:300], "tags": tags, "importance": importance, "source": source, "knowledge_type": "direct", "confidence": 0.9, "fact_key": fact_key})
+            updates.append({"npc_name": target, "summary": summary[:300], "tags": tags, "importance": importance, "source": source, "knowledge_type": "direct", "confidence": 0.9, "fact_key": fact_key, "attribution_status": "confirmed", "evidence_text": str(user_input_text)})
 
     if relationship_update:
-        for name in _relationship_names(relationship_update):
-            add(name, f"关系变化记录：{relationship_update}", ["关系"], 8, f"relationship:{name}")
+        for part in re.split(r"[,，、]\s*", relationship_update):
+            names = _relationship_names(part)
+            if names and canonical_npc_name(names[0]) in targets:
+                add(canonical_npc_name(names[0]), f"关系变化记录：{part}", ["关系"], 8, f"relationship:{canonical_npc_name(names[0])}")
     battle = result.get("spellcard_result")
     if isinstance(battle, dict) and any(battle.get(key) for key in ("opponent", "outcome", "summary", "spellcard_name")):
-        target = str(battle.get("opponent") or npc_name or (targets[0] if targets else ""))
-        add(target, f"符卡/战斗记忆：{battle.get('summary') or battle.get('outcome', '未裁定')}", ["符卡", "战斗"], 8)
-    for task in task_updates or result.get("task_updates") or []:
-        if isinstance(task, dict) and task.get("action") in ("update", "complete"):
-            label = "完成" if task.get("action") == "complete" else "推进"
-            for target in targets[:2]:
-                add(target, f"线索{label}：{task.get('info') or task.get('name') or task.get('task_id')}", ["线索"], 6)
-    event = result.get("dynamic_event") or result.get("open_event")
-    if isinstance(event, dict) and (event.get("title") or event.get("description")):
-        for target in targets[:2]:
-            add(target, f"共同经历事件：{event.get('title', '自由探索')} - {event.get('description', '')}", ["事件"], 6)
-    combined = f"{user_input_text}\n{result.get('description', '')}"
-    if any(word in combined for word in ("承诺", "约定", "保证", "背叛", "救", "赠送", "礼物", "秘密", "称呼", "亲密", "喜欢", "威胁", "羞辱")):
-        for target in targets[:2]:
-            add(target, f"值得记住的互动：玩家在{scene}中{str(user_input_text).strip()[:80]}；后续结果：{str(result.get('description', ''))[:120]}", ["互动"], 7)
+        target = canonical_npc_name(str(battle.get("opponent") or npc_name or ""))
+        if target in targets and battle.get("rule_source"):
+            add(target, f"规则结算：与玩家的符卡战，结果 {battle.get('outcome', '未裁定')}", ["符卡", "战斗"], 8)
+    if any(word in str(user_input_text) for word in ("承诺", "约定", "保证", "背叛", "救", "赠送", "礼物", "秘密", "称呼", "亲密", "喜欢", "威胁", "羞辱")):
+        for target in targets:
+            add(target, f"玩家向{target}表达的行动/话语（不证明结果已发生）：{str(user_input_text).strip()}", ["互动", "玩家原文"], 7)
     return updates
 
 

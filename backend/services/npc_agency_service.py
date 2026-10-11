@@ -1,8 +1,9 @@
 """Persistent NPC goals, social ties, and rumor knowledge."""
 
 from datetime import datetime
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable
 from backend.services.npc_identity_service import canonical_npc_name
+from backend.services.npc_attribution_service import interaction_targets, npc_label
 
 
 GOALS_BY_LOCATION = {
@@ -146,30 +147,26 @@ def record_player_interaction(
     turn_id: str = None,
 ) -> None:
     agency = ensure_npc_agency(character)
-    names: List[str] = []
-    if npc_name:
-        names.append(npc_name)
-    names.extend(
-        str(item.get("name") or "") for item in scene_npcs or [] if isinstance(item, dict)
-    )
-    names = list(dict.fromkeys(canonical_npc_name(name) for name in names if name))[:5]
+    names = interaction_targets(action_text, npc_name, scene_npcs)
     now = datetime.now().isoformat()
     incident = character.get("incident_state", {}) or {}
     for name in names:
         state = agency["npcs"].setdefault(name, {})
         if state.get("last_turn_id") != turn_id and any(word in action_text for word in ("帮助", "协助", "承诺", "约定")):
-            state["plan_progress"] = min(2, int(state.get("plan_progress", 0) or 0) + 1)
             state["last_shared_milestone"] = str(action_text)[:180]
         state.update({
             "current_goal": state.get("current_goal") or _goal(name, scene, incident),
             "last_player_interaction": str(action_text or "")[:180],
             "last_player_outcome": str(outcome or "")[:240],
+            "interaction_attribution": "explicit_target",
+            "last_player_outcome_status": "unverified_narrative",
             "last_turn_id": turn_id,
             "last_location": scene,
             "updated_at": now,
         })
-    for index, left in enumerate(names):
-        for right in names[index + 1:]:
+    witnesses = list(dict.fromkeys(names + [canonical_npc_name(item.get("name")) for item in scene_npcs or () if isinstance(item, dict) and item.get("name")]))[:5]
+    for index, left in enumerate(witnesses):
+        for right in witnesses[index + 1:]:
             pair = "|".join(sorted((left, right)))
             edge = agency["social_graph"].setdefault(pair, {
                 "npcs": sorted((left, right)), "shared_scenes": 0, "last_scene": scene,
@@ -187,14 +184,15 @@ def format_npc_agency_context(
     lines = ["人物只知道其亲历、记忆和下列已接收的消息；远方世界回响不能自动视为本人已经知晓。"]
     for name in requested[:limit]:
         state = agency["npcs"].get(name, {})
-        line = f"- {name}当前目标：{state.get('current_goal') or _goal(name, scene, character.get('incident_state', {}) or {})}"
+        line = f"- {npc_label(name)}当前目标：{state.get('current_goal') or _goal(name, scene, character.get('incident_state', {}) or {})}"
         if state.get("last_player_interaction"):
-            line += f"；上次与玩家：{state['last_player_interaction']}"
+            label = "玩家向此人表达（非结果证明）" if state.get("interaction_attribution") == "explicit_target" else "旧互动归属未核实"
+            line += f"；{label}：{state['last_player_interaction']}"
         if state.get("last_rumor"):
             line += f"；最近听闻（来自{state.get('last_rumor_source', '旧日见闻')}，可信度{state.get('last_rumor_confidence', 0.5)}）：{state['last_rumor']}"
         line += f"；计划进度：{state.get('plan_progress', 0)}/3"
         if state.get("last_shared_milestone"):
-            line += f"；共同经历：{state['last_shared_milestone']}"
+            line += f"；互动原文（不证明已共同完成）：{state['last_shared_milestone']}"
         lines.append(line)
     requested_set = set(requested)
     for edge in (agency.get("social_graph", {}) or {}).values():

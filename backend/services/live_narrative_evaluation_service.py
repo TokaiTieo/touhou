@@ -10,6 +10,8 @@ from backend.services.ai_service import call_ai_async, get_last_ai_error, get_la
 from backend.services.evaluation_context import EvaluationContext, evaluation_context
 from backend.services.play_quality_service import evaluate_play_quality, RUBRIC
 from backend.services.npc_identity_service import resolve_npc
+from backend.services.turn_models import TurnContext, TurnInput
+from backend.services.turn_history_service import append_turn_history
 
 
 LIVE_CASES = (
@@ -158,10 +160,13 @@ async def run_live_evaluation(character=None, tasks=None, *, turn_count=4, token
                 for ok, code in ((contract_ok, "contract"), (state_ok, "settlement")):
                     if not ok:
                         evaluation["issues"].append({"code": code, "message": "回合契约或确定性结算不一致"})
-                context.character.setdefault("conversation_history", []).extend([
-                    {"message_id": str(uuid.uuid4()), "speaker": owner["profile"]["name"], "content": case["action"]},
-                    {"message_id": str(uuid.uuid4()), "speaker": npc["name"] if case.get("npc") else "旁白", "content": text},
-                ])
+                history_context = TurnContext(turn=TurnInput(
+                    **common, kind="npc_dialogue" if case.get("npc") else "environment",
+                    action_text=case["action"], record_history=True,
+                    npc_name=npc["name"] if case.get("npc") else None,
+                    npc_id=npc["id"] if case.get("npc") else None,
+                ), character=context.character, tasks=context.tasks)
+                append_turn_history(history_context, {"description": text})
             except EvaluationBudgetReached:
                 stopped_reason = "budget_reached"
                 break

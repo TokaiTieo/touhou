@@ -184,6 +184,21 @@ def migrate_save_schema(character: Dict) -> bool:
     from backend.services.npc_identity_service import migrate_npc_identities
     changed = migrate_npc_identities(character) or changed
 
+    if version < 12:
+        from backend.services.npc_memory_service import upgrade_npc_memory_metadata
+        upgrade_npc_memory_metadata(character)
+        character.setdefault("npc_memory_corrections", {})
+        if character.get("story_summary"):
+            character.setdefault("attribution_legacy_story_summary", copy.deepcopy(character["story_summary"]))
+            if isinstance(character["story_summary"], dict):
+                character["story_summary"]["version"] = 1
+        character["save_version"] = 12
+        character.setdefault("migration_history", []).append({
+            "version": 12, "applied_at": datetime.now().isoformat(),
+            "summary": "人物归属、记忆来源标记及纠错回档保护；保留全部旧原文",
+        })
+        changed = True
+
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary

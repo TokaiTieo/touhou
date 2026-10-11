@@ -20,17 +20,17 @@ class ContextBudgetTests(unittest.TestCase):
             protected=("rule_context",),
         )
         self.assertLessEqual(sum(map(len, budgeted.values())), 25)
-        self.assertEqual(len(budgeted["history_text"]), 3)
-        self.assertEqual(len(budgeted["npc_memories"]), 2)
+        self.assertEqual(budgeted["history_text"], "")
+        self.assertEqual(budgeted["npc_memories"], "")
         self.assertLessEqual(diagnostics["used_chars"], 25)
 
-    def test_history_keeps_recent_tail_when_truncated(self):
+    def test_history_does_not_keep_an_unattributed_tail(self):
         budgeted, _ = budget_context_sections(
             {"history_text": "old---recent"},
             total_chars=6,
             limits={"history_text": 6},
         )
-        self.assertEqual(budgeted["history_text"], "recent")
+        self.assertEqual(budgeted["history_text"], "")
 
 
 if __name__ == "__main__":

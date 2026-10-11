@@ -143,11 +143,7 @@ export async function callAIAndRespond(userInput, userMsg = null) {
     const loadingIndicator = showLoadingIndicator();
     
     try {
-        const historyForAI = state.chatHistory.slice(-10).map(msg => ({
-            speaker: msg.speaker,
-            content: msg.content,
-            role: msg.role
-        }));
+        const historyForAI = []; // Committed history and attribution come from the server.
         
         let hasStreamedText = false;
         const assistantMsg = state.addChatMessage({
@@ -394,8 +390,10 @@ function buildTurnSummary(response, userInput) {
         parts.push(`线索板：${taskText}`);
     }
 
-    if (Array.isArray(response.memory_updates) && response.memory_updates.length > 0) {
-        const memoryText = response.memory_updates
+    const confirmedMemories = (Array.isArray(response.memory_updates) ? response.memory_updates : [])
+        .filter(item => item.attribution_status === 'confirmed');
+    if (confirmedMemories.length > 0) {
+        const memoryText = confirmedMemories
             .map(item => `${item.npc_name || item.name || 'NPC'}记住了这件事`)
             .join('，');
         parts.push(`NPC记忆：${memoryText}`);

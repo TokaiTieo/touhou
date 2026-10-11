@@ -38,6 +38,7 @@ class TaskUpdate(ContractModel):
 
 class MemoryUpdate(ContractModel):
     npc_name: str = Field(min_length=1, max_length=120)
+    npc_id: Optional[str] = Field(default=None, max_length=120)
     summary: str = Field(min_length=1, max_length=2000)
     tags: List[str] = Field(default_factory=list)
     importance: int = Field(default=5, ge=1, le=10)

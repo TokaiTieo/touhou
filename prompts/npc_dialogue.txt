@@ -19,7 +19,7 @@
 {history_text}
 
 ## 长期剧情摘要
-这是当前存档根据仍然存在的历史记录整理出的事实。若与最近对话冲突，以最近对话为准。
+这是历史摘录，并非独立事实核验。逐人绑定的当前记录优先于旧旁白，归属未知的旧代词不得绑定当前人物。
 {story_summary}
 
 ## 【NPC态度集合】：
@@ -113,7 +113,7 @@ inventory_updates: 确实获得、失去或使用物品时返回，格式为 act
 reputation_updates: 行为明确影响势力评价时返回 faction/delta/reason，普通交谈不改变声望（可选，默认[]）
 world_effects: 对话造成持续地点影响、传闻或世界标记时返回 kind/target/effect/magnitude/delay_hours；不得锁定地点或限制探索（可选，默认[]）
 task_updates: 任务更新数组（可选，默认[]）
-memory_updates: NPC记忆更新数组（可选，默认[]）
+memory_updates: 待核实的 NPC 记忆提议（可选，默认[]）；同时填写 npc_name 和 npc_id，区分持有人与事实主语，不得将旁白当作归属证据。
 open_event: 自由探索事件（可选，默认null）
 spellcard_result: 符卡/战斗裁定（可选，默认null）
 exit_dialogue: 是否强制退出对话（可选，默认false）

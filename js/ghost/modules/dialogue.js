@@ -200,11 +200,7 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
     const loadingIndicator = showLoadingIndicator();
     
     try {
-        const historyForAI = state.chatHistory.slice(-15).map(msg => ({
-            speaker: msg.speaker,
-            content: msg.content,
-            role: msg.role
-        }));
+        const historyForAI = []; // Committed history and attribution come from the server.
         
         // 构建用户输入文本（包含动作和语言）
         let userInputText = '';
@@ -478,8 +474,10 @@ function buildDialogueSummary(data) {
             return `${label}「${getTaskDisplayName(item.task_id, item)}」`;
         }).join('，')}`);
     }
-    if (Array.isArray(data.memory_updates) && data.memory_updates.length > 0) {
-        parts.push(`NPC记忆：${data.memory_updates.map(item => `${item.npc_name || item.name || 'NPC'}记住了这件事`).join('，')}`);
+    const confirmedMemories = (Array.isArray(data.memory_updates) ? data.memory_updates : [])
+        .filter(item => item.attribution_status === 'confirmed');
+    if (confirmedMemories.length > 0) {
+        parts.push(`NPC记忆：${confirmedMemories.map(item => `${item.npc_name || item.name || 'NPC'}记住了这件事`).join('，')}`);
     }
     if (data.open_event) {
         parts.push(`自由事件：${data.open_event.title || data.open_event.type || '自由探索事件'}`);

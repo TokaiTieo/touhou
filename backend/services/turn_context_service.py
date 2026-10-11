@@ -6,6 +6,9 @@ from typing import Dict, List, Optional
 from backend.location_manager import get_location_manager
 from backend.services.relationship_policy_service import mature_context_allowed
 from backend.services.world_info_service import build_world_info_context
+from backend.services.history_context_service import format_history_for_ai  # noqa: F401
+from backend.services.npc_attribution_service import format_current_npc_snapshot, npc_label
+from backend.services.npc_identity_service import resolve_npc
 
 
 def format_player_state_for_ai(character: Dict) -> str:
@@ -43,15 +46,6 @@ def get_world_info_context(
     )
 
 
-def format_history_for_ai(history: List[Dict], max_count: int = 20) -> str:
-    if not history:
-        return "（无历史记录）"
-    return "\n".join(
-        f"{item.get('speaker', '未知')}: {item.get('content', '')}"
-        for item in history[-max_count:]
-    )
-
-
 def format_locations_for_ai(locations_dir: Path) -> str:
     all_locations = get_location_manager(Path(locations_dir)).get_all_locations()
     regions = []
@@ -80,8 +74,11 @@ def format_npcs_for_ai(npcs: List[Dict], character: Optional[Dict] = None) -> st
 
     lines = []
     for npc in npcs:
+        npc = resolve_npc(npc.get("id") or npc.get("name")) or npc
         profile = npc.get("profile", {})
-        lines.append(f"- {npc.get('name')}：{profile.get('identity', '普通人')}")
+        lines.append(f"- {npc_label(npc.get('name'), npc.get('id'))}：{profile.get('identity', '普通人')}")
+        if character is not None:
+            lines.append(format_current_npc_snapshot(character, npc.get('name'), npc.get('id')))
         field_labels = (
             ("description", "外貌性格"),
             ("personality", "行为风格"),

@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Dict, Iterable, List
 from backend.services.conversation_archive_service import history_count
+from backend.services.history_context_service import format_history_record
 
 
 SUMMARY_INTERVAL = 12
@@ -14,7 +15,7 @@ IMPORTANT_WORDS = (
 
 def default_story_summary() -> Dict:
     return {
-        "version": 1,
+        "version": 2,
         "recent_arc": "",
         "player_choices": [],
         "key_events": [],
@@ -59,6 +60,8 @@ def _needs_refresh(character: Dict, force: bool) -> bool:
     if not history:
         return False
     summary = character.get("story_summary") or {}
+    if int(summary.get("version", 1) or 1) < 2:
+        return True
     last_id = summary.get("last_message_id")
     current_id = history[-1].get("message_id") if isinstance(history[-1], dict) else None
     if current_id and current_id == last_id:
@@ -80,12 +83,12 @@ def rebuild_story_summary(character: Dict, tasks_data: Dict = None, force: bool 
     completed_tasks = tasks_data.get("completed_tasks", []) or character.get("completed_tasks", []) or []
 
     narrative = [
-        f"{_speaker(item) or '记录'}：{_compact(_content(item), 150)}"
+        format_history_record(item, content_limit=150)
         for item in history[-12:] if _content(item).strip()
     ]
     choices = [
-        _content(item) for item in history[-40:]
-        if _speaker(item) in ("玩家", "user", "你")
+        format_history_record(item, content_limit=150) for item in history[-40:]
+        if item.get("role") == "user" or _speaker(item) in ("玩家", "user", "你")
     ]
     completed = [
         f"完成线索「{item.get('name') or item.get('task_name') or item.get('id', '未命名')}」"
@@ -118,9 +121,9 @@ def rebuild_story_summary(character: Dict, tasks_data: Dict = None, force: bool 
 
     last_entry = history[-1] if history else {}
     new_summary = {
-        "version": 1,
+        "version": 2,
         "recent_arc": "\n".join(narrative[-8:]),
-        "player_choices": _unique_recent(choices, 8),
+        "player_choices": choices[-8:],
         "key_events": _unique_recent(completed + events + battles + incident_events, 16),
         "unresolved_threads": _unique_recent(unresolved, 10),
         "relationship_highlights": _unique_recent(relationship_lines, 12),
@@ -136,7 +139,7 @@ def format_story_summary_for_ai(character: Dict) -> str:
     summary = character.get("story_summary") or {}
     if not summary.get("recent_arc") and not summary.get("key_events"):
         return "暂无长期剧情摘要"
-    sections = []
+    sections = ["摘要是历史摘录，不是独立事实核验；归属未知或旧代词不得绑定当前人物，亦不代表所有 NPC 知情。"]
     if summary.get("key_events"):
         sections.append("重要经历：\n- " + "\n- ".join(summary["key_events"][-12:]))
     if summary.get("player_choices"):
