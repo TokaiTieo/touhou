@@ -15,7 +15,7 @@
 
 .th-side-tabs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .th-side-tabs button {
@@ -453,3 +453,22 @@ body.light-theme .th-side { background: rgba(255, 253, 249, 0.98); }
 }
 
 .touhou-high-contrast .th-side { border-color: currentColor; box-shadow: none; }
+
+.th-life-panel { min-width: 0; padding: 0 12px 16px; text-align: left; }
+.th-life-panel h3 { margin: 18px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--kin-line); font-size: 0.86rem; color: var(--kin); }
+.th-life-list { list-style: none; margin: 0; padding: 0; }
+.th-life-list li { min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--kin-line); overflow-wrap: anywhere; }
+.th-life-list strong, .th-life-list small { display: block; }
+.th-life-list strong { font-size: 0.8rem; }
+.th-life-list small { margin: 4px 0; font-size: 0.72rem; opacity: 0.8; }
+.th-life-list p, .th-life-panel > p { margin: 6px 0; font-size: 0.78rem; line-height: 1.6; overflow-wrap: anywhere; }
+.th-life-panel button { padding: 5px 8px; border: 1px solid var(--kin-line); border-radius: 6px; cursor: pointer; font: inherit; font-size: 0.75rem; color: inherit; background: transparent; }
+.th-life-panel button:disabled { opacity: 0.45; cursor: default; }
+.th-life-panel button:focus-visible { outline: 2px solid var(--kin); outline-offset: 2px; }
+.th-life-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.th-life-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.th-life-form label { display: grid; min-width: 0; gap: 4px; font-size: 0.75rem; }
+.th-life-form input, .th-life-form select { box-sizing: border-box; min-width: 0; width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--kin-line); color: var(--ink); background: var(--panel); font: inherit; }
+.th-life-notice { padding: 10px; border-left: 2px solid var(--th-moss); border-radius: 6px; }
+.th-life-panel details { margin: 10px 0; }
+.th-life-panel summary { cursor: pointer; font-size: 0.8rem; }

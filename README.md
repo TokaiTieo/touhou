@@ -2,8 +2,8 @@
 
 《东方异变录》是一款以自然语言对话驱动的 Touhou Project 同人互动游戏。玩家可以在幻想乡自由探索，通过行动与台词影响 NPC、任务、异变、关系、战斗结果和长期世界状态。
 
-当前版本：`v0.16.1`
-存档结构：`V12`
+当前版本：`v0.17.0`
+存档结构：`V13`
 运行平台：Windows
 
 ## 主要特性
@@ -16,7 +16,8 @@
 - 关系发展、消息重写、回复评分、剧情分支和存档快照。
 - 离屏 NPC 活动与延迟后果，让玩家行动持续影响世界。
 - LangGraph Functional API 回合恢复，断线或解析中断时避免重复调用和重复结算。
-- V1-V11 旧存档可自动、增量、幂等升级到 V12，并保留未知及自定义字段；旧记忆保留原文并标记归属未核实，明确纠错在回档时继续生效。
+- V1-V12 旧存档可自动、增量、幂等升级到 V13，并保留未知及自定义字段；旧记忆保留原文并标记归属未核实，明确纠错在回档时继续生效。
+- 日常活动、人物实际计划、偏好赠礼、日历约定、事件生命周期和有来源的共同经历；高好感可触发性格化邀约与告白，不会自动确立恋爱关系。
 - 完整剧情分块归档，近期窗口与长期历史分离，支持分页查找、完整导出和独立分支。手动备份时应复制完整数据目录（包含 `_history`），跨机器迁移推荐使用“导出角色”。
 - 面向开发者的本地诊断、上下文预算、模型运行与恢复状态工具。
 
@@ -45,11 +46,10 @@ API Key 由当前 Windows 用户加密保存在本机，不会写入角色存档
 
 ### 从源码运行
 
-建议使用项目已验证的 Python 3.13 与 Node.js 22 环境。
+本机开发、测试与打包统一使用 Conda `APITEST`（Python 3.13）与 Node.js 22 环境。
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+conda activate APITEST
 python -m pip install --upgrade pip
 python -m pip install -r requirements-runtime.txt
 npm install
@@ -201,6 +201,7 @@ docs/             架构与迁移说明
 - V11 档案、备份与评测说明：[docs/long-play-v11.md](docs/long-play-v11.md)
 - 回合恢复、历史索引与发布状态：[docs/reliability-v016.md](docs/reliability-v016.md)
 - 人物归属、待核实记忆与 V12 纠错：[docs/npc-attribution-v12.md](docs/npc-attribution-v12.md)
+- V13 日常、人物主动关系与兼容边界：[docs/life-simulation-v13.md](docs/life-simulation-v13.md)
 
 ## 同人说明
 

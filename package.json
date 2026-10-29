@@ -2,7 +2,7 @@
   "name": "touhou-ai-adventure-ui",
   "private": true,
   "type": "module",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "description": "Vue 3 frontend shell for TouHou - 东方异变录",
   "scripts": {
     "build:icons": "node scripts/build-icons.mjs",

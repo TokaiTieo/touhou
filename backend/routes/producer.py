@@ -313,7 +313,7 @@ async def set_relationship(request: dict):
         if not npc_name or not attitude:
             raise HTTPException(status_code=400, detail="缺少 NPC 名称或关系")
         relation = f"{npc_name}:{attitude}({str(request.get('reason') or '高权限指令').strip()})"
-        update_relationships(character, relation, character.get("time", {}).get("current_hour", 0))
+        update_relationships(character, relation, character.get("time", {}).get("current_hour", 0), confirmation_override=True)
         memory_runtime.record_npc_memories(character, [{
             "npc_name": npc_name, "summary": f"制作人控制台改写关系：{relation}",
             "tags": ["关系", "制作人控制台"], "importance": 8,

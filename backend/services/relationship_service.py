@@ -57,7 +57,7 @@ def _stage_for_score(score: float) -> str:
         return "信赖"
     if score < 88:
         return "亲密"
-    return "恋人"
+    return "亲密"
 
 
 def ensure_relationship_progress(character: Dict) -> Dict:
@@ -93,6 +93,7 @@ def update_relationships(
     max_history: int = 20,
     interaction_text: str = "",
     turn_id: str = None,
+    confirmation_override: bool = False,
 ):
     if not new_content or new_content.strip() in ("", "null", "None"):
         return {}
@@ -116,9 +117,16 @@ def update_relationships(
         )
         score = policy["score"]
         stage = _stage_for_score(score)
+        from backend.services.relationship_dynamics_service import relationship_dimensions
+        dimensions = relationship_dimensions(character, name)
+        if confirmation_override and character.get("gm_mode") and requested_stage == "恋人":
+            dimensions["status"] = "lover"
+        dimensions["familiarity"] = max(0, min(100, score))
+        if dimensions["status"] in ("lover", "partner", "legacy_confirmed"):
+            stage = (old_progress.get("stage") or "恋人") if dimensions["status"] == "legacy_confirmed" else ("伴侣" if dimensions["status"] == "partner" else "恋人")
         reason = attitude.split("(", 1)[1].rstrip(")") if "(" in attitude else "本回合关系变化"
         effective_attitude = attitude
-        if policy["clamped"]:
+        if policy["clamped"] or (requested_stage == "恋人" and dimensions["status"] == "unconfirmed"):
             effective_attitude = f"{stage}({reason}；关系按既有经历逐步发展)"
         rel_map[name] = effective_attitude
         progress[name] = {
@@ -160,6 +168,11 @@ def apply_relationship_delta(
     old_score = float(current.get("score", 0) or 0)
     new_score = max(-100, min(100, old_score + float(delta or 0)))
     stage = _stage_for_score(new_score)
+    from backend.services.relationship_dynamics_service import relationship_dimensions
+    dimensions = relationship_dimensions(character, npc_name)
+    dimensions["familiarity"] = max(0, new_score)
+    if dimensions["status"] in ("lover", "partner", "legacy_confirmed"):
+        stage = current.get("stage") or "恋人"
     attitude = f"{stage}({reason})"
     character["relationships_map"][npc_name] = attitude
     progress[npc_name] = {

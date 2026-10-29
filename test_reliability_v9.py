@@ -37,7 +37,7 @@ class MemoryRetentionTests(unittest.TestCase):
         self.assertNotIn("rumor", activity("雾雨魔理沙", "魔法之森", 6))
         self.assertIn("rumor", activity("雾雨魔理沙", "魔法之森", 7))
         self.assertEqual(agency["npcs"]["雾雨魔理沙"]["last_rumor_source"], "博丽灵梦")
-        self.assertTrue(agency["npcs"]["雾雨魔理沙"]["goal_history"])
+        self.assertTrue(agency["npcs"]["雾雨魔理沙"]["current_goal"])
 
     def test_variants_preserve_choice_and_do_not_reapply_bonus(self):
         from backend.services.campaign_service import apply_incident_variant
@@ -66,7 +66,7 @@ class MemoryRetentionTests(unittest.TestCase):
         from backend.services.item_effects import gift_response
         character = {}
         values = [gift_response(character, "西行寺幽幽子", {"name": "点心"})[0] for _ in range(6)]
-        self.assertEqual(values[0], 6)
+        self.assertEqual(values[0], 7)  # Preferred food also meets a current need.
         self.assertGreater(values[0], values[1])
         self.assertEqual(values[-1], 0)
 

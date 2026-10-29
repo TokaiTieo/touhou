@@ -1,4 +1,4 @@
-import { loadCharacterJournal, loadNPCMemories, loadRelationships, updateOnboarding } from '../api.js';
+import { loadCharacterJournal, loadNPCMemories, loadRelationships, updateOnboarding, getLifeState } from '../api.js';
 import { state } from '../ghost/core/state.js';
 import { openAppModal } from './app-store.js';
 
@@ -18,10 +18,12 @@ export async function openNPCDetail(npcId) {
     const profile = npc.profile || {};
     let memories = [];
     let summary = '';
+    let life = {};
     try {
         const result = await loadNPCMemories(state.currentSession.characterId, npc.name);
         memories = (result.memories || []).map(memoryLabel);
         summary = result.summary || '';
+        life = await getLifeState(state.currentSession.characterId);
     } catch (error) {
         console.warn('读取人物记忆失败:', error);
     }
@@ -31,6 +33,10 @@ export async function openNPCDetail(npcId) {
         name: npc.name,
         subtitle: `${profile.identity || '幻想乡住民'} · ${profile.encounter_tier || '自由探索'}`,
         rows: [
+            { label: '当前活动', value: npc.schedule_status },
+            { label: '已知喜好', value: (life.known_preferences?.[npc.name]?.likes || []).join('、') || '尚待了解' },
+            { label: '已知不喜', value: (life.known_preferences?.[npc.name]?.dislikes || []).join('、') },
+            { label: '共同经历', value: (life.experiences || []).filter(item => item.participants?.some(person => person.npc_name === npc.name)).slice(-6).map(item => `${item.title}：${item.detail}`) },
             { label: '当前态度', value: state.currentSession.relationshipsMap?.[npc.name] || profile.initial_attitude || '尚未明确' },
             { label: '外貌', value: profile.description },
             { label: '性格', value: profile.personality },

@@ -30,7 +30,7 @@ def _chain_ready(event: Dict, seen: Dict) -> bool:
         return True
     chain = str(event.get("chain") or "")
     return any(
-        isinstance(value, dict) and value.get("chain") == chain and int(value.get("stage", 0) or 0) == stage - 1
+        isinstance(value, dict) and value.get("status") == "completed" and value.get("chain") == chain and int(value.get("stage", 0) or 0) == stage - 1
         for value in seen.values()
     )
 
@@ -46,7 +46,9 @@ def select_dynamic_event(
     data = load_event_definitions(events_path)
     flags = character.setdefault("event_flags", {})
     runtime = flags.setdefault("dynamic_events", {"seen": {}, "last_trigger_hour": -999})
+    from backend.services.life_simulation_service import ensure_life_state, register_event
     seen = runtime.setdefault("seen", {})
+    lifecycle = ensure_life_state(character)["events"]
     now_hour = _absolute_hour(character)
     names = {str(npc.get("name") or "") for npc in (scene_npcs or []) if isinstance(npc, dict)}
     if npc_name:
@@ -55,7 +57,7 @@ def select_dynamic_event(
     candidates = []
 
     for event in data.get("personal_events", []) or []:
-        if not isinstance(event, dict) or event.get("id") in seen or not _chain_ready(event, seen):
+        if not isinstance(event, dict) or event.get("id") in seen or not _chain_ready(event, lifecycle):
             continue
         event_npc = str(event.get("npc") or "")
         if event_npc not in names and event_npc not in text:
@@ -100,12 +102,14 @@ def select_dynamic_event(
         "description": selected.get("description", ""),
         "hooks": selected.get("hooks", []),
         "source": "dynamic_event_v1",
+        "chain": selected.get("chain"), "stage": selected.get("stage", 0),
         "created_at": datetime.now().isoformat(),
     }
     seen[event["id"]] = {
         "hour": now_hour, "chain": selected.get("chain"), "stage": selected.get("stage", 0),
     }
     runtime["last_trigger_hour"] = now_hour
+    register_event(character, event)
     return event
 
 

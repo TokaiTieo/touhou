@@ -4,6 +4,7 @@ import hashlib
 import re
 from typing import Any, Dict, List, Optional
 from backend.services.item_effects import equipment_effects
+from backend.services.action_resolution_service import classify_action, performed_text
 
 
 BATTLE_WORDS = ("战斗", "符卡", "弹幕", "决斗", "挑战", "退治", "攻击", "开战")
@@ -51,7 +52,7 @@ def _skill_tier(value: float) -> str:
 
 
 def is_battle_action(action_text: str, result: Optional[Dict] = None) -> bool:
-    return any(word in str(action_text or "") for word in BATTLE_WORDS) or isinstance((result or {}).get("spellcard_result"), dict)
+    return any(word in performed_text(action_text) for word in BATTLE_WORDS)
 
 
 def _find_opponent(action_text: str, scene_npcs: List[Dict], explicit_name: str = None) -> Dict:
@@ -325,7 +326,9 @@ def resolve_turn_rules(
             "tier": _skill_tier(level)
         }
 
-    text = str(action_text or "")
+    action = classify_action(action_text)
+    result["action_resolution"] = action
+    text = action["effective_text"] if not result.get("activity_resolution") else ""
     time_cost = _clamp(_number(result.get("time_cost"), 0), 0, 12)
     base_experience = 6 + min(6, time_cost * 2)
     if any(word in text for word in INVESTIGATION_WORDS):
@@ -340,7 +343,7 @@ def resolve_turn_rules(
         add("疲劳", -18)
         add("受伤", -8)
         add("灵力", 8, 999999)
-    else:
+    elif not result.get("activity_resolution"):
         add("疲劳", max(1, round(time_cost * 2.5 * (1 - survival_reduction))))
     if any(word in text for word in TRAVEL_WORDS):
         add("疲劳", max(0, round(4 * (1 - survival_reduction)) - effects.get("travel_reduction", 0)))
@@ -348,7 +351,7 @@ def resolve_turn_rules(
     ruling = preview or preview_turn_ruling(character, text, scene_npcs or [], npc_name)
     if ruling.get("is_battle"):
         existing = result.get("spellcard_result") if isinstance(result.get("spellcard_result"), dict) else {}
-        spell_name = _spellcard_name(text, result)
+        spell_name = _spellcard_name(action_text, result)
         mastery_before = character.get("spellcard_mastery", {}).get(spell_name, {}) or {}
         cost_reduction = 1 if _number(mastery_before.get("level"), 1) >= 5 else 0
         spirit_cost = max(0, {"none": 0, "low": 3, "medium": 7, "high": 12}.get(ruling.get("cost_level"), 6) - cost_reduction)
@@ -394,6 +397,8 @@ def resolve_turn_rules(
 
     result["time_cost"] = time_cost
     time_info = character.setdefault("time", {})
+    if result.get("_activity_fatigue_delta"):
+        delta["疲劳"] = round(delta.get("疲劳", 0) + result.pop("_activity_fatigue_delta"), 2)
     time_info["energy_state"] = _energy(_number(state.get("疲劳"), 0))
     result["new_energy_state"] = time_info["energy_state"]
     result["player_state_delta"] = delta

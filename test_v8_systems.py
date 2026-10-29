@@ -65,7 +65,7 @@ class V8ProgressionTests(unittest.TestCase):
         self.assertEqual(character["player_state"]["受伤"], 10)
         self.assertEqual(used["player_state_delta"]["受伤"], -20)
         gifted = perform_inventory_action(character, action="gift", item_name="红茶", npc_name="博丽灵梦")
-        self.assertEqual(gifted["relationship"]["delta"], 4)
+        self.assertEqual(gifted["relationship"]["delta"], 6)  # Tea is an explicit preference.
         self.assertFalse(reputation_profile(character)["博丽神社"]["gates_exploration"])
 
 

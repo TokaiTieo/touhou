@@ -199,10 +199,41 @@ def migrate_save_schema(character: Dict) -> bool:
         })
         changed = True
 
+    if version < 13:
+        from backend.services.life_simulation_service import ensure_life_state, register_event, upgrade_legacy_discoveries
+        from backend.services.relationship_dynamics_service import relationship_dimensions
+        from backend.services.npc_memory_service import upgrade_npc_memory_metadata
+        upgrade_npc_memory_metadata(character)
+        if character.get("story_summary"):
+            character.setdefault("attribution_legacy_story_summary", copy.deepcopy(character["story_summary"]))
+        ensure_life_state(character)
+        names = set(character.get("relationship_progress", {})) | set(character.get("relationships_map", {}))
+        for name in names:
+            progress = character.get("relationship_progress", {}).get(name, {})
+            dimensions = relationship_dimensions(character, name)
+            label = str(progress.get("stage", "")) + str(character.get("relationships_map", {}).get(name, ""))
+            if any(word in label for word in ("恋人", "伴侣", "热恋", "深爱")):
+                dimensions["status"] = "legacy_confirmed"
+        for event in character.get("open_events", []):
+            if isinstance(event, dict):
+                register_event(character, event)
+        upgrade_legacy_discoveries(character)
+        character.setdefault("relationship_proposals", [])
+        character["save_version"] = 13
+        character.setdefault("migration_history", []).append({
+            "version": 13, "applied_at": datetime.now().isoformat(),
+            "summary": "日常生活、人物实际计划、多维关系与主动邀约、事件状态和归属日记；保留旧关系原值",
+        })
+        changed = True
+
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary
     v6_defaults = {
+        "life_state": {"version": 1, "activities": [], "appointments": [], "events": {}, "diaries": {},
+                       "shared_experiences": [], "known_preferences": {}, "npc_resources": {}},
+        "relationship_dimensions": {},
+        "relationship_proposals": [],
         "conversation_archive": {"version": 1, "chunks": []},
         "npc_memory_archive": {},
         "npc_memory_layers": {},

@@ -96,8 +96,22 @@ class TurnOrchestrator:
         )
         self._apply_life_state(character, result, turn.kind)
         relationship_update = self._apply_relationship(character, result, turn)
+        from backend.services.relationship_dynamics_service import respond_from_text
+        responded = respond_from_text(character, turn.action_text, turn.npc_name)
+        if responded:
+            from backend.services.life_simulation_service import record_experience
+            record_experience(character, responded["id"] + ":response", "回应心意", [responded["npc_name"]], turn.scene, responded["status"], bond=False)
+            result["relationship_response"] = responded
         self._apply_memories_and_events(character, result, turn, relationship_update)
         self._apply_tasks(character, tasks, result, turn)
+        from backend.services.life_simulation_service import sync_completed_events
+        from backend.services.relationship_dynamics_service import propose_relationship
+        sync_completed_events(character, tasks)
+        names = list(dict.fromkeys(filter(None, [turn.npc_name] + [item.get("name") for item in turn.scene_npcs])))
+        proposal = propose_relationship(character, names)
+        if proposal:
+            result["relationship_proposal"] = proposal
+            result["description"] = f"{result.get('description', '')}\n\n{proposal['description']}"
         finalize_incident_history(character, result)
         if turn.kind == "environment":
             self._apply_location(context, result, turn)
@@ -256,6 +270,8 @@ class TurnOrchestrator:
                     turn.scene,
                     turn_id=turn.turn_id,
                 )
+                from backend.services.life_simulation_service import register_event
+                register_event(character, initiative)
         memory_runtime.record_spellcard_result(
             character,
             result.get("spellcard_result"),
@@ -367,6 +383,10 @@ class TurnOrchestrator:
             "reputation_updates": result.get("reputation_updates", []),
             "progression_delta": result.get("progression_delta", {}),
             "relationship_progress_delta": result.get("relationship_progress_delta", {}),
+            "relationship_proposal": result.get("relationship_proposal"),
+            "relationship_response": result.get("relationship_response"),
+            "action_resolution": result.get("action_resolution"),
+            "activity_resolution": result.get("activity_resolution"),
             "incident_state": result.get("incident_state"),
             "incident_resolution": result.get("incident_resolution"),
             "new_incident": result.get("new_incident"),

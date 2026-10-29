@@ -111,17 +111,8 @@ def record_npc_activity(character: Dict, event: Dict) -> Dict:
     location = str(event.get("location") or "幻想乡")
     npc = agency["npcs"].setdefault(name, {})
     plan = _plan(name, location, event.get("profile"))
-    index = int(npc.get("plan_index", 0) or 0)
-    tick_id = event.get("id") or f"{event.get('game_hour', _hour(character))}:{name}"
-    if npc.get("last_activity_id") != tick_id:
-        progress = int(npc.get("plan_progress", 0) or 0) + 1
-        if progress >= 3:
-            history = npc.setdefault("goal_history", [])
-            history.append({"goal": plan[index % len(plan)], "completed_hour": event.get("game_hour", _hour(character))})
-            npc["goal_history"] = history[-20:]
-            index, progress = index + 1, 0
-        npc.update(plan_index=index, plan_progress=progress, last_activity_id=tick_id)
-    event["activity"] = plan[index % len(plan)]
+    from backend.services.life_simulation_service import advance_npc_plan
+    event["activity"] = advance_npc_plan(character, event, plan[0])
     npc.update({
         "current_goal": event["activity"],
         "last_location": location,

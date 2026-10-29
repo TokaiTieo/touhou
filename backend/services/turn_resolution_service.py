@@ -12,6 +12,8 @@ from backend.services.campaign_service import advance_campaign_state
 from backend.services.memory_maintenance_service import maintain_memories
 from backend.services.npc_agency_service import record_player_interaction
 from backend.services.onboarding_service import advance_onboarding
+from backend.services.life_simulation_service import apply_activity, advance_calendar, complete_linked_events
+from backend.services.action_resolution_service import performed_text
 
 
 def apply_turn_resolution(
@@ -35,10 +37,11 @@ def apply_turn_resolution(
             "offscreen_updates": result.get("offscreen_updates", []),
             "duplicate": True,
         }
+    activity = apply_activity(character, result, action_text, scene, scene_npcs or [], turn_id)
     resolve_turn_rules(
         character, result, action_text, scene_npcs or [], npc_name=npc_name, preview=rule_preview
     )
-    apply_progression_updates(character, result, scene, action_text)
+    apply_progression_updates(character, result, scene, performed_text(action_text))
     advance_incident_state(character, result, action_text, tasks_data, rule_preview)
     advance_campaign_state(character, result, action_text, tasks_data)
     update_story_director(
@@ -53,6 +56,10 @@ def apply_turn_resolution(
     apply_time_progression(character, result)
     offscreen_updates = simulate_offscreen_npcs(character, result.get("time_cost", 0))
     result["offscreen_updates"] = offscreen_updates
+    present = [item.get("name") for item in scene_npcs or [] if item.get("name")]
+    advance_calendar(character, scene, present)
+    if activity and activity["available"]:
+        complete_linked_events(character, activity, [], scene)
     record_player_interaction(
         character,
         npc_name=npc_name or "",

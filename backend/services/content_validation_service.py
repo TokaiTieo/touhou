@@ -15,6 +15,8 @@ SCHEMA_FILES = {
     "world_info.json": "world-info.schema.json",
 }
 
+OPTIONAL_SCHEMA_FILES = {"life_content.json": "life.schema.json"}
+
 
 def _load(path: Path) -> Dict:
     return json.loads(path.read_text(encoding="utf-8-sig"))
@@ -58,6 +60,9 @@ def _validate_schema(
         return
     if "enum" in schema and value not in schema["enum"]:
         errors.append(f"{path}: value is not in the allowed enum")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if value < schema.get("minimum", float("-inf")) or value > schema.get("maximum", float("inf")):
+            errors.append(f"{path}: number is outside the allowed range")
     if isinstance(value, str) and len(value) < schema.get("minLength", 0):
         errors.append(f"{path}: string is shorter than minLength")
     if isinstance(value, list):
@@ -114,6 +119,7 @@ EDITABLE_CONTENT_FILES = {
     "events.json": "事件池",
     "incidents.json": "异变库",
     "npc_schedules.json": "NPC 日程",
+    "life_content.json": "日常活动与人物偏好",
     "locations/location_base.json": "地点库",
     "npcs/npc_index.json": "NPC 名册",
 }
@@ -184,7 +190,7 @@ def validate_editable_content(
     _editable_path(world_root, relative)
     if not isinstance(document, dict):
         return {"valid": False, "errors": ["JSON 顶层必须是对象"], "counts": {}}
-    if relative not in SCHEMA_FILES:
+    if relative not in {**SCHEMA_FILES, **OPTIONAL_SCHEMA_FILES}:
         return {"valid": True, "errors": [], "counts": {}, "mode": "object"}
     with tempfile.TemporaryDirectory(prefix="touhou-content-preview-") as temp_dir:
         preview_root = Path(temp_dir) / "world_touhou"
@@ -285,8 +291,10 @@ def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
     errors: List[str] = []
     documents: Dict[str, Dict] = {}
 
-    for relative, schema_name in SCHEMA_FILES.items():
+    for relative, schema_name in {**SCHEMA_FILES, **OPTIONAL_SCHEMA_FILES}.items():
         content_path = world_root / relative
+        if relative in OPTIONAL_SCHEMA_FILES and not content_path.exists():
+            continue
         schema_path = schemas_root / schema_name
         try:
             document = _load(content_path)
@@ -297,7 +305,7 @@ def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
             errors.append(f"{relative}: unable to validate ({exc})")
 
     required = set(SCHEMA_FILES)
-    if set(documents) != required:
+    if not required.issubset(documents):
         return {"valid": False, "errors": errors, "counts": {}}
 
     locations = documents["locations/location_base.json"]
@@ -320,6 +328,20 @@ def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
     npc_aliases = npcs_document.get("aliases", {})
     valid_npcs = npc_names | set(npc_aliases)
     _check_aliases(npc_aliases, npc_names, "npc", errors)
+
+    life = documents.get("life_content.json", {})
+    if life and not any(error.startswith("life_content.json") for error in errors):
+        for name in set(life["npc_traits"]) | set(life["plans"]):
+            if name not in valid_npcs:
+                errors.append(f"life npc does not exist: {name}")
+        entries = list(life["plans"].values()) + life["activities"] + life["festivals"]
+        for item in entries:
+            if item["scene"] not in location_names:
+                errors.append(f"life scene must be a canonical location: {item['scene']}")
+            if item.get("npc") and item["npc"] not in valid_npcs:
+                errors.append(f"life activity npc does not exist: {item['npc']}")
+        for identity in _duplicates([item["id"] for item in life["activities"] + life["festivals"]]):
+            errors.append(f"duplicate life id: {identity}")
 
     duplicate_groups = {
         "location id": _duplicates([item.get("id") for item in location_items]),

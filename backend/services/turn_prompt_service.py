@@ -11,4 +11,6 @@ def render_prompt(template: str, values: Dict[str, Any], ruling_text: str) -> st
     prompt = str(template)
     for key, value in values.items():
         prompt = prompt.replace("{" + str(key) + "}", str(value))
-    return f"{ATTRIBUTION_RULES}\n{prompt}\n\n## 后端游戏规则预裁定（必须遵守）\n{ruling_text}"
+    from backend.services.action_resolution_service import action_context
+    action = action_context(values.get("user_input", ""))
+    return f"{ATTRIBUTION_RULES}\n{prompt}\n\n## 后端游戏规则预裁定（必须遵守）\n{ruling_text}\n{action}"
