@@ -1,5 +1,13 @@
 # TouHou Changelog
 
+## v0.17.0
+
+- Add conservative action classification and deterministic daily activities with time, inventory and experience settlement.
+- Advance NPC work by elapsed time and location, with material results and optional follow-up events.
+- Separate affection from confirmed romance; personality-aware invitations and confessions require a player response.
+- Add gift preferences, appointments, event lifecycles and participant-bound diaries in a Vue daily-life panel.
+- Upgrade V1-V12 saves additively to V13, preserving legacy relationships, unknown fields and attribution corrections.
+
 ## v0.16.1
 
 - Preserve historical scene, speaker, participant, visibility and NPC identities through prompt formatting and budgeting.

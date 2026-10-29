@@ -63,6 +63,11 @@ def _absolute_hour(character: dict) -> float:
 
 def scheduled_location(name: str, hour: float, default_location: str, character: dict = None) -> Tuple[str, Optional[str]]:
     name = canonical_npc_name(name)
+    if character:
+        now = _absolute_hour(character)
+        for appointment in character.get("life_state", {}).get("appointments", []):
+            if appointment.get("npc_name") == name and appointment.get("status") == "scheduled" and appointment["hour"] - 1 <= now <= appointment["hour"] + 2:
+                return appointment["scene"], "正在赴约"
     schedule = load_schedules().get(name)
     if not schedule:
         return default_location, None

@@ -360,7 +360,7 @@ def perform_inventory_action(
         raise ValueError("不支持的行囊操作")
     state = ensure_inventory_state(character)
     item = _find_item(state["items"], name)
-    if not item:
+    if not item or _number(item.get("quantity"), 0) < 1:
         raise ValueError("行囊中没有该物品")
 
     equipped = state.setdefault("equipped", [])

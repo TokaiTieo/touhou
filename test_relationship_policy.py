@@ -64,6 +64,7 @@ class RelationshipPolicyTests(unittest.TestCase):
             character,
             "八云紫:热恋(制作人控制台)",
             12,
+            confirmation_override=True,
         )
         self.assertEqual(delta["八云紫"]["stage"], "恋人")
         self.assertFalse(delta["八云紫"]["clamped"])

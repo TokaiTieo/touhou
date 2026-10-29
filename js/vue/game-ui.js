@@ -8,6 +8,7 @@ export const gameUi = reactive({
     actionDraft: '',
     speechDraft: '',
     sidebarTab: 'encounter',
+    lifeData: null,
     completedOpen: false,
     mobileSidebarOpen: false,
     focusNonce: 0,
@@ -25,6 +26,7 @@ export function deactivateGameUi() {
     gameUi.actionDraft = '';
     gameUi.speechDraft = '';
     gameUi.mobileSidebarOpen = false;
+    gameUi.lifeData = null;
 }
 
 export function refreshGameUi() {

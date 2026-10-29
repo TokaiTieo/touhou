@@ -8,6 +8,11 @@ test('unverified model memory is not announced as fact and can be reviewed by th
     })).json());
     await page.reload();
     await page.locator('.character-card').filter({ hasText: 'E2E人物归属' }).getByRole('button', { name: '继续异变' }).click();
+    await expect(page.locator('.th-game')).toBeVisible();
+    await expect.poll(() => page.evaluate(async () => {
+        const { state } = await import('/js/ghost/core/state.js');
+        return typeof state.currentSession.characterId === 'string' && typeof state.currentSession.currentScene === 'string';
+    })).toBe(true);
     await page.evaluate(async () => {
         const dialogue = await import('/js/ghost/modules/dialogue.js');
         await dialogue.startNPCDialogue('npc_marisa', '雾雨魔理沙');

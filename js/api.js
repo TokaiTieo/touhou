@@ -103,6 +103,14 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
+export function getLifeState(characterId) {
+    return apiCall(`/ghost/life?character_id=${encodeURIComponent(characterId)}`);
+}
+
+export function performLifeCommand(characterId, command) {
+    return apiCall('/ghost/life_command', { method: 'POST', body: { character_id: characterId, ...command } });
+}
+
 function formatApiError(errorData, fallback) {
     if (!errorData) return fallback;
     const detail = errorData.detail ?? errorData.message ?? errorData.error ?? errorData.description;

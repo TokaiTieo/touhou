@@ -47,6 +47,7 @@ from backend.services.relationship_policy_service import (
     observe_relationship_boundaries,
 )
 from backend.services.game_rules import preview_turn_ruling, format_ruling_for_prompt
+from backend.services.life_simulation_service import format_life_action_preview
 from backend.services.incident_service import sync_incident_from_tasks
 from backend.services.ai_contracts import DialogueTurnResult, EnvironmentTurnResult, parse_turn_response
 from backend.services.turn_context_service import (
@@ -625,7 +626,7 @@ async def environment_interact(request: EnvironmentInteractRequest):
         
         rule_preview = preview_turn_ruling(character, user_input_text, scene_npcs)
         context_sections, context_budget = budget_context_sections({
-            "rule_context": format_ruling_for_prompt(rule_preview),
+            "rule_context": format_ruling_for_prompt(rule_preview) + "\n" + format_life_action_preview(character, user_input_text, request.scene),
             "world_setting": worldview,
             "player_background": player_background,
             "npc_info": format_npcs_for_ai(scene_npcs, character),
@@ -875,7 +876,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
     
     rule_preview = preview_turn_ruling(character, request.user_input, request.scene_npcs, request.npc_name)
     context_sections, context_budget = budget_context_sections({
-        "rule_context": format_ruling_for_prompt(rule_preview),
+        "rule_context": format_ruling_for_prompt(rule_preview) + "\n" + format_life_action_preview(character, request.user_input, request.scene),
         "world_setting": worldview,
         "npc_info": npc_info,
         "player_info": player_info,

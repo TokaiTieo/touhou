@@ -5,11 +5,11 @@ import json
 import zipfile
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.services.ai_service import call_ai_async, get_last_ai_runtime
 from backend.services.conversation_archive_service import hydrate_history, history_page, history_count, portable_character
@@ -118,6 +118,16 @@ class InventoryActionRequest(BaseModel):
 class OnboardingRequest(CommandRequest):
     character_id: str
     action: str
+
+
+class LifeCommandRequest(CommandRequest):
+    character_id: str
+    command: Literal["activity", "event", "relationship", "appointment", "appointment_update"]
+    target: str = Field(default="", max_length=200)
+    choice: str = Field(default="", max_length=40)
+    day: int = Field(default=1, ge=1, le=1000000)
+    hour: float = Field(default=12, ge=0, lt=24, allow_inf_nan=False)
+    scene: str = Field(default="", max_length=200)
 
 
 def _require_character(character_id: str):
@@ -336,6 +346,65 @@ async def set_spellcard_loadout(request: SpellcardLoadoutRequest):
     payload = request.model_dump(exclude={"operation_id"})
     return await execute_character_command(request.character_id, request.operation_id,
         {"command": "set_spellcard_loadout", **payload}, change)
+
+
+@router.get("/life")
+async def get_life_state(character_id: str):
+    from backend.services.life_simulation_service import life_view
+    return life_view(_require_character(character_id))
+
+
+@router.post("/life_command")
+async def life_command(request: LifeCommandRequest):
+    from backend.services.life_simulation_service import (
+        life_view, life_content, change_event, create_appointment, update_appointment, record_experience, sync_event_task,
+    )
+    from backend.services.relationship_dynamics_service import respond_relationship
+    from backend.services.turn_resolution_service import apply_turn_resolution
+    from backend.services.npc_identity_service import npc_registry
+    from backend.services.npc_schedule_service import place_scheduled_npcs
+
+    def change(character, tasks):
+        if character.get("status", {}).get("is_dead"):
+            raise HTTPException(400, "角色已退场，无法进行日常活动")
+        scene = character.get("status", {}).get("current_scene", "")
+        message = "记录已更新"
+        try:
+            if request.command == "activity":
+                activity = next((item for item in life_content()["activities"] if item["id"] == request.target), None)
+                if not activity or activity["scene"] != scene:
+                    raise ValueError("请先到达活动地点")
+                from backend.services.life_simulation_service import activity_preview
+                preview = activity_preview(character, activity["title"], scene)
+                if not preview["available"]:
+                    raise ValueError(preview["reason"])
+                result = {"description": "", "contract_valid": True}
+                npcs = place_scheduled_npcs(list(npc_registry()[0].values()), scene, character.get("time", {}).get("current_hour", 8), character=character)
+                apply_turn_resolution(character, result, activity["title"], scene, tasks, npcs,
+                                      turn_id="life:" + str(request.operation_id or uuid.uuid4()))
+                message = result["description"]
+            elif request.command == "event":
+                event = change_event(character, request.target, request.choice)
+                if request.choice == "participate" and not event.get("task_id"):
+                    event["task_id"] = "life_event_" + uuid.uuid4().hex
+                    tasks.setdefault("active_tasks", []).append({"id": event["task_id"], "name": event["title"],
+                        "description": event.get("description", ""), "priority": 100, "source": "optional_event"})
+                sync_event_task(event, tasks)
+            elif request.command == "relationship":
+                proposal = respond_relationship(character, request.target, request.choice)
+                message = f"已回应{proposal['npc_name']}的心意"
+                record_experience(character, proposal["id"] + ":response", message, [proposal["npc_name"]], scene, request.choice, bond=False)
+            elif request.command == "appointment":
+                create_appointment(character, request.target, request.day, request.hour, request.scene)
+                message = "已送出邀约，等待对方回应"
+            else:
+                update_appointment(character, request.target, request.choice, request.day, request.hour)
+        except (ValueError, TypeError) as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return {"message": message, "life": life_view(character), "character": character}
+
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "life_command", **request.model_dump(exclude={"operation_id"})}, change)
 
 
 @router.post("/inventory_action")

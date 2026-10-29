@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "npc_traits": {
+    "博丽灵梦": {"style": "直率", "likes": ["茶", "御守", "食物"], "dislikes": ["粗劣"], "need": "御札"},
+    "雾雨魔理沙": {"style": "主动", "likes": ["书籍", "魔法", "素材"], "dislikes": ["粗劣"], "need": "素材"},
+    "帕秋莉": {"style": "含蓄", "likes": ["书籍", "茶"], "dislikes": ["喧闹"], "need": "素材"},
+    "爱丽丝": {"style": "含蓄", "likes": ["人偶", "手作", "魔法"], "dislikes": ["粗劣"], "need": "手作"},
+    "十六夜咲夜": {"style": "含蓄", "likes": ["茶", "手作"], "dislikes": ["粗劣"], "need": "食物"},
+    "西行寺幽幽子": {"style": "主动", "likes": ["食物", "花"], "dislikes": [], "need": "食物"},
+    "八意永琳": {"style": "含蓄", "likes": ["药品", "书籍", "素材"], "dislikes": ["粗劣"], "need": "素材"},
+    "东风谷早苗": {"style": "主动", "likes": ["御守", "茶"], "dislikes": [], "need": "御札"},
+    "风见幽香": {"style": "直率", "likes": ["花", "茶"], "dislikes": ["粗劣"], "need": "花"},
+    "古明地觉": {"style": "含蓄", "likes": ["书籍", "茶"], "dislikes": ["喧闹"], "need": "茶"}
+  },
+  "plans": {
+    "博丽灵梦": {"title": "准备御札", "scene": "博丽神社", "hours": 6, "resource": "御札", "amount": 2},
+    "雾雨魔理沙": {"title": "采集魔法素材", "scene": "魔法之森", "hours": 6, "resource": "魔法素材", "amount": 2},
+    "八意永琳": {"title": "整理药材并配药", "scene": "永远亭", "hours": 6, "resource": "药材", "amount": 2},
+    "十六夜咲夜": {"title": "准备茶会", "scene": "红魔馆", "hours": 6, "resource": "茶点", "amount": 2},
+    "帕秋莉": {"title": "整理魔法研究笔记", "scene": "红魔馆", "hours": 6, "resource": "研究笔记", "amount": 1},
+    "爱丽丝": {"title": "制作演出人偶", "scene": "魔法之森", "hours": 6, "resource": "人偶", "amount": 1}
+  },
+  "activities": [
+    {"id": "shrine_work", "title": "神社帮工", "scene": "博丽神社", "hours": 1, "fatigue": 5, "currency": 15, "skill": "交涉熟练度", "npc": "博丽灵梦", "output": "御札"},
+    {"id": "herbs", "title": "采集药材", "scene": "永远亭", "hours": 1, "fatigue": 6, "currency": 0, "skill": "生存熟练度", "output": "药材"},
+    {"id": "research", "title": "魔法研究", "scene": "红魔馆", "hours": 1, "fatigue": 5, "currency": 0, "skill": "调查熟练度", "npc": "帕秋莉", "output": "研究笔记"},
+    {"id": "cooking", "title": "制作便当", "scene": "人间之里", "hours": 0.5, "fatigue": 3, "currency": 0, "skill": "生存熟练度", "input": "食材", "input_quantity": 1, "output": "便当"},
+    {"id": "fishing", "title": "湖畔垂钓", "scene": "雾之湖", "hours": 1, "fatigue": 3, "currency": 0, "skill": "生存熟练度", "output": "食材"},
+    {"id": "doll", "title": "制作小人偶", "scene": "魔法之森", "hours": 1, "fatigue": 4, "currency": 0, "skill": "调查熟练度", "npc": "爱丽丝", "output": "手作人偶"}
+  ],
+  "festivals": [
+    {"id": "shrine_festival", "day": 7, "period": 28, "title": "神社茶会", "scene": "博丽神社"},
+    {"id": "market", "day": 14, "period": 28, "title": "人里集市", "scene": "人间之里"},
+    {"id": "moon", "day": 21, "period": 28, "title": "月下赏景", "scene": "永远亭"}
+  ]
+}

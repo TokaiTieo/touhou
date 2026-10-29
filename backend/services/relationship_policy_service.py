@@ -150,4 +150,6 @@ def format_relationship_policy_context(
             f"成熟关系上下文={'允许' if mature else '禁用'}；"
             f"最近信号={boundary.get('last_signal', '无')}"
         )
-    return "\n".join(lines)
+    from backend.services.relationship_dynamics_service import relationship_context
+    from backend.services.life_simulation_service import life_context
+    return "\n".join(lines) + "\n" + relationship_context(character, names) + "\n" + life_context(character, "")

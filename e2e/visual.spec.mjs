@@ -107,6 +107,7 @@ test('captures the single-root Vue interface on desktop and mobile', async ({ pa
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(page.locator('.th-npc').first()).toBeVisible();
+    await expect(page.locator('.th-suggestions')).toContainText('神社帮工');
     await page.waitForTimeout(450);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: `${visualDir}/game-desktop.png` });

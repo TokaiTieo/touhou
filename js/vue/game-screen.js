@@ -11,6 +11,7 @@ import { state } from '../ghost/core/state.js';
 import VirtualHistory from './virtual-history.js';
 import HistorySearch from './history-search.js';
 import TurnRecovery from './turn-recovery.js';
+import LifePanel from './life-panel.js';
 import { renderMarkdownLite, softenPublicText } from '../ghost/ui/text.js';
 import { showToast } from '../ghost/ui/components.js';
 import { accessibilityState, speakText } from './accessibility.js';
@@ -98,6 +99,8 @@ function buildSuggestions() {
     if (task) {
         items.push({ label: '推进目标', mark: '录', action: `围绕任务「${task.name}」寻找下一条线索`, speech: '' });
     }
+    const activity = gameUi.lifeData?.activities?.find(item => item.scene === scene && item.available);
+    if (activity) items.unshift({ label: activity.title, mark: '日', action: activity.title, speech: '' });
     return items.slice(0, 4);
 }
 
@@ -315,7 +318,7 @@ const TaskPanel = defineComponent({
 
 export const GameScreen = defineComponent({
     name: 'GameScreen',
-    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory, HistorySearch, TurnRecovery },
+    components: { ChatMessage, MapPanel, NpcPanel, TaskPanel, VirtualHistory, HistorySearch, TurnRecovery, LifePanel },
     setup() {
         const chatRef = ref(null);
         const actionRef = ref(null);
@@ -545,9 +548,10 @@ export const GameScreen = defineComponent({
 
             <aside class="th-side" :class="{ open: gameUi.mobileSidebarOpen }">
                 <nav class="th-side-tabs" aria-label="侧栏视图">
-                    <button v-for="tab in [{id:'encounter',label:'人物'},{id:'map',label:'地图'},{id:'tasks',label:'线索'},{id:'status',label:'状态'}]" :key="tab.id" type="button" :class="{ active: gameUi.sidebarTab === tab.id }" @click="gameUi.sidebarTab = tab.id">{{ tab.label }}</button>
+                    <button v-for="tab in [{id:'encounter',label:'人物'},{id:'map',label:'地图'},{id:'tasks',label:'线索'},{id:'life',label:'日常'},{id:'status',label:'状态'}]" :key="tab.id" type="button" :class="{ active: gameUi.sidebarTab === tab.id }" @click="gameUi.sidebarTab = tab.id">{{ tab.label }}</button>
                 </nav>
                 <div class="th-side-scroll">
+                    <section v-show="gameUi.sidebarTab === 'life'" class="th-side-panel"><header><span>日</span><div><strong>幻想乡日常</strong><small>{{ session.currentScene }}</small></div></header><LifePanel /></section>
                     <section v-show="gameUi.sidebarTab === 'encounter'" class="th-side-panel"><header><span>遇</span><div><strong>当前遭遇</strong><small>{{ session.currentScene }}</small></div></header><NpcPanel :npcs="npcs" @helper="helper" @detail="npcAction('detail', $event)" @observe="npcAction('observe', $event)" @talk="npcAction('talk', $event)" @add="addNpc" /></section>
                     <section v-show="gameUi.sidebarTab === 'map'" class="th-side-panel"><header><span>図</span><div><strong>幻想乡绘卷</strong><small>所见之地皆可前往</small></div></header><MapPanel :regions="locations" :scene="session.currentScene" @travel="travel" @detail="locationDetail" /></section>
                     <section v-show="gameUi.sidebarTab === 'tasks'" class="th-side-panel"><header><span>録</span><div><strong>开放线索板</strong><small>记录，而非通行条件</small></div></header><TaskPanel :active="activeTasks" :completed="completedTasks" :incident="session.incidentState" @delete="deleteTask" /></section>

@@ -19,6 +19,7 @@ a = Analysis(
         ('avatars', 'avatars'),
         ('release\\build_worlds_clean', 'worlds'),
         ('prompts', 'prompts'),
+        ('content_schemas', 'content_schemas'),
     ],
     hiddenimports=[
         'webview',
