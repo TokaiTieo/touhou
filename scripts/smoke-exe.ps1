@@ -175,6 +175,20 @@ PRIVATE_DEBUG=False
     if (-not (Test-Path -LiteralPath (Join-Path $smokeRoot "runtime\turn_checkpoints.sqlite3"))) {
         throw "Packaged LangGraph SQLite checkpoint was not created."
     }
+    Invoke-RestMethod -Method Post -Uri ($runtime.url + '/api/ghost/agent_mode') -Headers $headers `
+        -ContentType 'application/json; charset=utf-8' `
+        -Body (@{ character_id = $character.character_id; mode = 'collaborative' } | ConvertTo-Json) -TimeoutSec 10 | Out-Null
+    $agentBody = @{ character_id = $character.character_id; scene = '博丽神社'; player_name = '打包验证者';
+        user_input = @{ action = '向博丽灵梦问好' }; turn_id = 'packaged-agent-smoke'; record_history = $true } | ConvertTo-Json -Depth 5
+    $agentTurn = Invoke-RestMethod -Method Post -Uri ($runtime.url + '/api/ghost/environment_interact') -Headers $headers `
+        -ContentType 'application/json; charset=utf-8' -Body $agentBody -TimeoutSec 30
+    $agentReplay = Invoke-RestMethod -Method Post -Uri ($runtime.url + '/api/ghost/environment_interact') -Headers $headers `
+        -ContentType 'application/json; charset=utf-8' -Body $agentBody -TimeoutSec 10
+    if ($agentTurn.agent_turn.participants.Count -ne 1 -or $agentTurn.agent_turn.participants[0] -ne 'npc_reimu' `
+        -or $agentTurn.agent_turn.budget.requests -ne 2 -or -not $agentTurn.agent_events `
+        -or $agentReplay.description -ne $agentTurn.description) {
+        throw 'Packaged independent NPC decisions, budget or idempotent replay failed.'
+    }
     Invoke-RestMethod -Method Post -Uri ($runtime.url + "/api/shutdown") -Headers $headers -TimeoutSec 10 | Out-Null
     $shutdownDeadline = [DateTime]::UtcNow.AddSeconds(20)
     $serviceStopped = $false

@@ -210,8 +210,10 @@ def update_appointment(character, identity, choice, day=None, hour=None):
 def advance_calendar(character, scene, present_names):
     state = ensure_life_state(character)
     hour = absolute_hour(character)
+    from backend.services.agent_rules_service import advance_agent_calendar
+    advance_agent_calendar(character)
     for item in state["appointments"]:
-        if item["status"] == "proposed" and item["hour"] + 2 >= hour:
+        if item["status"] == "proposed" and item["hour"] + 2 >= hour and character.get("agent_state", {}).get("mode") != "collaborative":
             # Acceptance is a deterministic NPC decision, not a player-side fact.
             from backend.services.relationship_dynamics_service import relationship_dimensions
             relation = relationship_dimensions(character, item["npc_name"])

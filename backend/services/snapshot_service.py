@@ -152,6 +152,25 @@ def prepare_restore_payload(
     character["command_receipts"] = []
     character["resolved_turn_ids"] = []
     character["turn_receipts"] = []
+    old_epoch = character.get("timeline_epoch")
     character["timeline_epoch"] = uuid.uuid4().hex
+    if old_epoch:
+        # Rebind only evidence actually retained in this snapshot, never future state.
+        def rebind(value):
+            if isinstance(value, dict):
+                if value.get("timeline_epoch") == old_epoch:
+                    value.setdefault("source_timeline_epoch", old_epoch)
+                    value["timeline_epoch"] = character["timeline_epoch"]
+                for key, child in value.items():
+                    if key not in ("originals", "legacy_identity_records", "npc_identity_archive"):
+                        rebind(child)
+            elif isinstance(value, list):
+                for child in value:
+                    rebind(child)
+        for field in ("npc_memories", "npc_memory_archive", "npc_memory_layers", "conversation_history", "life_state", "agent_state"):
+            rebind(character.get(field))
+    if character.get("agent_state"):
+        character["agent_state"]["permission_version"] = int(character["agent_state"].get("permission_version", 1)) + 1
+        character["agent_state"]["last_turn"] = {}
     tasks["last_updated"] = datetime.now().isoformat()
     return {"target_id": target_id, "character": character, "tasks": tasks}

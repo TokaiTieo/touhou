@@ -1,6 +1,8 @@
 """AI model and encrypted local credential settings."""
 
 import logging
+from typing import Literal, Optional
+from pydantic import BaseModel
 
 from fastapi import APIRouter, HTTPException
 from openai import OpenAI
@@ -25,6 +27,73 @@ from backend.world_manager import load_character
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+class AgentModeRequest(BaseModel):
+    character_id: str
+    mode: Literal["legacy", "retrieval", "collaborative"]
+    operation_id: Optional[str] = None
+
+
+def public_agent_state(character):
+    from backend.services.agent_contracts import default_agent_state
+    from backend.services.agent_context_service import catalogue
+    state = character.get("agent_state") or default_agent_state()
+    records = catalogue(character)
+    pending = []
+    for event in state.get("events", []):
+        if event.get("status") == "pending" and event.get("target_id") == "@player":
+            pending.append({"id": event["id"], "kind": event["kind"], "npc_name": records.get(event.get("actor_id"), {}).get("name", "人物"),
+                            "text": event.get("text", ""), "hour": event.get("hour"), "scene": event.get("scene"),
+                            "item": event.get("item"), "quantity": event.get("quantity")})
+    return {"mode": state.get("mode", "legacy"), "pending": pending, "last_turn": state.get("last_turn", {})}
+
+
+@router.get("/agent_mode")
+async def get_agent_mode(character_id: str):
+    character = load_character(character_id)
+    if not character:
+        raise HTTPException(404, "角色不存在")
+    return public_agent_state(character)
+
+
+@router.post("/agent_mode")
+async def set_agent_mode(request: AgentModeRequest):
+    from backend.services.agent_contracts import default_agent_state
+    from backend.services.character_commands import execute_character_command
+    def change(character, tasks):
+        state = character.setdefault("agent_state", default_agent_state())
+        state["mode"] = request.mode
+        state["permission_version"] = int(state.get("permission_version", 1)) + 1
+        return public_agent_state(character)
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "agent_mode", "mode": request.mode}, change)
+
+
+class AgentResponseRequest(BaseModel):
+    character_id: str
+    event_id: str
+    choice: Literal["accept", "reject"]
+    operation_id: Optional[str] = None
+
+
+@router.post("/agent_response")
+async def respond_agent_event(request: AgentResponseRequest):
+    from backend.services.character_commands import execute_character_command
+    from backend.services.agent_context_service import catalogue
+    from backend.services.agent_rules_service import ProposalMerger
+    from backend.services.agent_scheduler import server_presence
+    def change(character, tasks):
+        records = catalogue(character)
+        scene = character.get("status", {}).get("current_scene", "")
+        merger = ProposalMerger(character, records, "response:" + request.event_id + ":" + request.choice,
+                                scene, server_presence(character, records, scene))
+        results = merger.merge("@player", {"commands": [{"kind": request.choice, "event_id": request.event_id}]})
+        if results and results[0]["status"] == "rejected":
+            raise HTTPException(409, results[0]["reason"])
+        return public_agent_state(character)
+    return await execute_character_command(request.character_id, request.operation_id,
+        {"command": "agent_response", "event_id": request.event_id, "choice": request.choice}, change)
 
 
 def _save_env_settings(updates: dict) -> None:

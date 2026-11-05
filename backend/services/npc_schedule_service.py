@@ -65,16 +65,21 @@ def scheduled_location(name: str, hour: float, default_location: str, character:
     name = canonical_npc_name(name)
     if character:
         now = _absolute_hour(character)
+        from backend.services.npc_identity_service import resolve_npc
+        person = resolve_npc(name) or next((row for row in character.get("custom_npcs", []) if row.get("name") == name), {})
+        for event in character.get("agent_state", {}).get("events", []):
+            if (event.get("kind") == "invite" and event.get("status") in ("accepted", "completed")
+                    and person.get("id") in (event.get("actor_id"), event.get("target_id"))
+                    and event["hour"] - 1 <= now <= event["hour"] + 2):
+                return event["scene"], "正在赴约"
         for appointment in character.get("life_state", {}).get("appointments", []):
             if appointment.get("npc_name") == name and appointment.get("status") == "scheduled" and appointment["hour"] - 1 <= now <= appointment["hour"] + 2:
                 return appointment["scene"], "正在赴约"
-    schedule = load_schedules().get(name)
-    if not schedule:
-        return default_location, None
+    schedule = load_schedules().get(name) or {}
     period = period_for_hour(hour)
     location = schedule.get(period, default_location)
     labels = {"morning": "清晨", "day": "白天", "evening": "黄昏", "night": "夜间"}
-    note = f"{labels[period]}通常在{location}活动"
+    note = f"{labels[period]}通常在{location}活动" if schedule else None
     if character:
         runtime = character.setdefault("npc_runtime", {}).get(name, {})
         if (

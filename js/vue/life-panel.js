@@ -1,5 +1,5 @@
 import { computed, defineComponent, onBeforeUnmount, ref, watch } from '../vendor/vue.esm-browser.prod.js';
-import { getLifeState, performLifeCommand } from '../api.js';
+import { apiCall, getLifeState, performLifeCommand } from '../api.js';
 import { state } from '../ghost/core/state.js';
 import { gameUi } from './game-ui.js';
 import { refreshNPCList, refreshTasksPanel } from './game-controller.js';
@@ -9,6 +9,7 @@ export default defineComponent({
     name: 'LifePanel',
     setup() {
         const data = ref(null);
+        const agent = ref(null);
         const busy = ref(false);
         const error = ref('');
         const message = ref('');
@@ -29,8 +30,10 @@ export default defineComponent({
             const request = ++sequence;
             try {
                 const result = await getLifeState(id);
+                const agentResult = await apiCall(`/ghost/agent_mode?character_id=${encodeURIComponent(id)}`);
                 if (disposed || request !== sequence || id !== state.currentSession.characterId) return;
                 data.value = result;
+                agent.value = agentResult;
                 gameUi.lifeData = result;
                 day.value = Math.max(Number(day.value), result.day + 1);
                 scene.value ||= result.scene;
@@ -65,10 +68,22 @@ export default defineComponent({
                 if (!disposed && id === state.currentSession.characterId) error.value = reason.message || '操作未确认，请重试';
             } finally { busy.value = false; }
         }
+        async function respondAgent(eventId, choice) {
+            if (disabled.value) return;
+            busy.value = true;
+            try {
+                agent.value = await apiCall('/ghost/agent_response', { method: 'POST', body: {
+                    character_id: state.currentSession.characterId, event_id: eventId, choice
+                } });
+                message.value = choice === 'accept' ? '已接受' : '已婉拒';
+                await refresh();
+            } catch (reason) { error.value = reason.message; }
+            finally { busy.value = false; }
+        }
         function appoint() { return command({ command: 'appointment', target: target.value, day: Number(day.value), hour: Number(hour.value), scene: scene.value }); }
         function reschedule(item) { return command({ command: 'appointment_update', target: item.id, choice: 'reschedule', day: Number(day.value), hour: Number(hour.value) }); }
         function when(value) { return `第${Math.floor(value / 24) + 1}天 ${Math.floor(value % 24)}:${String(Math.round(value % 1 * 60)).padStart(2, '0')}`; }
-        return { data, disabled, error, message, labels, command, appoint, reschedule, refresh, npcs, locations, target, day, hour, scene, when, softenPublicText };
+        return { data, agent, respondAgent, disabled, error, message, labels, command, appoint, reschedule, refresh, npcs, locations, target, day, hour, scene, when, softenPublicText };
     },
     template: `
         <div class="th-life-panel">
@@ -81,6 +96,12 @@ export default defineComponent({
                     <button type="button" :disabled="disabled || !activity.available" :title="activity.reason || activity.title" @click="command({command:'activity',target:activity.id})">开始</button>
                 </li></ul>
                 <h3>来往心意</h3>
+                <ul v-if="agent?.pending?.length" class="th-life-list"><li v-for="item in agent.pending" :key="item.id">
+                    <strong>{{ item.npc_name }} · {{ item.kind === 'invite' ? '邀约' : '物品交接' }}</strong>
+                    <p>{{ item.text }}</p><small v-if="item.kind === 'invite'">{{ when(item.hour) }} · {{ item.scene }}</small>
+                    <small v-else>{{ item.item }} × {{ item.quantity }}</small>
+                    <div class="th-life-actions"><button type="button" :disabled="disabled" @click="respondAgent(item.id, 'accept')">接受</button><button type="button" :disabled="disabled" @click="respondAgent(item.id, 'reject')">婉拒</button></div>
+                </li></ul>
                 <p v-if="!data.proposals.length" class="th-empty">尚无待回应的心意</p>
                 <ul class="th-life-list"><li v-for="proposal in data.proposals" :key="proposal.id">
                     <strong>{{ proposal.npc_name }} · {{ softenPublicText(proposal.title) }}</strong><p>{{ softenPublicText(proposal.description) }}</p>

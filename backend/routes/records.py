@@ -184,6 +184,8 @@ async def rewrite_message(request: RewriteMessageRequest):
             raise HTTPException(status_code=400, detail="消息索引无效")
 
         target = history[target_index]
+        if target.get("canonical_decision"):
+            raise HTTPException(409, "人物决定原文保留；可继续对话，不对已结算决定进行重写")
         player_name = character.get("profile", {}).get("name", "玩家")
         if target.get("speaker") in (player_name, "系统"):
             raise HTTPException(status_code=400, detail="仅可改写叙事或 NPC 回复")

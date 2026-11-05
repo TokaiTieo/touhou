@@ -10,6 +10,7 @@ import { beginGeneration, cancelActiveGeneration, endGeneration, hasActiveGenera
 import { switchScene } from './location.js';
 import { rememberTurn, finishTurn, readPendingTurn, checkPendingTurn } from '../core/pending-turn.js';
 import { getTaskDisplayName } from '../ui/text.js';
+import { appendAgentDecisions } from '../../vue/agent-results.js';
 import {
     clearComposer,
     gameUi,
@@ -205,8 +206,7 @@ export async function callAIAndRespond(userInput, userMsg = null) {
                 }
             );
             if (!response) {
-                assistantMsg.content = '';
-                response = await environmentInteract(...requestArgs);
+                throw new Error('回合尚未确认，请手动恢复；不会自动追加模型请求');
             } else {
                 showToast('本回合已恢复', 1800);
             }
@@ -246,6 +246,7 @@ export async function callAIAndRespond(userInput, userMsg = null) {
         assistantMsg.content = description;
         assistantMsg.isDead = isDead;
         assistantMsg.isStreaming = false;
+        appendAgentDecisions(response);
         renderChatHistory();
         scrollChatToBottom();
 

@@ -60,15 +60,16 @@ def apply_turn_resolution(
     advance_calendar(character, scene, present)
     if activity and activity["available"]:
         complete_linked_events(character, activity, [], scene)
-    record_player_interaction(
-        character,
-        npc_name=npc_name or "",
-        scene_npcs=scene_npcs or [],
-        scene=scene,
-        action_text=action_text,
-        outcome=result.get("description", ""),
-        turn_id=turn_id,
-    )
+    if character.get("agent_state", {}).get("mode") == "collaborative":
+        from backend.services.agent_context_service import catalogue, storage_name
+        records = catalogue(character)
+        for part in result.get("agent_inputs", []):
+            if part["npc_id"] in records:
+                record_player_interaction(character, npc_name=storage_name(records, part["npc_id"]),
+                    scene=scene, action_text=part["content"], outcome="", turn_id=turn_id)
+    else:
+        record_player_interaction(character, npc_name=npc_name or "", scene_npcs=scene_npcs or [],
+            scene=scene, action_text=action_text, outcome=result.get("description", ""), turn_id=turn_id)
     result["memory_maintenance"] = maintain_memories(character)
     result["onboarding"] = advance_onboarding(
         character, "dialogue" if npc_name else "turn"

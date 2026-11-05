@@ -22,7 +22,7 @@ function Assert-WorkspaceFile([string]$Path) {
 function Publish-File([string]$Source, [string]$Destination) {
     Assert-WorkspaceFile $Source
     Assert-WorkspaceFile $Destination
-    if (Test-Path -LiteralPath $Destination) { [IO.File]::Replace($Source, $Destination, $null) }
+    if (Test-Path -LiteralPath $Destination) { [IO.File]::Replace($Source, $Destination, [NullString]::Value) }
     else { [IO.File]::Move($Source, $Destination) }
 }
 

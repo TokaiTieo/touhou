@@ -209,13 +209,13 @@ const ChatMessage = defineComponent({
             props.message.rating = value;
             refreshGameUi();
         }
-        return { accessibilityState, copy, emit, html, kind, messageClass, rate, selectRewrite, speak };
+        return { state, accessibilityState, copy, emit, html, kind, messageClass, rate, selectRewrite, speak };
     },
     template: `
         <article class="th-message" :class="messageClass">
             <div class="th-message-rail"><span>{{ kind }}</span></div>
             <div class="th-message-body">
-                <header><strong>{{ message.speaker }}</strong><span v-if="message.isStreaming" class="th-streaming">书写中</span></header>
+                <header><strong>{{ message.speaker }}</strong><span v-if="message.canonicalDecision">本人回应</span><span v-if="message.isStreaming" class="th-streaming">{{ state.turnPhase || '书写中' }}</span></header>
                 <div class="th-message-content" v-html="html"></div>
                 <div v-if="message.rewriteCandidates?.length" class="th-rewrite-variants" aria-label="叙事版本">
                     <button type="button" :class="{ active: (message.activeRewrite ?? -1) === -1 }" @click="selectRewrite(-1)">原文</button>
@@ -230,7 +230,7 @@ const ChatMessage = defineComponent({
                         :title="accessibilityState.ttsEnabled ? '朗读消息' : '请先在设置中开启本地朗读'" @click="speak">朗读</button>
                     <button v-if="message.role === 'assistant'" type="button" :class="{ active: message.rating === 'up' }" title="满意" @click="rate('up')">好</button>
                     <button v-if="message.role === 'assistant'" type="button" :class="{ active: message.rating === 'down' }" title="需改进" @click="rate('down')">改</button>
-                    <button v-if="message.role === 'assistant' && !message.isStreaming && message.conversationIndex !== undefined"
+                    <button v-if="message.role === 'assistant' && !message.canonicalDecision && !message.isStreaming && message.conversationIndex !== undefined"
                         type="button" :disabled="message.isRewriting" title="生成措辞候选，不重放回合" @click="emit('reroll', index)">
                         {{ message.isRewriting ? '润色中' : '重写' }}
                     </button>

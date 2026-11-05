@@ -188,12 +188,19 @@ test('completes the playable loop, compares a rewrite, branches, and reloads the
     });
     await expect(page.locator('.th-message')).toHaveCount(messageCountBeforeComposition);
 
-    // Force the streaming endpoint to fail once and verify the normal-request fallback.
+    // A broken stream must not silently start another paid model request.
+    let generationRequests = 0;
+    page.on('request', request => {
+        if (/environment_interact/.test(request.url()) && request.method() === 'POST') generationRequests += 1;
+    });
     await page.route('**/api/ghost/environment_interact_stream', route => {
         route.abort('failed');
     }, { times: 1 });
     await page.locator('.th-composer textarea').nth(0).fill('完成结界裂隙调查并用仪式稳定博丽大结界');
     await page.locator('.th-send').click();
+    await expect(page.locator('.th-turn-recovery')).toBeVisible();
+    expect(generationRequests).toBe(1);
+    await page.getByRole('button', { name: '恢复本回合', exact: true }).click();
     const resolvedMessage = page.locator('.th-message').filter({ hasText: '结界波纹逐渐恢复平静' });
     await expect(resolvedMessage.locator('.th-message-content')).toBeVisible({ timeout: 30_000 });
 

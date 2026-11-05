@@ -83,6 +83,7 @@ export async function loadAndEnterGhostMode(characterId, sceneId) {
                 timestamp: Date.now(), isDead: msg.is_dead || false, isDialogue,
                 conversationIndex: state.historyStart + i,
                 messageId: msg.message_id || null,
+                canonicalDecision: Boolean(msg.canonical_decision),
                 rating: msg.rating || null,
                 rewriteCandidates: Array.isArray(msg.rewrite_candidates) ? msg.rewrite_candidates : [],
                 activeRewrite: -1
@@ -121,6 +122,7 @@ export async function loadEarlierHistory() {
         if (owner !== state.currentSession.characterId) return;
         const items = page.messages.map((msg, index) => ({
             localId: msg.message_id, messageId: msg.message_id, conversationIndex: page.start + index,
+            canonicalDecision: Boolean(msg.canonical_decision),
             role: msg.speaker === state.currentSession.profile?.name ? 'user' : msg.speaker === '系统' ? 'system' : 'assistant',
             isDialogue: ![state.currentSession.profile?.name, '系统', '旁白'].includes(msg.speaker),
             speaker: msg.speaker, content: msg.content, timestamp: msg.timestamp, isDead: msg.is_dead,

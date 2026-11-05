@@ -170,6 +170,9 @@ export const TouhouApp = defineComponent({
                     <GameToolbar />
                 </div>
                 <div class="app-chrome-actions">
+                    <button v-if="gameUi.active" class="icon-button" type="button" title="游戏设置" aria-label="游戏设置" @click="appUi.modal = 'settings'">
+                        <span aria-hidden="true">&#9881;</span>
+                    </button>
                     <span v-if="developerMode" class="app-runtime-badge" title="仅制作人模式可见"><i aria-hidden="true"></i> DEV · Vue 3 · {{ appVersion }}</span>
                     <button class="icon-button" type="button" :title="themeLabel" :aria-label="themeLabel" @click="toggleTheme">
                         <span aria-hidden="true">{{ theme === 'light' ? '夜' : '昼' }}</span>

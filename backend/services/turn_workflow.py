@@ -474,6 +474,9 @@ async def clear_all_turn_checkpoints() -> Dict[str, Any]:
     for thread_id in thread_ids:
         await runtime["saver"].adelete_thread(thread_id)
     await runtime["connection"].execute("DELETE FROM touhou_turn_threads")
+    cursor = await runtime["connection"].execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_turns'")
+    if await cursor.fetchone():
+        await runtime["connection"].execute("UPDATE agent_turns SET status='cancelled',jobs='[]' WHERE status!='committed'")
     await runtime["connection"].commit()
     return {"cleared": len(thread_ids)}
 
@@ -509,6 +512,10 @@ async def get_persisted_turn_status(character_id: str, turn_id: str, timeline_ep
     """Read recovery state after a process restart without exposing prompt data."""
     if not CHECKPOINT_PATH.exists():
         return {"state": "unknown"}
+    from backend.services.npc_agent_runtime import persisted_agent_status
+    agent_status = persisted_agent_status(CHECKPOINT_PATH, character_id, turn_id, timeline_epoch)
+    if agent_status:
+        return agent_status
     try:
         runtime = await _get_runtime("environment")
         suffix = ":" + timeline_epoch if timeline_epoch else ""

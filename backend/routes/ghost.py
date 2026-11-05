@@ -94,6 +94,7 @@ class EnvironmentInteractRequest(BaseModel):
     user_input: Dict[str, str]
     history: List[Dict] = []
     scene_npcs: List[Dict] = []
+    interaction_npc_ids: List[str] = []
     turn_id: Optional[str] = None
     _scene_identities = field_validator("scene_npcs")(validate_scene_npcs)
 
@@ -240,6 +241,9 @@ async def _stream_endpoint(request, handler):
                     event, payload = await asyncio.wait_for(queue.get(), timeout=15.0)
                 except asyncio.TimeoutError:
                     yield ": ping\n\n"
+                    status = turn_coordinator.get_status(request.character_id, request.turn_id)
+                    if status:
+                        yield _sse_message("status", {"character_id": request.character_id, "turn_id": request.turn_id, "state": status.state})
                     continue
                 if event == "done":
                     break
@@ -533,6 +537,7 @@ async def environment_interact(request: EnvironmentInteractRequest):
             scene=request.scene,
             player_name=request.player_name,
             action_text=user_input_text,
+            interaction_npc_ids=request.interaction_npc_ids,
             record_history=request.record_history,
             turn_id=request.turn_id,
             scene_npcs=request.scene_npcs,
@@ -564,6 +569,10 @@ async def environment_interact(request: EnvironmentInteractRequest):
                 "new_location": None
             }
         
+        from backend.services.agent_scheduler import maybe_agent_turn
+        agent_result = await maybe_agent_turn(turn_context)
+        if agent_result is not None:
+            return agent_result
         worldview = get_world_worldview()
         scene_npcs = request.scene_npcs
         npc_profiles = {
@@ -762,6 +771,10 @@ async def npc_dialogue(request: NPCDialogueRequest):
     if character["status"].get("is_dead") and not is_gm_mode:
         return {"description": "你已经死亡，无法对话。"}
     
+    from backend.services.agent_scheduler import maybe_agent_turn
+    agent_result = await maybe_agent_turn(turn_context)
+    if agent_result is not None:
+        return agent_result
     # 加载任务数据
     active_tasks = tasks_data.get("active_tasks", [])
     

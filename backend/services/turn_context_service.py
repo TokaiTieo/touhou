@@ -80,6 +80,9 @@ def format_npcs_for_ai(npcs: List[Dict], character: Optional[Dict] = None) -> st
         if character is not None:
             lines.append(format_current_npc_snapshot(character, npc.get('name'), npc.get('id')))
         field_labels = (
+            ("species", "种族"),
+            ("ability", "能力"),
+            ("faction", "势力"),
             ("description", "外貌性格"),
             ("personality", "行为风格"),
             ("initial_attitude", "初始态度"),

@@ -113,7 +113,7 @@ def respond_relationship(character, proposal_id, choice):
     proposal = next((item for item in character.get("relationship_proposals", []) if item.get("id") == proposal_id), None)
     if not proposal or proposal.get("status") != "pending":
         raise ValueError("这份心意已经回应或不在当前时间线")
-    name = proposal["npc_name"]
+    name = proposal.get("npc_storage_key") or proposal["npc_name"]
     state = relationship_dimensions(character, name)
     proposal["status"] = {"accept": "accepted", "decline": "declined", "friendship": "friendship"}[choice]
     proposal["responded_hour"] = absolute_hour(character)
