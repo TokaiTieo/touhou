@@ -29,7 +29,32 @@ def append_turn_history(context, result):
                    "is_dead": bool(result.get("is_dead")) if role == "assistant" else False,
                    "timestamp": datetime.now().isoformat(), "game_hour": character.get("time", {}).get("current_hour", 0),
                    "rating": None, "rewrite_candidates": []}
+        if (result.get("agent_turn") or {}).get("mode") == "collaborative":
+            message["visibility"] = {"scope": "recipients", "audience": ["@player"]}
+            message["participants"] = []
+            if role == "assistant":
+                message.update(speaker="旁白", npc_id=None)
+            else:
+                message["agent_inputs"] = result.get("agent_inputs", [])
         history.append(message)
         saved[role] = {"message_id": message["message_id"], "message_index": history_count(character) - 1,
                        "rewrite_candidates": []}
+    saved["agents"] = []
+    for event in result.get("agent_events", []):
+        if "@player" not in event.get("visibility", {}).get("audience", []):
+            continue
+        if event.get("status") == "rejected":
+            content = "动作未执行：" + str(event.get("reason", ""))
+        else:
+            content = event.get("text", "")
+        if not content:
+            continue
+        message = {"message_id": event["id"], "turn_id": turn.turn_id, "role": "assistant",
+                   "speaker": event["npc_name"], "npc_id": event["actor_id"], "content": content,
+                   "scene": turn.scene, "participants": event["visibility"]["audience"],
+                   "visibility": event["visibility"], "canonical_decision": True,
+                   "truth_status": "speech_not_verified_fact" if event["kind"] == "speak" else "server_validated_result",
+                   "timestamp": datetime.now().isoformat(), "rating": None, "rewrite_candidates": []}
+        history.append(message)
+        saved["agents"].append({"message_id": message["message_id"], "message_index": history_count(character) - 1})
     result["conversation"] = saved

@@ -45,7 +45,7 @@ export async function resolvePendingTurn(cancel = false) {
     entry.error = '';
     try {
         const status = cancel ? await cancelTurn(entry.body.character_id, entry.body.turn_id)
-            : await apiCall(`/ghost/${entry.kind}`, { method: 'POST', body: entry.body, timeoutMs: 180000 });
+            : await apiCall(`/ghost/${entry.kind}`, { method: 'POST', body: entry.body, timeoutMs: 660000 });
         if (cancel && !['committed', 'cancelled'].includes(status.state)) {
             entry.error = '尚未确认停止；回合可能正在结算，请稍后查询。';
             return;

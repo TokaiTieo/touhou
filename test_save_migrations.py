@@ -11,6 +11,22 @@ from backend.world_manager import ensure_character_fields
 
 
 class SaveMigrationTests(unittest.TestCase):
+    def test_v7_through_v13_keep_private_profile_and_agent_state_roundtrip(self):
+        for version in range(7, 14):
+            with self.subTest(version=version):
+                old = {"save_version": version, "character_id": "upgrade-agent", "profile": {"name": "旧角色", "body_data": {"keep": True}},
+                       "romance_settings": {"enabled": True}, "custom_mod": [1, 2, 3]}
+                ensure_character_fields(old).pop("_migrated", None)
+                self.assertEqual(old["agent_state"]["mode"], "legacy")
+                self.assertEqual(old["profile"]["body_data"], {"keep": True})
+                self.assertTrue(old["romance_settings"]["enabled"])
+                old["agent_state"]["mode"] = "collaborative"
+                old["agent_state"]["events"].append({"id": "event", "status": "pending", "target_id": "npc_reimu"})
+                restored = json.loads(json.dumps(old))
+                ensure_character_fields(restored).pop("_migrated", None)
+                self.assertEqual(restored["agent_state"], old["agent_state"])
+                self.assertEqual(restored["custom_mod"], [1, 2, 3])
+
     def test_v1_through_v6_fixtures_upgrade_additively_and_idempotently(self):
         fixture_dir = Path(__file__).parent / "test_fixtures" / "saves"
         for version in range(1, 7):

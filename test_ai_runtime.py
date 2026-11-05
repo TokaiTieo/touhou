@@ -56,6 +56,17 @@ def _service(responder):
 
 
 class AIRuntimeTests(unittest.TestCase):
+    def test_structured_options_are_opt_in_and_provider_scoped(self):
+        from backend.services.ai_provider_service import structured_request_options
+        service, calls = _service(lambda *_: _response('{}'))
+        service.call('JSON', structured=True)
+        self.assertEqual(calls.calls[-1]['extra_body'], {'thinking': {'type': 'disabled'}})
+        self.assertEqual(calls.calls[-1]['response_format'], {'type': 'json_object'})
+        service.call('Legacy JSON')
+        self.assertNotIn('extra_body', calls.calls[-1])
+        self.assertEqual(structured_request_options('https://api.example.com', 'deepseek-v4-flash'), {})
+        self.assertEqual(structured_request_options('https://notdeepseek.com', 'deepseek-v4-flash'), {})
+
     def test_prompt_compression_preserves_instructions_and_recent_tail(self):
         prompt = "开头规则\n" + ("中段资料\n" * 1800) + "最近行动与硬性输出规则"
         compacted, report = compress_prompt(prompt, max_chars=5000)

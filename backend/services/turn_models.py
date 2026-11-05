@@ -23,6 +23,7 @@ class TurnInput(BaseModel):
     npc_id: Optional[str] = None
     npc_name: Optional[str] = None
     scene_npcs: List[Dict[str, Any]] = Field(default_factory=list)
+    interaction_npc_ids: List[str] = Field(default_factory=list, max_length=40)
 
 
 class TurnContext(BaseModel):
@@ -38,6 +39,8 @@ class TurnContext(BaseModel):
     base_character_revision: int = 0
     base_tasks_revision: int = 0
     pending_world_changes: Dict[str, Any] = Field(default_factory=dict)
+    prepared_result: Optional[Dict[str, Any]] = None
+    candidate_committed: bool = False
 
 
 class TurnOutcome(BaseModel):

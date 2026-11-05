@@ -10,6 +10,7 @@ import { getTaskDisplayName } from '../ui/text.js';
 import { refreshCharacterTime } from '../core/session.js';
 import { beginGeneration, endGeneration } from '../core/generation.js';
 import { rememberTurn, finishTurn, readPendingTurn, checkPendingTurn } from '../core/pending-turn.js';
+import { appendAgentDecisions } from '../../vue/agent-results.js';
 import {
     scrollGameChatToBottom as scrollChatToBottom,
     setComposerDisabled as updateInputsDisabled
@@ -293,8 +294,7 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
                 }
             );
             if (!data) {
-                assistantMsg.content = '';
-                data = await npcDialogue(...requestArgs);
+                throw new Error('回合尚未确认，请手动恢复；不会自动追加模型请求');
             } else {
                 showToast('本回合已恢复', 1800);
             }
@@ -316,6 +316,8 @@ export async function callAIForDialogue(action, speech, isGreeting = false, isCo
         
         assistantMsg.content = npcResponse;
         assistantMsg.isStreaming = false;
+        if (data.agent_turn?.mode === 'collaborative') assistantMsg.speaker = '旁白';
+        appendAgentDecisions(data);
         renderChatHistory();
         scrollChatToBottom();
 

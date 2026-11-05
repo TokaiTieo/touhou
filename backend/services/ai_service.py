@@ -97,6 +97,10 @@ def compress_prompt(prompt: str, max_chars: int = None):
 
 
 def _mock_response(prompt: str) -> str:
+    if prompt.startswith("你是东方异变录中独立的人物"):
+        return json.dumps({"commands": [{"kind": "speak", "text": "先坐下喝杯茶吧。接下来的安排，我会自己想清楚。", "target_id": "@player"}]}, ensure_ascii=False)
+    if prompt.startswith("你是东方异变录的主持人"):
+        return json.dumps({"description": "庭院中的风轻轻拂过，方才的回应仍留在耳边。你可以继续交谈，也可以按自己的想法行动。", "cited_event_ids": []}, ensure_ascii=False)
     is_dialogue = "## 当前NPC信息" in prompt
     completes_incident = "完成结界裂隙" in prompt or "稳定博丽大结界" in prompt
     payload = {
@@ -246,7 +250,7 @@ class AIService:
             return True
         return False
     
-    def call(self, prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False) -> str:
+    def call(self, prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False, structured=False) -> str:
         """调用 AI API（同步阻塞）"""
         if E2E_MOCK_AI:
             self._remember_error()
@@ -283,6 +287,7 @@ class AIService:
             models, max_attempts = models[:1], 1
         client = self.client.with_options(max_retries=0) if single_attempt else self.client
         request_limits = {"max_tokens": max(1, int(max_output_tokens))} if max_output_tokens is not None else {}
+        from backend.services.ai_provider_service import structured_request_options
         attempts = []
         final_error = None
         for model_index, model_name in enumerate(models):
@@ -295,6 +300,7 @@ class AIService:
                         temperature=temperature,
                         timeout=AI_TIMEOUT,
                         **request_limits,
+                        **(structured_request_options(self.base_url, model_name) if structured else {}),
                     )
                     self._remember_usage(getattr(response, "usage", None))
                     attempts.append({"model": model_name, "attempt": attempt, "status": "ok"})
@@ -305,6 +311,8 @@ class AIService:
                         "attempts": len(attempts),
                         "attempt_log": attempts,
                         "fallback_used": model_index > 0,
+                        "finish_reason": getattr(response.choices[0], "finish_reason", None),
+                        "structured": structured,
                     })
                     return response.choices[0].message.content
                 except Exception as exc:
@@ -485,7 +493,7 @@ def call_ai(prompt: str, temperature: float = DEFAULT_TEMPERATURE) -> str:
     return ai_service.call(prompt, temperature)
 
 
-async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False) -> str:
+async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE, *, max_output_tokens=None, single_attempt=False, structured=False) -> str:
     """便捷函数：异步调用 AI（在线程池中执行，不阻塞事件循环，带总超时保护）"""
     loop = asyncio.get_running_loop()
     started_at = time.perf_counter()
@@ -493,8 +501,10 @@ async def call_ai_async(prompt: str, temperature: float = DEFAULT_TEMPERATURE, *
     caller = ai_service.call
     if max_output_tokens is not None or single_attempt:
         caller = partial(caller, max_output_tokens=max_output_tokens, single_attempt=single_attempt)
+    if structured:
+        caller = partial(caller, structured=True)
     args = (prompt, temperature)
-    if stream_context and max_output_tokens is None and not single_attempt:
+    if stream_context and max_output_tokens is None and not single_attempt and not structured:
         caller = partial(
             ai_service.call_streaming,
             on_chunk=stream_context.on_chunk,

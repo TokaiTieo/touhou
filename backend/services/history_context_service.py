@@ -3,6 +3,7 @@
 import json
 
 from backend.services.npc_attribution_service import npc_identity
+from backend.services.npc_identity_service import normalize_npc_references
 
 
 def select_history(server_history, client_history=()):
@@ -15,13 +16,14 @@ def format_history_record(item, content_limit=None):
     if content_limit is not None and len(content) > content_limit:
         content = content[:content_limit] + "…"
     identity = npc_identity(item.get("speaker"), item.get("npc_id")) if item.get("npc_id") else None
+    metadata = normalize_npc_references({"participants": item.get("participants"), "visibility": item.get("visibility")})
     record = {
         "message_id": item.get("message_id"), "turn_id": item.get("turn_id"),
         "speaker": item.get("speaker") or item.get("role") or "未知",
         "role": item.get("role", "unknown"), "npc": identity,
         "scene": item.get("scene") or "未知",
-        "participants": item.get("participants") or "归属未知，不得绑定当前人物",
-        "visibility": item.get("visibility") or "未知，不代表在场所有人知晓",
+        "participants": metadata["participants"] or "归属未知，不得绑定当前人物",
+        "visibility": metadata["visibility"] or "未知，不代表在场所有人知晓",
         "content": content,
     }
     # One physical line is an indivisible budget unit, including escaped newlines.

@@ -79,6 +79,8 @@ class TurnOrchestrator:
                 workflow_thread_id=context.workflow_thread_id,
             )
 
+        if context.prepared_result is not None:
+            raise ValueError("候选回合已结算，不得重复计算时间或奖励")
         turn = context.turn
         character = context.character
         tasks = context.tasks
@@ -108,7 +110,7 @@ class TurnOrchestrator:
         from backend.services.relationship_dynamics_service import propose_relationship
         sync_completed_events(character, tasks)
         names = list(dict.fromkeys(filter(None, [turn.npc_name] + [item.get("name") for item in turn.scene_npcs])))
-        proposal = propose_relationship(character, names)
+        proposal = None if character.get("agent_state", {}).get("mode") == "collaborative" else propose_relationship(character, names)
         if proposal:
             result["relationship_proposal"] = proposal
             result["description"] = f"{result.get('description', '')}\n\n{proposal['description']}"
@@ -118,8 +120,17 @@ class TurnOrchestrator:
         self._record_consequence(character, result, turn)
 
         final_result = self._public_result(turn.kind, result)
+        context.prepared_result = final_result
         if not persist:
             return TurnOutcome(result=final_result, committed=False, workflow_thread_id=context.workflow_thread_id)
+        return self.commit_candidate(context)
+
+    def commit_candidate(self, context: TurnContext) -> TurnOutcome:
+        """Commit the already-settled candidate without re-running gameplay rules."""
+        if context.prepared_result is None or context.candidate_committed:
+            raise ValueError("没有可提交的候选回合，或已完成提交")
+        turn, character, tasks = context.turn, context.character, context.tasks
+        final_result = context.prepared_result
         append_turn_history(context, final_result)
         rebuild_story_summary(character, tasks)
         record_turn_receipt(character, turn.turn_id, final_result)
@@ -131,6 +142,7 @@ class TurnOrchestrator:
             expected_tasks_revision=context.base_tasks_revision,
             world_changes=context.pending_world_changes,
         )
+        context.candidate_committed = True
         return TurnOutcome(
             result=final_result,
             committed=True,
@@ -223,7 +235,7 @@ class TurnOrchestrator:
             scene_npcs=turn.scene_npcs,
             relationship_update=relationship_update,
             task_updates=result.get("task_updates", []),
-        )
+        ) if character.get("agent_state", {}).get("mode") != "collaborative" else []
         if auto_updates:
             result["memory_updates"] = (result.get("memory_updates") or []) + auto_updates
             memory_runtime.record_npc_memories(
@@ -255,7 +267,7 @@ class TurnOrchestrator:
                 turn.scene,
                 turn_id=turn.turn_id,
             )
-        else:
+        elif character.get("agent_state", {}).get("mode") != "collaborative":
             initiative = select_npc_initiative(
                 character,
                 get_current_world_path() / "events.json",
@@ -398,6 +410,7 @@ class TurnOrchestrator:
             "memory_maintenance": result.get("memory_maintenance"),
             "onboarding": result.get("onboarding"),
             "turn_diagnostics": result.get("turn_diagnostics"),
+            "agent_turn": result.get("agent_turn"),
         }
 
 

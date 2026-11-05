@@ -177,6 +177,7 @@ async function streamApiCall(endpoint, body, {
         if (!dataLines.length) return;
         const payload = JSON.parse(dataLines.join('\n'));
         if (eventName === 'token') onToken?.(payload.text || '');
+        if (eventName === 'status') window.dispatchEvent(new CustomEvent('touhou:turn-phase', { detail: payload }));
         if (eventName === 'result') finalResult = payload;
         if (eventName === 'error') throw new Error(payload.message || '流式生成失败');
     };
@@ -338,7 +339,7 @@ async function getTurnStatus(characterId, turnId) {
 async function waitForTurnResult(
     characterId,
     turnId,
-    { signal, timeoutMs = 90000, pollMs = 450, onStatus } = {}
+    { signal, timeoutMs = 300000, pollMs = 1000, onStatus } = {}
 ) {
     const deadline = Date.now() + timeoutMs;
     let unknownCount = 0;

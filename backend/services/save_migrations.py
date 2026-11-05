@@ -226,10 +226,25 @@ def migrate_save_schema(character: Dict) -> bool:
         })
         changed = True
 
+    if version < 14:
+        from backend.services.agent_contracts import default_agent_state
+        from backend.services.npc_memory_service import upgrade_npc_memory_metadata
+        upgrade_npc_memory_metadata(character)
+        if character.get("story_summary"):
+            character.setdefault("attribution_legacy_story_summary", copy.deepcopy(character["story_summary"]))
+        character.setdefault("agent_state", default_agent_state())
+        character["save_version"] = 14
+        character.setdefault("migration_history", []).append({
+            "version": 14, "applied_at": datetime.now().isoformat(),
+            "summary": "可选 NPC 独立协作、权限版本与待处理互动；默认保持原模式，保留旧存档全部内容",
+        })
+        changed = True
+
     # Early V6 development saves may carry the version flag while missing a
     # newly introduced optional field. Keep this repair additive and idempotent.
     from backend.services.story_summary_service import default_story_director, default_story_summary
     v6_defaults = {
+        "agent_state": {"version": 1, "mode": "legacy", "permission_version": 1, "events": [], "consumed_events": [], "last_turn": {}},
         "life_state": {"version": 1, "activities": [], "appointments": [], "events": {}, "diaries": {},
                        "shared_experiences": [], "known_preferences": {}, "npc_resources": {}},
         "relationship_dimensions": {},

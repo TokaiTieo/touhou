@@ -1,5 +1,16 @@
 # TouHou Changelog
 
+## v0.18.0
+
+- Merge duplicate Chimata and Hisami records through stable IDs and legacy aliases, preserving memories and existing relationships.
+- Correct verified NPC species, abilities, affiliations, appearance and non-romantic personality details; retain custom body data and romance content.
+- Upgrade known erroneous installed content with original-file backups, and reconcile diaries, appointments and correction records when loading or restoring saves.
+
+- Add opt-in, identity-bound NPC decisions with zero to six participants per turn and a separate host narration.
+- Introduce read-only permissioned evidence, structured proposals, candidate settlement and single final commit.
+- Persist request reservations and subtask checkpoints; preserve unknown usage after cancellation and require manual retry.
+- Add V14 additive migration with legacy mode as the default. Release verification and comparative evaluation are tracked in docs/project-governor.md.
+
 ## v0.17.0
 
 - Add conservative action classification and deterministic daily activities with time, inventory and experience settlement.

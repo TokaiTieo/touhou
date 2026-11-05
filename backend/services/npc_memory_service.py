@@ -177,6 +177,27 @@ def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
             new_entry["truth_status"] = "disputed"
 
 
+def recall_npc_memories_readonly(character: Dict, npc_name: str, limit: int = 8, query: str = "") -> List[Dict]:
+    """No migration, index writes or access counters during speculative retrieval."""
+    name = canonical_npc_name(npc_name)
+    items = [copy.deepcopy(item) for field in ("npc_memory_archive", "npc_memories")
+             for item in character.get(field, {}).get(name, [])
+             if isinstance(item, dict) and _recalled(character, name, item)
+             and item.get("truth_status") not in ("retracted", "revoked")]
+    return rank_memories(items, query, limit, {}, {}, [])
+
+
+def commit_memory_usage(character: Dict, accesses) -> None:
+    wanted = {(item["npc_name"], item["memory_id"]) for item in accesses}
+    now = datetime.now().isoformat()
+    for field in ("npc_memories", "npc_memory_archive"):
+        for name, bucket in character.get(field, {}).items():
+            for item in bucket:
+                if isinstance(item, dict) and (name, item.get("id")) in wanted:
+                    item["used_count"] = _number(item.get("used_count"), 0) + 1
+                    item["last_used_at"] = now
+
+
 def get_npc_memory_text(character: Dict, npc_name: str = None, limit: int = 8, query: str = "") -> str:
     npc_name = canonical_npc_name(npc_name)
     memories = character.setdefault("npc_memories", {})

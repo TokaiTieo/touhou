@@ -328,6 +328,7 @@ def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
     npc_aliases = npcs_document.get("aliases", {})
     valid_npcs = npc_names | set(npc_aliases)
     _check_aliases(npc_aliases, npc_names, "npc", errors)
+    _check_aliases(npcs_document.get("id_aliases", {}), {item.get("id") for item in npc_items}, "npc id", errors)
 
     life = documents.get("life_content.json", {})
     if life and not any(error.startswith("life_content.json") for error in errors):

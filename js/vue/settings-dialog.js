@@ -1,4 +1,4 @@
-import { defineComponent, onMounted, ref } from '../vendor/vue.esm-browser.prod.js';
+import { computed, defineComponent, onMounted, ref } from '../vendor/vue.esm-browser.prod.js';
 import { state as gameState } from '../ghost/core/state.js';
 import {
     accessibilityState,
@@ -8,6 +8,7 @@ import {
     updateAccessibilitySettings
 } from './accessibility.js';
 import { openAppModal } from './app-store.js';
+import { apiCall } from '../api.js';
 
 
 export const SettingsDialog = defineComponent({
@@ -29,6 +30,9 @@ export const SettingsDialog = defineComponent({
         const diagnosticsMessage = ref('');
         const recovery = ref(null);
         const saveHealth = ref(null);
+        const agentMode = ref('legacy');
+        const hasCharacter = Boolean(gameState.currentSession.characterId);
+        const gameStateWaiting = computed(() => gameState.isWaitingForAI);
         const fontScale = ref(accessibilityState.fontScale);
         const ttsEnabled = ref(accessibilityState.ttsEnabled);
         const ttsRate = ref(accessibilityState.ttsRate);
@@ -63,12 +67,25 @@ export const SettingsDialog = defineComponent({
                 }
                 const recoveryResponse = await fetch('/api/ghost/turn_recovery');
                 if (recoveryResponse.ok) recovery.value = await recoveryResponse.json();
-                if (characterId) await loadSaveHealth(characterId);
+                if (characterId) {
+                    await loadSaveHealth(characterId);
+                    agentMode.value = (await apiCall(`/ghost/agent_mode?character_id=${encodeURIComponent(characterId)}`)).mode;
+                }
             } catch (error) {
                 status.value = '读取配置失败，请重新打开设置。';
                 statusType.value = 'error';
             }
         });
+
+        async function saveAgentMode() {
+            busy.value = true;
+            try {
+                await apiCall('/ghost/agent_mode', { method: 'POST', body: { character_id: gameState.currentSession.characterId, mode: agentMode.value } });
+                status.value = '本存档叙事方式已更新';
+                statusType.value = 'ok';
+            } catch (error) { status.value = error.message; statusType.value = 'error'; }
+            finally { busy.value = false; }
+        }
 
         async function saveAndTest() {
             if (!apiKey.value.trim() && !hasKey.value) {
@@ -218,6 +235,7 @@ export const SettingsDialog = defineComponent({
         }
 
         return {
+            agentMode, hasCharacter, saveAgentMode, gameStateWaiting,
             apiKey, busy, clearRecovery, costText, diagnosticsMessage, formatNumber, hasKey,
             fontScale, highContrast, keySourceText, maskedKey, model, models, providerBaseUrl, providerName,
             recovery, reduceMotion, repairSave, resetAccessibility, saveAccessibility, saveAndTest, saveHealth,
@@ -232,6 +250,14 @@ export const SettingsDialog = defineComponent({
                     <button class="icon-button" type="button" title="关闭" aria-label="关闭" @click="onClose">×</button>
                 </header>
                 <div class="dialog-content">
+                    <div v-if="hasCharacter" class="form-group">
+                        <label for="vueAgentMode">叙事方式</label>
+                        <select id="vueAgentMode" v-model="agentMode" :disabled="busy || gameStateWaiting" @change="saveAgentMode">
+                            <option value="legacy">原有叙事</option>
+                            <option value="retrieval">检索增强叙事（试验）</option>
+                            <option value="collaborative">人物独立回应（试验，额外模型调用）</option>
+                        </select>
+                    </div>
                     <div v-if="hasKey" class="api-key-status ok">当前已配置：{{ maskedKey || '已安全载入' }} · {{ keySourceText() }}</div>
                     <div class="form-group">
                         <label for="vueApiKeyInput">{{ hasKey ? '更换 API Key' : 'API Key' }}</label>

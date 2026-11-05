@@ -1,0 +1,534 @@
+{
+  "generated_at": "2026-10-29T17:17:20.442428+00:00",
+  "budget": {
+    "scope": "authorized-5000k-all-modes",
+    "token_limit": 5000000,
+    "request_limit": 3000,
+    "charged_tokens": 3234112,
+    "reserved_and_charged": 3234112,
+    "actual_tokens": 3176604,
+    "unknown_requests": 5,
+    "requests": 582
+  },
+  "groups": [
+    {
+      "stage": "fixed",
+      "mode": "legacy",
+      "attempts": 9,
+      "successful": 6,
+      "requests": 9,
+      "known_tokens": 75668,
+      "mean_seconds": 6.67,
+      "p95_seconds": 8.725,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "7a14928cf76de85ce66603620a770682a59f47c294e6c206ca26e05692f68b38"
+      ]
+    },
+    {
+      "stage": "fixed",
+      "mode": "retrieval",
+      "attempts": 9,
+      "successful": 4,
+      "requests": 9,
+      "known_tokens": 58613,
+      "mean_seconds": 18.39,
+      "p95_seconds": 24.34,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "7a14928cf76de85ce66603620a770682a59f47c294e6c206ca26e05692f68b38"
+      ]
+    },
+    {
+      "stage": "fixed",
+      "mode": "collaborative",
+      "attempts": 9,
+      "successful": 5,
+      "requests": 24,
+      "known_tokens": 54067,
+      "mean_seconds": 19.54,
+      "p95_seconds": 40.732,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 4,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "7a14928cf76de85ce66603620a770682a59f47c294e6c206ca26e05692f68b38"
+      ]
+    },
+    {
+      "stage": "fixed-contract-diagnosis",
+      "mode": "retrieval",
+      "attempts": 3,
+      "successful": 1,
+      "requests": 3,
+      "known_tokens": 20042,
+      "mean_seconds": 19.57,
+      "p95_seconds": 22.735,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "09cc521c46fa5549cfa4d48fdaac598cadbdf701d81c25d11d354cbcafb8095c"
+      ]
+    },
+    {
+      "stage": "fixed-contract-diagnosis",
+      "mode": "collaborative",
+      "attempts": 3,
+      "successful": 3,
+      "requests": 8,
+      "known_tokens": 21998,
+      "mean_seconds": 21.9,
+      "p95_seconds": 28.041,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "09cc521c46fa5549cfa4d48fdaac598cadbdf701d81c25d11d354cbcafb8095c"
+      ]
+    },
+    {
+      "stage": "fixed-structured-v2",
+      "mode": "legacy",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 9,
+      "known_tokens": 74309,
+      "mean_seconds": 5.44,
+      "p95_seconds": 7.04,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "57cbc33934d07807aa93b49a0f8f406da292845528930d23d48f0916a4d83986"
+      ]
+    },
+    {
+      "stage": "fixed-structured-v2",
+      "mode": "collaborative",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 29,
+      "known_tokens": 64258,
+      "mean_seconds": 17.37,
+      "p95_seconds": 27.0,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "57cbc33934d07807aa93b49a0f8f406da292845528930d23d48f0916a4d83986"
+      ]
+    },
+    {
+      "stage": "fixed-structured-v2",
+      "mode": "retrieval",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 9,
+      "known_tokens": 51628,
+      "mean_seconds": 15.43,
+      "p95_seconds": 30.032,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "57cbc33934d07807aa93b49a0f8f406da292845528930d23d48f0916a4d83986"
+      ]
+    },
+    {
+      "stage": "24",
+      "mode": "legacy",
+      "attempts": 24,
+      "successful": 24,
+      "requests": 24,
+      "known_tokens": 258832,
+      "mean_seconds": 5.65,
+      "p95_seconds": 7.096,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "27f9e10ec383c0965d7f1c87b59e94b30cef65b39a4f99dd3ab7defb9df75362"
+      ]
+    },
+    {
+      "stage": "24",
+      "mode": "retrieval",
+      "attempts": 24,
+      "successful": 24,
+      "requests": 24,
+      "known_tokens": 168240,
+      "mean_seconds": 11.1,
+      "p95_seconds": 15.454,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "27f9e10ec383c0965d7f1c87b59e94b30cef65b39a4f99dd3ab7defb9df75362"
+      ]
+    },
+    {
+      "stage": "24",
+      "mode": "collaborative",
+      "attempts": 24,
+      "successful": 22,
+      "requests": 46,
+      "known_tokens": 155143,
+      "mean_seconds": 13.01,
+      "p95_seconds": 24.486,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 2,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "27f9e10ec383c0965d7f1c87b59e94b30cef65b39a4f99dd3ab7defb9df75362"
+      ]
+    },
+    {
+      "stage": "fixed-contract-v3",
+      "mode": "collaborative",
+      "attempts": 4,
+      "successful": 4,
+      "requests": 10,
+      "known_tokens": 26390,
+      "mean_seconds": 14.17,
+      "p95_seconds": 21.391,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "1902ffc478abe4915a38ba609669424f9c79b89e1f1bfc0638d01f3545cc806b"
+      ]
+    },
+    {
+      "stage": "60",
+      "mode": "legacy",
+      "attempts": 60,
+      "successful": 60,
+      "requests": 60,
+      "known_tokens": 668831,
+      "mean_seconds": 5.33,
+      "p95_seconds": 6.646,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "60",
+      "mode": "retrieval",
+      "attempts": 60,
+      "successful": 60,
+      "requests": 60,
+      "known_tokens": 418296,
+      "mean_seconds": 12.55,
+      "p95_seconds": 20.825,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "60",
+      "mode": "collaborative",
+      "attempts": 60,
+      "successful": 58,
+      "requests": 115,
+      "known_tokens": 472937,
+      "mean_seconds": 13.88,
+      "p95_seconds": 24.221,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 2,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "fixed-release-wal",
+      "mode": "legacy",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 9,
+      "known_tokens": 74742,
+      "mean_seconds": 6.44,
+      "p95_seconds": 7.68,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "fixed-release-wal",
+      "mode": "collaborative",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 29,
+      "known_tokens": 83565,
+      "mean_seconds": 17.72,
+      "p95_seconds": 37.586,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "fixed-release-wal",
+      "mode": "retrieval",
+      "attempts": 9,
+      "successful": 9,
+      "requests": 9,
+      "known_tokens": 49708,
+      "mean_seconds": 13.46,
+      "p95_seconds": 20.117,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "24-release-wal",
+      "mode": "collaborative",
+      "attempts": 24,
+      "successful": 23,
+      "requests": 48,
+      "known_tokens": 189484,
+      "mean_seconds": 11.02,
+      "p95_seconds": 19.355,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "b91d5488420dace5ea27576e72bfa1a84c0e5b9d27de7923f70cd197f6c81b5e"
+      ]
+    },
+    {
+      "stage": "24-final-citations",
+      "mode": "collaborative",
+      "attempts": 24,
+      "successful": 24,
+      "requests": 48,
+      "known_tokens": 189853,
+      "mean_seconds": 12.46,
+      "p95_seconds": 20.36,
+      "failed_checks": {
+        "no_secret_to_unauthorized_npc": 0,
+        "zero_npc_when_alone": 0,
+        "required_npcs_responded": 0,
+        "max_six": 0
+      },
+      "source_hashes": [
+        "844124074f2a7cceed28db4b2ccf2bff28f284a9ce957a275ca1265849e48ec2"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "id": "fixed:legacy:3:three",
+      "error": "RuntimeError: invalid_turn_contract",
+      "causes": []
+    },
+    {
+      "id": "fixed:legacy:4:six",
+      "error": "RuntimeError: invalid_turn_contract",
+      "causes": []
+    },
+    {
+      "id": "fixed:collaborative:3:three",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:legacy:9:ordinary_friendship",
+      "error": "RuntimeError: invalid_turn_contract",
+      "causes": []
+    },
+    {
+      "id": "fixed:retrieval:4:six",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:retrieval:5:seven",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:collaborative:5:seven",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:retrieval:6:private_probe",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:collaborative:7:custom",
+      "error": "HTTPException: 主持人引用了不存在或无权公开的事件，本回合保留待恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:retrieval:8:unadapted",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:retrieval:9:ordinary_friendship",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed:collaborative:9:ordinary_friendship",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed-contract-diagnosis:retrieval:1:three",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "fixed-contract-diagnosis:retrieval:2:private_probe",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "24:collaborative:3:ordinary_friendship",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "24:collaborative:11:ordinary_friendship",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": []
+    },
+    {
+      "id": "60:collaborative:22:three",
+      "error": "HTTPException: database is locked",
+      "causes": [
+        {
+          "type": "HTTPException",
+          "detail": "422: database is locked"
+        },
+        {
+          "type": "OperationalError",
+          "detail": "database is locked"
+        }
+      ]
+    },
+    {
+      "id": "60:collaborative:24:unadapted",
+      "error": "HTTPException: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复",
+      "causes": [
+        {
+          "type": "HTTPException",
+          "detail": "503: 协作回合尚未提交，请手动恢复。结构化决策未通过校验，本回合未提交；可手动恢复"
+        },
+        {
+          "type": "AgentDecisionError",
+          "detail": "结构化决策未通过校验，本回合未提交；可手动恢复"
+        },
+        {
+          "type": "ValidationError",
+          "detail": "2 validation errors for Proposal\nbinding\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'save_id': 'evaluation-s...'permission_version': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden\ngame_hour\n  Extra inputs are not permitted [type=extra_forbidden, input_value=15.0, input_type=float]\n    For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden"
+        }
+      ]
+    },
+    {
+      "id": "24-release-wal:collaborative:7:alone",
+      "error": "HTTPException: 主持人引用了不存在或无权公开的事件，本回合保留待恢复",
+      "causes": [
+        {
+          "type": "HTTPException",
+          "detail": "409: 主持人引用了不存在或无权公开的事件，本回合保留待恢复",
+          "frames": [
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\scripts\\evaluate-agents.py\", line 192, in mode_run\n    result = await ghost.environment_interact.__wrapped__(request)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\backend\\routes\\ghost.py\", line 573, in environment_interact\n    agent_result = await maybe_agent_turn(turn_context)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\backend\\services\\agent_scheduler.py\", line 401, in maybe_agent_turn\n    raise HTTPException(409, str(exc)) from exc\n"
+          ]
+        },
+        {
+          "type": "ValueError",
+          "detail": "主持人引用了不存在或无权公开的事件，本回合保留待恢复",
+          "frames": [
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\backend\\services\\agent_scheduler.py\", line 395, in maybe_agent_turn\n    result, _ = await run_agent_turn(context)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\backend\\services\\agent_scheduler.py\", line 325, in run_agent_turn\n    return await workflow()\n           ^^^^^^^^^^^^^^^^\n",
+            "  File \"H:\\BaiduNetdiskDownload\\branchworld\\touhou\\backend\\services\\agent_scheduler.py\", line 292, in workflow\n    raise ValueError(\"主持人引用了不存在或无权公开的事件，本回合保留待恢复\")\n"
+          ]
+        }
+      ]
+    }
+  ],
+  "manual_scores_complete": false
+}

@@ -276,6 +276,9 @@ def ensure_worlds_available():
     _merge_bundled_content(Path(DEFAULT_WORLD_ID) / "events.json", "personal_events")
     _merge_bundled_content(Path(DEFAULT_WORLD_ID) / "events.json", "ambient_events")
 
+    from backend.services.npc_content_service import upgrade_installed_npcs
+    upgrade_installed_npcs(bundled_worlds / DEFAULT_WORLD_ID, WORLDS_DIR / DEFAULT_WORLD_ID, _atomic_json_write)
+
     WORLDS_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_worlds_dir() -> Path:

@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
     testDir: './e2e',
     outputDir: './test-results/playwright-artifacts',
-    globalTimeout: 100_000,
+    globalTimeout: 150_000,
     timeout: 30_000,
     workers: 1,
     reporter: [['list']],

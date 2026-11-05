@@ -8,8 +8,9 @@ from functools import lru_cache
 from urllib.parse import quote
 
 
-NAME_ALIASES = {"帕秋莉·诺蕾姬": "帕秋莉"}
-ID_ALIASES = {"npc_patchouli_n": "npc_patchouli", "hakurei_reimu": "npc_reimu"}
+NAME_ALIASES = {"帕秋莉·诺蕾姬": "帕秋莉", "千亦": "天弓千亦", "日狭美": "豫母都日狭美"}
+ID_ALIASES = {"npc_patchouli_n": "npc_patchouli", "hakurei_reimu": "npc_reimu",
+              "npc_chiyoda": "npc_takane", "npc_hisami_c": "npc_hisami"}
 KEY_ALIASES = {**NAME_ALIASES, "npc_patchouli_n": "帕秋莉", "npc_patchouli": "帕秋莉"}
 
 
@@ -39,6 +40,38 @@ def canonical_npc_name(name):
 
 def canonical_npc_id(identity):
     return npc_registry()[3].get(identity, identity) if isinstance(identity, str) else identity
+
+
+def normalize_npc_references(value):
+    """Normalize explicit metadata, never rewrite narrative or evidence originals."""
+    _, _, names, ids = npc_registry()
+
+    def visit(value):
+        if isinstance(value, list):
+            return [visit(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        result = {}
+        for key, item in value.items():
+            if key in ("originals", "legacy_identity_records", "npc_identity_archive"):
+                result[key] = copy.deepcopy(item)
+            elif key in ("npc_name", "owner_npc_name", "source_npc", "opponent") and isinstance(item, str):
+                result[key] = names.get(item, item)
+            elif key in ("npc_id", "owner_npc_id") and isinstance(item, str):
+                result[key] = ids.get(item, item)
+            elif key in ("related_npcs", "audience", "npcs", "participants") and isinstance(item, list):
+                values = []
+                for identity in item:
+                    # Visibility audiences use IDs; do not turn these into names.
+                    normalized = ids.get(identity, names.get(identity, identity)) if isinstance(identity, str) else visit(identity)
+                    if normalized not in values:
+                        values.append(normalized)
+                result[key] = values
+            else:
+                result[key] = visit(item)
+        return result
+
+    return visit(value)
 
 
 def resolve_npc(identity):
@@ -109,33 +142,17 @@ def migrate_npc_identities(character):
     changed = False
     affected = set()
 
-    def references(value):
-        if isinstance(value, list):
-            return [references(item) for item in value]
-        if not isinstance(value, dict):
-            return value
-        result = {}
-        for key, item in value.items():
-            if key in ("npc_name", "source_npc", "opponent"):
-                result[key] = canonical_npc_name(item)
-            elif key == "npc_id":
-                result[key] = canonical_npc_id(item)
-            elif key in ("related_npcs", "audience") and isinstance(item, list):
-                result[key] = list(dict.fromkeys(canonical_npc_name(name) for name in item if isinstance(name, str)))
-            else:
-                result[key] = references(item)
-        return result
-
-    def reconcile(mapping, path, *, text=False):
+    def reconcile(mapping, path, *, text=False, identity_keys=False):
         nonlocal changed
         if not isinstance(mapping, dict):
             return
-        for alias, name in npc_registry()[2].items():
+        aliases = npc_registry()[3] if identity_keys else npc_registry()[2]
+        for alias, name in aliases.items():
             if alias == name:
                 continue
             if alias not in mapping:
                 continue
-            affected.add(name)
+            affected.add(canonical_npc_name(name))
             snapshots = character.setdefault("npc_identity_archive", {})
             snapshots.setdefault(path, copy.deepcopy(mapping))
             old = mapping.pop(alias)
@@ -148,12 +165,19 @@ def migrate_npc_identities(character):
                     if str(secondary.get("updated_at") or "") > str(primary.get("updated_at") or ""):
                         primary, secondary = secondary, primary
                 mapping[name] = _merge(primary, secondary, text=text)
+                if path == "relationship_dimensions" and mapping[name].get("status") == "unconfirmed":
+                    # A confirmed old relationship must not become unconfirmed.
+                    for state in (primary, secondary):
+                        if state.get("status") in ("lover", "partner", "legacy_confirmed"):
+                            mapping[name]["status"] = state["status"]
+                            break
             changed = True
 
     for field in (
         "relationships", "relationships_map", "relationship_progress", "relationship_boundaries",
         "npc_memories", "npc_memory_archive", "npc_memory_layers", "npc_memory_summaries",
-        "npc_memory_legacy_summaries", "npc_runtime", "opponent_adaptation",
+        "npc_memory_legacy_summaries", "npc_memory_corrections", "npc_runtime", "opponent_adaptation",
+        "relationship_dimensions",
     ):
         reconcile(character.get(field), field, text=field in ("npc_memory_summaries", "npc_memory_legacy_summaries"))
     agency = character.get("npc_agency", {})
@@ -175,9 +199,16 @@ def migrate_npc_identities(character):
                     if len(names) > 1:
                         graph[new_key] = _merge(graph[new_key], updated) if new_key in graph else updated
                     changed = True
-    for field in ("open_events", "deferred_consequences", "npc_simulation", "world_state", "incident_state", "incident_history"):
+    life = character.get("life_state", {})
+    if isinstance(life, dict):
+        reconcile(life.get("diaries"), "life_state.diaries", identity_keys=True)
+        for field in ("known_preferences", "npc_resources"):
+            reconcile(life.get(field), "life_state." + field)
+    for field in ("open_events", "deferred_consequences", "npc_simulation", "world_state", "incident_state", "incident_history",
+                  "npc_memories", "npc_memory_archive", "npc_memory_layers", "npc_runtime", "npc_agency",
+                  "relationship_dimensions", "relationship_proposals", "gift_history", "spellcard_history", "life_state"):
         original = character.get(field)
-        normalized = references(original)
+        normalized = normalize_npc_references(original)
         if normalized != original:
             character.setdefault("npc_identity_archive", {}).setdefault(field, copy.deepcopy(original))
             character[field] = normalized
@@ -205,6 +236,7 @@ def migrate_npc_identities(character):
         for field in ("semantic_memory_index", "memory_index_meta"):
             mapping = character.get(field, {})
             if isinstance(mapping, dict):
-                for key in (*npc_registry()[2], *npc_registry()[1]):
-                    mapping.pop(key, None)
+                for key in list(mapping):
+                    if canonical_npc_name(key) in affected:
+                        mapping.pop(key, None)
     return changed

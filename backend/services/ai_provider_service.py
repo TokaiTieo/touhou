@@ -7,6 +7,14 @@ from urllib.parse import urlparse
 DEFAULT_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro"]
 
 
+def structured_request_options(base_url: str, model: str) -> dict:
+    # Provider-specific options must never be guessed for compatible proxies.
+    host = (urlparse(base_url).hostname or "").lower()
+    if host == "api.deepseek.com" and model.startswith(("deepseek-v4", "deepseek-flash")):
+        return {"response_format": {"type": "json_object"}, "extra_body": {"thinking": {"type": "disabled"}}}
+    return {}
+
+
 def normalize_base_url(value: str) -> str:
     url = str(value or "").strip().rstrip("/")
     if any(ord(character) < 32 for character in url):
