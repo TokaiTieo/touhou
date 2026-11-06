@@ -1,6 +1,3 @@
-/* messages: component styles and responsive states. */
-
-
 .th-message {
     width: min(760px, 90%);
     display: grid;
@@ -19,6 +16,7 @@
 .th-message.is-player .th-message-body { grid-column: 1; grid-row: 1; }
 
 .th-message-rail {
+    position: relative;
     padding-top: 12px;
     display: flex;
     justify-content: center;
@@ -107,6 +105,14 @@
     margin: 7px 0 0 auto;
 }
 
+.th-message.is-dialogue .th-message-body > header {
+    color: var(--tsuki-deep);
+}
+
+.th-message.is-system .th-message-body > header {
+    color: var(--kin);
+}
+
 @media (max-width: 820px) {
     .th-message { width: 95%; }
 }
@@ -124,55 +130,70 @@
 }
 
 .th-message {
-    margin-bottom: 26px;
     color: var(--ink);
+    width: 100%;
+    gap: 18px;
+    margin-bottom: 24px;
 }
 
 .th-message-rail span {
-    border: 1px solid var(--sakura-deep);
-    border-radius: 50%;
-    background: #FFFDF9;
-    color: var(--shu);
-    box-shadow: 0 3px 10px rgba(223, 137, 165, 0.26);
+    color: var(--on-vermilion);
+    width: 28px;
+    height: 56px;
+    border-radius: 2px;
+    background: var(--vermilion);
+    border: 1px solid var(--vermilion);
+    outline: 1px solid rgba(255, 255, 255, 0.7);
+    outline-offset: -4px;
+    box-shadow: 0 3px 7px rgba(142, 40, 35, 0.1);
+    font: 1rem var(--font-display);
 }
 
-.th-message-body {
-    padding: 16px 20px 14px;
-    border: 1px solid rgba(183, 143, 69, 0.26);
-    border-left: 3px solid var(--kin);
-    border-radius: 4px var(--radius-l) var(--radius-l) var(--radius-l);
-    background: rgba(255, 253, 249, 0.96);
-    box-shadow: var(--shadow-soft);
+.th-message-rail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 88px;
+    background: var(--accent-line);
+    z-index: -1;
 }
 
 .th-message.is-player .th-message-body {
-    border-right: 3px solid var(--sakura-deep);
-    border-left: 1px solid rgba(223, 137, 165, 0.3);
-    border-radius: var(--radius-l) 4px var(--radius-l) var(--radius-l);
-    background: linear-gradient(140deg, #FBD9E4, #F4B9CC);
-    box-shadow: 0 10px 30px rgba(223, 137, 165, 0.28);
+    border-left: 1px solid var(--accent-line);
+    border-radius: 8px;
+    border: 1px solid var(--accent-line);
+    border-right: 1px solid var(--accent-line);
+    background: var(--accent-soft);
+    box-shadow: none;
 }
 
 .th-message.is-dialogue .th-message-body {
-    border-left-color: var(--tsuki-deep);
-    background: rgba(244, 251, 253, 0.96);
+    background: transparent;
+    border-left-color: var(--jade-line);
 }
 
 .th-message.is-system .th-message-body {
-    border: 1px solid rgba(138, 114, 180, 0.32);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    background: rgba(177, 156, 216, 0.12);
     text-align: left;
+    border-left: 1px solid var(--line);
+    background: var(--veil);
+    box-shadow: none;
+    padding: 18px 22px 12px;
 }
 
 .th-message-body > header {
-    margin-bottom: 9px;
-    color: var(--kin);
-    letter-spacing: 0.1em;
+    letter-spacing: 0;
+    font-family: var(--font-mincho);
+    font-weight: 600;
+    color: var(--shu);
+    font-size: 0.8rem;
+    margin-bottom: 10px;
 }
 
 .th-message.is-player .th-message-body > header {
-    color: #9E3A4E;
+    color: var(--shu);
 }
 
 .th-streaming {
@@ -180,38 +201,40 @@
 }
 
 .th-message-content {
-    color: var(--ink-soft);
-    line-height: 1.9;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 2.1;
+    color: var(--ink);
 }
 
 .th-message.is-player .th-message-content {
-    color: #5A2433;
+    color: var(--ink);
 }
 
 .th-message-content h1,
 .th-message-content h2,
 .th-message-content h3 {
     color: var(--kin);
-    letter-spacing: 0.08em;
+    letter-spacing: 0;
 }
 
 .th-message-content code {
     padding: 1px 6px;
-    border-radius: 5px;
-    background: rgba(168, 216, 232, 0.22);
+    border-radius: 6px;
+    background: var(--jade-soft);
     color: var(--tsuki-deep);
     font-family: Consolas, "Courier New", monospace;
 }
 
 .th-rewrite-variants {
     gap: 7px;
-    border-top: 1px dashed rgba(183, 143, 69, 0.24);
+    border-top: 1px dashed var(--line);
 }
 
 .th-rewrite-variants button {
-    border: 1px solid rgba(183, 143, 69, 0.26);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
     color: var(--ink-faint);
     transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
         background 0.3s var(--ease-drift);
@@ -220,27 +243,35 @@
 .th-rewrite-variants button:hover,
 .th-rewrite-variants button.active {
     border-color: var(--sakura-deep);
-    background: #FFF3F7;
+    background: var(--panel);
     color: var(--shu);
 }
 
 .th-message-tools {
     transition: opacity 0.3s var(--ease-drift);
+    padding-top: 12px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    opacity: 0.8;
+    gap: 8px;
 }
 
 .th-message-tools button,
 .th-dialogue-continue {
-    border: 1px solid rgba(183, 143, 69, 0.26);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.7);
-    color: var(--ink-faint);
     transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift);
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    color: var(--ink-faint);
 }
 
 .th-message-tools button:hover,
 .th-message-tools button.active {
-    border-color: var(--kin);
-    color: var(--kin);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    color: var(--shu);
 }
 
 .th-message-tools button.is-danger:hover {
@@ -249,7 +280,7 @@
 }
 
 .th-dialogue-continue {
-    border-color: rgba(94, 150, 172, 0.45);
+    border-color: var(--jade-line);
     color: var(--tsuki-deep);
 }
 
@@ -259,18 +290,27 @@
 }
 
 .th-message-body {
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 10px 0 8px;
+    box-shadow: none;
 }
 
-.th-history-search { margin-bottom: 18px; color: var(--ink-soft); font-size: 0.85rem; letter-spacing: 0; }
+.th-message.is-player .th-message-body { padding: 12px 18px 8px; }
+.th-message.is-player .th-message-rail span { background: var(--panel); color: var(--shu); outline-color: var(--accent-line); }
+.th-message.is-system .th-message-content { font-family: var(--font-mincho); font-size: 1rem; line-height: 1.9; }
+
+.th-history-search { letter-spacing: 0; font-size: 0.78rem; margin-bottom: 18px; color: var(--ink-faint); padding-left: 46px; }
 
 .th-history-search summary { cursor: pointer; width: fit-content; padding-block: 6px; }
 
 .th-history-search form { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 8px; }
 
-.th-history-search input { flex: 1 1 120px; min-width: 0; width: 100%; padding: 8px; }
+.th-history-search input { flex: 1 1 120px; min-width: 0; width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--input); color: var(--ink); }
 
-.th-history-search button { padding: 6px 10px; color: var(--shu); background: var(--washi); border: 1px solid var(--kin-line); border-radius: 4px; cursor: pointer; }
+.th-history-search button { padding: 6px 10px; color: var(--shu); background: var(--washi); border: 1px solid var(--kin-line); border-radius: 6px; cursor: pointer; }
 
 .th-history-results { max-height: 20rem; overflow: auto; overflow-wrap: anywhere; }
 
@@ -283,3 +323,14 @@
 .touhou-high-contrast .th-message-content { color: #fff; }
 
 .touhou-high-contrast .th-message-tools { opacity: 1; }
+
+@media (max-width: 560px) {
+    .th-message { width: 100%; gap: 10px; }
+    .th-message-body { padding: 10px 0 8px; }
+    .th-message-content { font-size: 1.1rem; line-height: 2; }
+    .th-message-rail span { width: 24px; height: 44px; }
+    .th-message-rail::before { height: 70px; }
+    .th-message.is-system { width: 100%; }
+    .th-message.is-system .th-message-body { padding: 15px 16px 10px; }
+    .th-history-search { padding-left: 37px; }
+}

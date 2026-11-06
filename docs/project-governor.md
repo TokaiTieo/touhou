@@ -2,10 +2,10 @@
 
 ## 当前快照
 
-- 核对日期：2026-10-30；基线 v0.17.0 / 存档 V13，当前源码 v0.18.0 / V14。
+- 核对日期：2026-11-06；基线 v0.17.0 / 存档 V13，当前源码 v0.18.0 / V14。
 - 治理：严格，仅覆盖本次权限、结算、恢复、评测和发布改动。
 - 目标：全部稳定 ID 的 NPC 可独立决策，每回合按互动激活 0–6 人；可选上线，默认关闭。
-- implementation: implemented-for-optional-release（M1–M5 已接入）；verification: automated-passed / real-quality-partial；acceptance: pending。最终产物已复验，真实评测已停止，默认模式未改变。
+- implementation: implemented-with-boundary-repairs-v4；verification: agent-65-and-workflow-5-passed / full-suite-334-of-336 / real-quality-partial；acceptance: pending。11-06三轮修复仅进入源码，尚未重打包；用户已确认原反例、缺席补位及召回过滤有效，旧预留和取消未发现新回归，不代表接受整个模式。默认模式未改变。
 - 保留并行用户任务的人设修补、头像、updatelog.md 修改及用户 DOCX，不修改正式玩家存档。
 
 ## Project Map 与需求台账
@@ -18,17 +18,58 @@
 
 | ID | 要求与验收 | 验证 | 实现 / 验证 | 证据 |
 | --- | --- | --- | --- | --- |
-| MA-001 | 后端身份、五类只读查询、ACL/时间线/证据过滤 | 私密/纠错/传闻/统计延后 | implemented / scoped-pass | test_agent_context.py；test_agent_scheduler.py 后续私密隔离 |
+| MA-001 | 后端身份、五类只读查询、ACL/时间线/证据过滤 | 私密/纠错/传闻/统计延后 | implemented / scoped-pass-v4 | test_agent_boundaries.py：显式转向后停顿不回退UI选择；未知动作阻断绑定；请求、历史证据和后续记忆检查 |
 | MA-002 | 通用人物实例、本人提案、主持人独立叙事 | 任意登记/自定义、拒绝跨 ID | implemented / scoped-pass | 94/94登记人物本人上下文检查；test_agent_runtime.py；真实自定义/随机人物通过 |
-| MA-003 | 整回合 0–6 人、并发 3、依赖与延期 | 0/1/3/6/7/连锁唤醒 | implemented / scoped-pass | test_agent_scheduler.py；test_agent_recovery.py 六人真实检查点并发及重放 |
+| MA-003 | 整回合 0–6 人、并发 3、依赖与延期 | 0/1/3/6/7/连锁唤醒 | implemented / scoped-pass-v4 | 既有调度专项保留；test_agent_boundaries.py 结构化继续意图及缺席；e2e/agents.spec.mjs 实际继续按钮、SSE和落盘 |
 | MA-004 | 资源/日程冲突、去重、统一结算、轻量生活 | 转交须对方接受、日历一次推进 | implemented / scoped-pass | test_agent_scheduler.py；支持的领域命令外不声称全自由文本效果等价 |
 | MA-005 | 候选结算一次、独立发言和统一事务 | 恢复不重复结算、分人历史 | implemented / scoped-pass | test_agent_recovery.py；e2e/agents.spec.mjs；EXE/解压ZIP 回执验证 |
-| MA-006 | 子任务恢复、指纹失效、失败待恢复、取消保护 | 部分完成/主持人失败/ACL/revision/epoch/纠错 | implemented / scoped-pass | test_agent_recovery.py；test_agent_context.py；test_agent_persistence.py |
-| MA-007 | 请求/Token/时间预算、预留和持久账本 | 未知计费、失败重试、重启 | implemented / scoped-pass | test_agent_runtime.py；reports/agent-evaluation-2026-10-29/budget.sqlite3 |
+| MA-006 | 子任务恢复、指纹失效、失败待恢复、取消保护 | 部分完成/主持人失败/ACL/revision/epoch/纠错 | implemented / scoped-pass-v4 | test_agent_recovery.py：引用成功前校验、重启仅重试主持人、旧错误缓存失效；候选一次及费用保留；既有预算／取消回归继续通过 |
+| MA-007 | 请求/Token/时间预算、预留和持久账本 | 未知计费、失败重试、重启 | implemented / scoped-pass-v3 | test_agent_runtime.py：原子替换未发送预留、超限回滚、scope隔离、旧未知消耗保留；真实评测账本未变 |
 | MA-008 | 真实三模式固定案例 | 同初始夹具与调用政策、人工质量待审 | implemented / partial | structured-v2及release-wal均27/27；定性复核已记录，人工分数未填写 |
 | MA-009 | 真实三模式 24/60 连续回合 | 失败留档、Token 统一封顶 | implemented / partial | 首轮24为24/24、24/24、22/24；60为60/60、60/60、58/60；最后协作复测24/24，人工质量未验收 |
 | MA-010 | 可选设置、状态、V14 自动迁移/导入导出/回退 | 旧档/浏览器/布局 | implemented / scoped-pass | 完整Playwright20/20退出0；旧档导入分支测试通过 |
-| MA-011 | EXE/ZIP 与源码一致、无 Key/玩家档 | 启动及协作回执验证 | implemented / scoped-pass | release/artifact-status.json：两产物current/verified；最终构建a4d1650f1872；ZIP白名单/空Key/解压运行通过 |
+| MA-011 | EXE/ZIP 与源码一致、无 Key/玩家档 | 启动及协作回执验证 | implemented / prior-release-only | 10-30 构建a4d1650f1872曾通过；11-06源码修复及现有视觉变更尚未重打包，旧产物证据不能作为当前版本验证 |
+
+## 2026-11-06 三次边界复查
+
+| required | completed | missing | evidence |
+| --- | --- | --- | --- |
+| MA-001：明确转向后不得回退原所选人物 | 默认／明确／阻断绑定分离；短暂停顿保留明确对象，未知动作不恢复默认 | 不保证所有自由中文句式；不自动清理污染旧档 | 请求、逐人历史和下一回合召回测试 |
+| MA-003：继续对话激活当前NPC | 路由→TurnInput→结构化任务意图；控制信息不成为玩家发言；按钮脱离最后一条消息 | 真实供应商表现未复测 | test_agent_boundaries.py；浏览器真实点击及SSE提交、两视口、退出隐藏 |
+| MA-006/007：无效主持人引用可恢复且保留计费 | 成功缓存前校验；主持人独立策略版本；复用有效NPC与候选，失败费用保留 | 语义一致性不在引用集合校验能力内；上下文策略升级仍需废弃旧NPC结果 | test_agent_recovery.py 三项新增真实Functional持久化／重启用例 |
+
+- 最终Agent 65＋工作流5共70/70通过；完整Python/API 336项、334通过、2项既有视觉旧断言失败，静态与叙事规则通过；协作浏览器1/1通过。
+- 首次新增测试错误假设休息耗时15分钟，已按现有30分钟规则纠正；首次浏览器测试真实发现摘要会隐藏继续按钮，已修复且重复实测通过。不是删断言或延长超时换取通过。
+- 上下文策略4、主持人结果策略2，存档仍V14；旧字段默认值兼容，不改正式档。只有继续按钮位置／可见性涉及现有用户前端，保留其他视觉改动。
+- implementation 已完成本次三项与相关按钮修复，verification 限上述用例，acceptance pending。无真实API消耗、未打包，真实24/60回合及自由叙事语义验收仍未完成。证据见报告“三次复查”。
+
+## 2026-11-06 二次边界复查（历史）
+
+| required | completed | missing | evidence |
+| --- | --- | --- | --- |
+| MA-001：未知动作不得交给上一受众 | 未解析动作不分发、不进NPC记忆，并断开后续隐式受众；只允许明确引语续接 | 不将任意中文都识别为可执行互动；不自动修复已污染旧档 | test_agent_boundaries.py 单元、请求、历史及下一回合召回 |
+| MA-003：正常动作＋台词与直接告知应激活 | 保留动作／语言字段，独立台词可重新绑定UI选择；直接告知的否定属于正文 | 无本次已报案例的缺项，语义全覆盖仍未证明 | 同文件；e2e/agents.spec.mjs 实际选人、SSE及按回合提交检查 |
+| MA-006/007：升级策略不能被旧未发送预留阻断 | 新旧预留在同一事务替换，仅限当前scope；失败、运行中及未知费用保留，超限回滚 | 真实供应商中断／长测未跑 | test_agent_runtime.py；test_agent_recovery.py 实际Functional checkpoint与重启 |
+
+- 上轮44项覆盖不足的结论已被本轮反例推翻，历史记录保留但不当作本轮验收。用户明确确认的两项有效修复（在场补位、召回过滤）保持不变。
+- 最终56项Agent测试通过；完整质量检查327项中325项通过，仍有两项前端旧断言失败；静态及叙事规则检查通过。六人并发先复现WAL启动锁竞争，修复后连续20次重放通过；不隐去中间失败。
+- implementation 已完成三个已报案例的修复及相关启动竞态；verification 仅限记录的模拟／本地检查点与浏览器范围；acceptance 对本轮仍pending。源码可验收，不代表全量发布或自由文本语义安全已完成。
+- 证据及限制：`reports/agent-boundaries-2026-11-06.md` 的“二次复查”部分；没有新增真实用量、存档格式或打包产物。
+
+## 2026-11-06 初轮记录（历史）
+
+| 必须完成 | 已完成 | 缺失或限制 | 证据 |
+| --- | --- | --- | --- |
+| 私语不进入错误人物输入及后续记忆 | 按引号外收件人分段，直接对话入口同样校验 | 自由中文的隐含指代不是确定性权限契约；旧档已污染记录未自动删除 | test_agent_boundaries.py 请求／候选／下一回合召回 |
+| 真正互动才激活 | 动作谓词与说话内容分开判断 | 未声称识别任意中文表达 | test_speech_negation_is_not_action_negation；实际调用数测试 |
+| 在场参与者补满六人且不绕过上限 | 先过滤在场，再截取；缺席和超额保留待处理 | 无新增范围取消 | 七人缺席首位／九人缺席两位／全员缺席用例；既有连锁唤醒测试 |
+| 先权限后排名且只读 | 权限谓词在召回候选进入向量与排序前执行 | 合法旧记忆和传闻继续保留 | 45条非法高分记录压制合法记忆的活动／归档测试、ranker输入断言 |
+| 恢复不能带回旧策略结果 | 上下文代码策略版本进入指纹，变更后重建候选；相同新策略可复用 | 不删除旧计费账本，不自动追加请求 | test_agent_recovery.py |
+
+- Agent 专项 44/44，协作浏览器 1/1；完整 Python/API 313/315。两项失败为现有前端视觉变更与旧断言不一致，不改用户前端、不放宽断言。本轮静态检查与5项叙事规则案例通过。
+- 回归初跑曾出现取消后临时SQLite仍被占用；已修正重复取消清理竞态并加入可控阻塞测试。最终专项与完整回归中的取消用例均通过。
+- 本轮不发真实请求、不改正式存档、不打包。自由叙事语义一致性、当前补丁真实24/60回合和主观质量仍未验收；此前24/24只属于10-30最后补丁，不转移为本版证据。
+- 完整修复记录：`reports/agent-boundaries-2026-11-06.md`。下方10-30的用量、失败和发布记录保留为历史证据。
 
 ## 用户决策与不变量
 

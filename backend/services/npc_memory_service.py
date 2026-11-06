@@ -177,13 +177,14 @@ def _resolve_fact_conflicts(bucket: List[Dict], new_entry: Dict) -> None:
             new_entry["truth_status"] = "disputed"
 
 
-def recall_npc_memories_readonly(character: Dict, npc_name: str, limit: int = 8, query: str = "") -> List[Dict]:
+def recall_npc_memories_readonly(character: Dict, npc_name: str, limit: int = 8, query: str = "", *, eligible=None) -> List[Dict]:
     """No migration, index writes or access counters during speculative retrieval."""
     name = canonical_npc_name(npc_name)
     items = [copy.deepcopy(item) for field in ("npc_memory_archive", "npc_memories")
              for item in character.get(field, {}).get(name, [])
              if isinstance(item, dict) and _recalled(character, name, item)
-             and item.get("truth_status") not in ("retracted", "revoked")]
+             and item.get("truth_status") not in ("retracted", "revoked")
+             and (eligible is None or eligible(item))]
     return rank_memories(items, query, limit, {}, {}, [])
 
 

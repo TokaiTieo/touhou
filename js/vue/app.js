@@ -39,7 +39,7 @@ export const TouhouApp = defineComponent({
         const toast = ref(null);
         const developerMode = ref(false);
         const appVersion = window.TOUHOU_APP_VERSION || 'dev';
-        const theme = ref(localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark');
+        const theme = ref(localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light');
         let toastTimer = null;
 
         const themeLabel = computed(() => theme.value === 'light' ? '切换为夜间主题' : '切换为日间主题');
@@ -195,26 +195,17 @@ export const TouhouApp = defineComponent({
                     <button type="button" class="ghost-btn" @click="reloadApp">重新加载</button>
                 </section>
                 <section v-else-if="appUi.view === 'characters'" class="character-screen">
-                    <header class="screen-bar">
-                        <div class="screen-context">
-                            <span class="screen-context-mark" aria-hidden="true">界</span>
-                            <span><strong>幻想乡</strong><small>异变记录 / 角色选择</small></span>
-                        </div>
-                        <div class="menu-tools">
-                            <button id="apiKeyBtnMenu" class="ghost-btn" title="API Key 设置" @click="appUi.modal = 'settings'">钥匙 · API</button>
-                            <button id="testAIBtnMenu" class="ghost-btn" title="测试 AI 连接" @click="testAi">试 · 连接</button>
-                        </div>
-                    </header>
                     <div class="touhou-hero">
-                        <div class="touhou-hero-content">
-                            <div class="touhou-hero-kicker">幻想乡异变记录</div>
-                            <h1>开放异变档案</h1>
-                            <p>循着大结界的微光自由调查。你的对话、探索与符卡，会写下新的幻想乡缘起。</p>
+                        <div class="menu-tools">
+                            <button id="apiKeyBtnMenu" class="ghost-btn" title="API Key 设置" @click="appUi.modal = 'settings'"><span class="title-icon icon-key" aria-hidden="true"></span>钥匙 · API</button>
+                            <button id="testAIBtnMenu" class="ghost-btn" title="测试 AI 连接" @click="testAi"><span class="title-icon icon-plug" aria-hidden="true"></span>试 · 连接</button>
                         </div>
-                        <div class="touhou-hero-seal" aria-hidden="true"><span>東</span><span>方</span></div>
+                        <div class="touhou-hero-content">
+                            <div class="touhou-hero-kicker"><span class="title-world-seal" aria-hidden="true">幻想乡</span><span>幻想乡异变记录</span></div>
+                            <h1><span class="title-heading-text">东方异变录</span><img class="title-calligraphy" src="/static/ui/title-calligraphy-v1.png" alt="" width="1536" height="1024" fetchpriority="high"></h1>
+                        </div>
                     </div>
                     <section class="character-records">
-                        <div class="section-title"><span aria-hidden="true">記</span><strong>异变记录</strong></div>
                         <CharacterSelection :initial-characters="appUi.characters" :world="appUi.world" :on-play="playCharacter" />
                     </section>
                 </section>

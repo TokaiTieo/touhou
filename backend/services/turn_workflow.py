@@ -203,6 +203,10 @@ async def _open_runtime(kind: str, *, retry_corrupt: bool = True) -> Dict[str, A
         runtime["workflows"][kind] = _build_workflow(saver, kind, dependencies)
         await _garbage_collect(runtime, force=True)
         return runtime
+    except asyncio.CancelledError:
+        if connection is not None:
+            await connection.close()
+        raise
     except WorkflowUnavailableError:
         if connection is not None:
             await connection.close()

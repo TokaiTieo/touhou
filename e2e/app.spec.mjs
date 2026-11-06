@@ -69,6 +69,11 @@ test('keeps the producer template secret and public relationship wording restrai
 test('theme and protected API work from the injected game session', async ({ page }) => {
     await page.goto('/');
     const themeButton = page.getByRole('button', { name: /切换为/ });
+    await expect(page.locator('body')).toHaveClass(/light-theme/);
+    await themeButton.click();
+    await expect(page.locator('body')).not.toHaveClass(/light-theme/);
+    await page.reload();
+    await expect(page.locator('body')).not.toHaveClass(/light-theme/);
     await themeButton.click();
     await expect(page.locator('body')).toHaveClass(/light-theme/);
     const status = await page.evaluate(async () => {
