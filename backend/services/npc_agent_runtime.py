@@ -22,6 +22,14 @@ class AgentDecisionError(RuntimeError):
     pass
 
 
+HOST_RESULT_POLICY_VERSION = 2
+
+
+def _validate_host_citations(result, allowed_event_ids):
+    if set(result["cited_event_ids"]) - set(allowed_event_ids):
+        raise AgentDecisionError("主持人引用了不存在或无权公开的事件，本回合保留待恢复")
+
+
 async def ledger_io(operation, *args, **kwargs):
     """Do not strand an SQLite worker when cancellation interrupts its await."""
     worker = asyncio.create_task(asyncio.to_thread(operation, *args, **kwargs))
@@ -52,6 +60,9 @@ class BudgetLedger:
         self.token_limit, self.request_limit = int(token_limit), int(request_limit)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
+            # Configure the shared database before parallel ledger/checkpoint
+            # operations start; switching journal mode needs exclusive access.
+            connection.execute("PRAGMA journal_mode=WAL").close()
             connection.executescript("""
                 CREATE TABLE IF NOT EXISTS agent_jobs (
                     scope TEXT NOT NULL, job TEXT NOT NULL, reservation INTEGER NOT NULL,
@@ -84,9 +95,18 @@ class BudgetLedger:
             "SELECT COALESCE(SUM(reservation),0),COUNT(*) FROM agent_jobs WHERE scope=? AND status='planned'", (self.scope,)).fetchone()
         return charged + planned, requests + held
 
-    def reserve(self, jobs):
+    def reserve(self, jobs, *, replace_pending=False):
         with self.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
+            if replace_pending:
+                # Replace this turn's unsent plan atomically with the new one.
+                # Calls (including failed/unknown charges) are never refunded.
+                obsolete = [(time.time(), self.scope, row[0]) for row in connection.execute(
+                    "SELECT job FROM agent_jobs WHERE scope=? AND status='planned'", (self.scope,))
+                    if row[0] not in jobs]
+                connection.executemany(
+                    "UPDATE agent_jobs SET status='unused',updated=? WHERE scope=? AND job=? AND status='planned'",
+                    obsolete)
             for job, reservation in jobs.items():
                 row = connection.execute("SELECT status FROM agent_jobs WHERE scope=? AND job=?", (self.scope, job)).fetchone()
                 if row and row[0] == "complete":
@@ -186,9 +206,9 @@ hour 是绝对游戏小时，目标 @player 是玩家。仅说话不会修改属
 只输出符合下面 schema 的 JSON，不输出思维过程。"""
 
 
-def npc_prompt(reader, evidence, action, recipients, hour):
+def npc_prompt(reader, evidence, action, recipients, hour, *, intent="interaction"):
     return NPC_INSTRUCTIONS + "\n" + json.dumps({"binding": reader.model_dump(), "game_hour": hour,
-        "task": {"player_input": action, "allowed_recipients": recipients}, "evidence": evidence,
+        "task": {"intent": intent, "player_input": action, "allowed_recipients": recipients}, "evidence": evidence,
         "schema": proposal_schema()}, ensure_ascii=False)
 
 
@@ -218,6 +238,8 @@ class NPCRuntime:
             from backend.services.ai_contracts import EnvironmentTurnResult
             contract = Proposal if payload["kind"] == "npc" else EnvironmentTurnResult if payload["kind"] == "retrieval" else HostNarration
             result = contract.model_validate(safe_json_loads(response, None)).model_dump()
+            if payload["kind"] == "host":
+                _validate_host_citations(result, payload.get("allowed_event_ids", []))
             success = True
             return {"result": result, "evidence": payload["evidence"], "binding": payload["binding"],
                     "usage": usage, "runtime": get_last_ai_runtime(), "job": job}
@@ -230,9 +252,9 @@ class NPCRuntime:
         finally:
             await ledger_io(self.ledger.finish, request_id, usage, success=success)
 
-    async def invoke(self, reader, prompt, evidence, job, *, kind="npc", billing_job=None):
+    async def invoke(self, reader, prompt, evidence, job, *, kind="npc", billing_job=None, allowed_event_ids=None):
         payload = {"prompt": prompt, "evidence": evidence, "binding": reader.model_dump(), "kind": kind, "job": job,
-                   "billing_job": billing_job or job}
+                   "billing_job": billing_job or job, "allowed_event_ids": list(allowed_event_ids or [])}
         if not self.checkpoint:
             return await self._generate(payload)
         await ledger_io(self.ledger.track_job, job)

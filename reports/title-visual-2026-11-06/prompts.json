@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-06",
+  "mode": "Built-in image_gen (not CLI)",
+  "direction": "红白神社、清透雅致",
+  "scope": "Title/save-selection visuals only. Existing action handlers preserved.",
+  "assets": [
+    {
+      "path": "reports/title-visual-2026-11-06/title-concept-v1.png",
+      "role": "Title-page impression",
+      "prompt": "Use case: ui-mockup. Create a finished art-directed TITLE / SAVE SELECTION SCREEN concept for a Chinese Touhou fan text adventure, \"东方异变录\".\nInput 1 is the current title page, use only for its existing functions. Input 2 is the game's newly established shrine-and-paper art direction, use for visual continuity. Redesign the title page meaningfully, not merely recolor the old banner.\nDirection: 红白神社、清透雅致. Luminous pearl-white, deep shrine vermilion, ink-calligraphy, soft spring sky blue, jade foliage, tiny gold cord details. Elegant illustrated Japanese doujin game, NOT a marketing website, dashboard, card grid demo or landing-page template.\nFlat complete browser UI screenshot, straight-on, 16:10 landscape, no device frame. No invented functions, counters or badges.\nONE slim top bar, current small crest and game name at left, day/night and quit at right. No second full-width toolbar.\nUpper ~52% is one full-bleed bespoke hand-painted shrine approach panorama, with spatial depth: a vermilion torii on the RIGHT, stone path leading to a red-and-white shrine beyond it, white shide and a delicate flowering branch framing the upper LEFT. Morning light, airy paper-white atmosphere with architecture still crisp and real. The LEFT 40% contains quiet light negative space. Over that landscape directly, NOT in a card or split panel, a large beautifully composed deep-red brush calligraphy title \"东方异变录\" in two lines, first \"东方\", then \"异变录\". A small rectangular red \"幻想乡\" seal and restrained subtitle \"幻想乡异变记录\". Tiny existing API settings and connection test controls at upper right of artwork, not a toolbar. No characters or new NPC art.\nAt the bottom edge of the landscape, a delicate red/gold cord with a small central knot and white paper streamers introduces a continuous luminous paper-white save journal. This lower section must already be visible in the first viewport. No floating section cards.\nThe save section has a fine title \"异变记录\", quiet world text \"幻想乡 · 第一章：结界裂隙异变\", and clear existing commands \"创建新外来者\", \"导入角色\", \"导入NPC\" aligned nearby. Make creation a restrained vermilion charm-like command, not oversized.\nBelow, three refined save slips arranged as a 3-column grid, individual repeated items only. Each has a narrow red bookmark-like index, a LARGE player's name, a short identity and location line, and visible \"继续异变\" command with smaller \"时序\", export, convert-to-NPC, delete controls. Use names \"白羽\", \"雾月\", \"清和\"; identities \"幻想乡原住民\", \"外来人\", \"旅行者\"; location \"博丽神社\". Do NOT duplicate saves from the top banner. No nested cards. Very light 6px corner framing, Japanese paper folio detail and delicate fine lines, no heavy shadows.\nA restrained flowering branch at the far bottom-right ties into the in-game journal. No orbs, bokeh, neon, dominant beige or purple. No paragraphs about features, keyboard shortcuts, UI design, tech or how to play. Avoid generic rounded blocks. This must look like a polished Touhou fan game's beautiful title screen and translate faithfully to real responsive Vue markup."
+    },
+    {
+      "path": "static/ui/title-shrine-approach-v1.png",
+      "role": "Full-bleed title scene",
+      "prompt": "Use case: background-extraction / illustration-story. From the supplied title-screen concept, redraw ONLY its upper shrine approach illustration as a reusable clean full-bleed background asset. Keep the same exquisite, airy hand-painted watercolor anime environment style.\nPanoramic landscape 3:1. On the RIGHT: a tall vermilion torii in the foreground, white shide and sacred rope, a sunlit stone path receding toward a red-and-white shrine beyond it, small stone lanterns, jade spring trees. A delicate flowering branch enters from the UPPER LEFT. Left 40% is luminous softly painted paper-white sky and distant foliage, quiet enough to put a large dark-red game title on top, but NOT a blank rectangular panel. Strong spatial depth, elegant natural light, clear red shrine architecture, restrained pale blue sky.\nRemove ALL interface elements: absolutely no title lettering, seals, text, numbers, symbols, game logo, cards, buttons, bottom horizontal decorative rope, page, borders or watermarks. No people or characters. No beige wash, no fantasy orbs, no bokeh. The illustration should fill the entire canvas, with no opaque white frame; keep its naturally light left-side negative space."
+    },
+    {
+      "path": "static/ui/title-calligraphy-v1.png",
+      "role": "Transparent simplified-Chinese title mark, verified on white",
+      "initial_prompt": "Use case: background-extraction / logo-brand. Produce ONLY the title calligraphy from the supplied title-screen concept as a clean isolated TRANSPARENT PNG title mark.\nExact simplified Chinese text, five characters total: \"东方异变录\". In two lines: first line \"东方\", second line \"异变录\". First line starts slightly to the left; second line slightly indented. Powerful but refined Chinese brush calligraphy, elegant sharp tapered strokes, natural hand-ink texture, deep shrine vermilion #A42D2A. Match the beautiful brush-lettered title in the reference. This is a Touhou doujin game's title, airy and sophisticated, not block typography. Keep all five characters exactly correct.\nTight composition with only a small transparent margin around strokes, landscape mark around 3:2, all strokes fully inside canvas. Genuine transparent alpha everywhere outside the calligraphy. NO white panel or opaque backdrop. NO flowers, paper texture background, tiny seal, subtitle, ribbon, gold flourishes, game UI, scenery, extra text, numbers, logos, watermark, framing or shadows. Only the five red characters.",
+      "final_prompt": "Fix this title mark for real UI use. Preserve the two-line brush-calligraphy composition and the EXACT SIMPLIFIED Chinese \"东方\" / \"异变录\" (five characters, not traditional forms). The current output has unwanted blurry red glow/fog surrounding the strokes. REMOVE ALL glow, fog, blur, shadows, halo, and colored background completely. Only crisp, fully opaque deep red #A42D2A brush strokes should remain, with clean antialiased edges. Every pixel outside the letter strokes must have alpha 0; no soft red cloud around them. True transparent cutout. The strokes should be dark red and strongly readable on white. No extra text, ornament, seal, background or watermark. Refined elegant sharp brush lettering, not a neon effect."
+    }
+  ],
+  "reused_assets": [
+    "static/ui/shrine-rope-v1.png",
+    "static/ui/shrine-floral-corner-v1.png"
+  ],
+  "icons": {
+    "source": "https://github.com/lucide-icons/lucide",
+    "license": "https://lucide.dev/license",
+    "local_directory": "static/ui/lucide",
+    "downloaded_on": "2026-11-06",
+    "main": [
+      "arrow-right",
+      "download",
+      "key-round",
+      "plug-zap",
+      "plus",
+      "upload",
+      "user-round-plus"
+    ],
+    "0.468.0": [
+      "history",
+      "trash-2"
+    ],
+    "notice": "Full license saved beside icons; no runtime CDN dependency."
+  }
+}

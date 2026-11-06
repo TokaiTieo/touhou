@@ -170,8 +170,8 @@ const GameToolbar = defineComponent({
 
 const ChatMessage = defineComponent({
     name: 'ChatMessage',
-    props: { message: { type: Object, required: true }, index: { type: Number, required: true }, last: Boolean },
-    emits: ['delete', 'reroll', 'continue'],
+    props: { message: { type: Object, required: true }, index: { type: Number, required: true } },
+    emits: ['delete', 'reroll'],
     setup(props, { emit }) {
         const kind = computed(() => props.message.isDead ? '終' : (props.message.role === 'user' ? '行' : (props.message.isDialogue ? '話' : (props.message.role === 'system' ? '告' : '述'))));
         const messageClass = computed(() => ({
@@ -236,7 +236,6 @@ const ChatMessage = defineComponent({
                     </button>
                     <button type="button" class="is-danger" title="从此处删除" @click="emit('delete', index)">删除</button>
                 </footer>
-                <button v-if="last && message.isDialogue && !message.isStreaming" class="th-dialogue-continue" type="button" @click="emit('continue')">静候对方继续</button>
             </div>
         </article>
     `
@@ -515,13 +514,18 @@ export const GameScreen = defineComponent({
         <div class="th-game">
             <section class="th-story-stage">
                 <div ref="chatRef" class="th-chat-scroll" aria-label="剧情记录" @scroll.passive="onChatScroll">
+                    <header class="th-scene-heading">
+                        <span class="th-scene-seal" aria-hidden="true">境</span>
+                        <div><p>幻想乡 · 异变纪行</p><h1>{{ session.currentScene }}</h1></div>
+                    </header>
                     <HistorySearch />
                     <button v-if="hasEarlier" type="button" class="th-history-more" :disabled="earlierLoading" @click="earlier">{{ earlierLoading ? '正在翻阅' : '翻阅更早记录' }}</button>
                     <div v-if="!messages.length" class="th-opening"><span>東</span><strong>异变记录尚未落笔</strong><small>第一段叙事正在生成</small></div>
                     <VirtualHistory :items="messages" :scroll-parent="chatRef" v-slot="{ message, index }">
-                        <ChatMessage :message="message" :index="index" :last="index === messages.length - 1"
-                            @delete="deleteMessage" @reroll="reroll" @continue="continueDialogue" />
+                        <ChatMessage :message="message" :index="index"
+                            @delete="deleteMessage" @reroll="reroll" />
                     </VirtualHistory>
+                    <button v-if="session.isInDialogue && session.currentDialogueNPC && !session.isWaitingForAI && !session.isDead" type="button" class="th-dialogue-continue" @click="continueDialogue">静候对方继续</button>
                     <button v-if="session.isInDialogue && session.currentDialogueNPC && !session.isWaitingForAI" type="button" class="th-end-dialogue" @click="endDialogue">结束与 {{ session.currentDialogueNPC?.name }} 的对话</button>
                 </div>
                 <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ turnAnnouncement }}</p>

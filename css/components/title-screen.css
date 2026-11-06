@@ -1,0 +1,182 @@
+/* Title artwork and save folios have one owner, separate from the play screen. */
+.character-screen {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--washi);
+    scrollbar-color: var(--accent-line) transparent;
+}
+
+.touhou-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: clamp(320px, 52svh, 540px);
+    padding: 58px max(32px, calc((100% - 1240px) / 2)) 36px;
+    background: url('/static/ui/title-shrine-approach-v1.png') center 56% / cover no-repeat;
+    isolation: isolate;
+}
+
+.touhou-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, rgba(255, 253, 253, 0.12), transparent 55%);
+}
+
+.touhou-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -41px;
+    height: 88px;
+    background: url('/static/ui/shrine-rope-v1.png') center 48% / 103% auto no-repeat;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.touhou-hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: min(450px, 43%);
+    min-width: 0;
+}
+
+.touhou-hero h1 { position: relative; width: 100%; margin: 0; line-height: 1; }
+.title-calligraphy { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; }
+.title-heading-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.touhou-hero-kicker {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-left: 36px;
+    color: #6c4541;
+    font: 1rem/1.5 var(--font-display);
+}
+
+.title-world-seal {
+    display: inline-block;
+    padding: 4px 6px;
+    border: 1px solid #b8322b;
+    outline: 1px solid rgba(255, 255, 255, 0.7);
+    outline-offset: -3px;
+    color: #fff;
+    background: #b8322b;
+    border-radius: 2px;
+    white-space: nowrap;
+    font-size: 0.72rem;
+}
+
+.menu-tools { position: absolute; top: 22px; right: 32px; display: flex; flex-wrap: wrap; gap: 10px; }
+.menu-tools .ghost-btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; background: var(--veil); border-color: var(--accent-line); font: 0.9rem/1.5 var(--font-display); }
+
+.title-icon { display: inline-block; width: 17px; height: 17px; flex: 0 0 auto; background: currentColor; mask: var(--title-icon) center / contain no-repeat; }
+.icon-key { --title-icon: url('/static/ui/lucide/key-round.svg'); }
+.icon-plug { --title-icon: url('/static/ui/lucide/plug-zap.svg'); }
+.icon-plus { --title-icon: url('/static/ui/lucide/plus.svg'); }
+.icon-upload { --title-icon: url('/static/ui/lucide/upload.svg'); }
+.icon-download { --title-icon: url('/static/ui/lucide/download.svg'); }
+.icon-person { --title-icon: url('/static/ui/lucide/user-round-plus.svg'); }
+.icon-history { --title-icon: url('/static/ui/lucide/history.svg'); }
+.icon-trash { --title-icon: url('/static/ui/lucide/trash-2.svg'); }
+.icon-arrow { --title-icon: url('/static/ui/lucide/arrow-right.svg'); }
+
+.character-records { width: min(1320px, calc(100% - 80px)); margin: 0 auto; padding: 42px 0 24px; }
+.character-records::after { content: ''; display: block; height: 100px; background: url('/static/ui/shrine-floral-corner-v1.png') right bottom / 230px auto no-repeat; pointer-events: none; }
+.character-records-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--accent-line); }
+.section-title { display: flex; align-items: center; gap: 14px; margin: 0; color: var(--shu); font: 1.65rem/1.4 var(--font-display); }
+.section-title strong { font-weight: 500; }
+.section-title > span { display: grid; place-items: center; width: 29px; height: 34px; border: 1px solid var(--accent-line); outline: 1px solid var(--accent-line); outline-offset: -4px; border-radius: 2px; font-size: 0.82rem; }
+.character-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.character-actions .action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 7px 14px; font: 1rem/1.4 var(--font-display); border-color: var(--accent-line); border-radius: 6px; background: transparent; color: var(--shu); }
+.character-actions .action-btn.primary { border: 3px double var(--washi); outline: 1px solid var(--vermilion); background: var(--vermilion); color: var(--on-vermilion); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45); }
+.character-actions .action-btn:hover { background: var(--accent-soft); }
+.character-actions .action-btn.primary:hover { background: var(--vermilion-hover); }
+.touhou-world-info { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin: 15px 0 22px; color: var(--ink-soft); font: 0.82rem/1.6 var(--font-mincho); }
+.world-info-label { color: var(--tsuki-deep); }
+.world-info-name { font-weight: 500; }
+.world-info-note { margin-left: auto; color: var(--ink-faint); }
+
+.vue-character-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
+.character-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
+    gap: 18px 16px;
+    min-width: 0;
+    min-height: 232px;
+    padding: 22px 22px 16px;
+    border: 1px solid var(--accent-line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink);
+    transition: border-color 180ms, box-shadow 180ms;
+    isolation: isolate;
+}
+.character-card::before { content: ''; position: absolute; inset: 5px; border: 1px solid var(--line); border-radius: 3px; pointer-events: none; z-index: -1; }
+.character-card::after { content: ''; position: absolute; top: 6px; right: 6px; width: 144px; height: 100px; background: url('/static/ui/shrine-floral-corner-v1.png') right bottom / 144px auto no-repeat; opacity: 0.11; pointer-events: none; z-index: -1; }
+.character-card:hover { border-color: var(--shu); box-shadow: 0 6px 20px rgba(100, 48, 44, 0.07); }
+.character-card.dead { opacity: 0.76; border-color: var(--ink-faint); }
+.character-record-seal { position: relative; align-self: start; display: grid; place-items: center; width: 32px; min-height: 52px; padding: 5px 3px; background: var(--vermilion); color: var(--on-vermilion); border: 1px solid var(--vermilion); outline: 1px solid rgba(255, 255, 255, 0.7); outline-offset: -4px; border-radius: 2px; font: 0.95rem/1.4 var(--font-display); font-variant-numeric: tabular-nums; }
+.character-record-seal::after { content: ''; position: absolute; top: 100%; width: 1px; height: 17px; background: var(--accent-line); }
+.character-card-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; overflow-wrap: anywhere; }
+.character-card-info strong { font: 500 1.8rem/1.35 var(--font-display); color: var(--ink); }
+.character-card-info span { margin-top: 5px; font: 0.84rem/1.6 var(--font-mincho); color: var(--ink-soft); }
+.character-card-info small { margin-top: 4px; font: 0.75rem/1.6 var(--font-mincho); color: var(--ink-faint); }
+.character-card-actions { grid-column: 1 / -1; display: grid; grid-template-columns: auto auto minmax(0, 1fr) 32px; align-items: center; gap: 8px 4px; }
+.character-card-actions button { display: inline-flex; justify-content: center; align-items: center; gap: 5px; min-width: 0; min-height: 32px; padding: 5px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; color: var(--ink-soft); background: transparent; font: 0.77rem/1.5 var(--font-display); }
+.character-card-actions button:hover { color: var(--shu); background: var(--accent-soft); }
+.character-card-actions .character-play-btn { grid-column: 1 / -1; justify-self: center; width: min(210px, 100%); margin-bottom: 5px; min-height: 38px; padding: 5px 12px; gap: 20px; border: 3px double var(--washi); outline: 1px solid var(--vermilion); background: var(--vermilion); color: var(--on-vermilion); font-size: 1.1rem; border-radius: 6px; }
+.character-card-actions .character-play-btn:hover { background: var(--vermilion-hover); }
+.character-card-actions .character-delete-btn { color: var(--ink-faint); }
+.character-card-actions .character-delete-btn:hover { color: var(--shu); }
+.empty-character-state { padding: 38px 16px; border-block: 1px solid var(--line); color: var(--ink-faint); font: 1rem/1.8 var(--font-display); text-align: center; overflow-wrap: anywhere; }
+
+body:not(.light-theme) .touhou-hero::before { background: rgba(24, 22, 30, 0.6); }
+body:not(.light-theme) .title-calligraphy { filter: brightness(0) invert(0.94); }
+body:not(.light-theme) .touhou-hero-kicker { color: var(--ink); }
+body:not(.light-theme) .character-records::after { opacity: 0.6; }
+
+@media (max-width: 1100px) {
+    .character-records { width: calc(100% - 48px); }
+    .vue-character-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .touhou-hero-content { width: min(400px, 48%); }
+}
+@media (max-width: 740px) {
+    .vue-character-list { grid-template-columns: minmax(0, 1fr); }
+    .character-records { width: calc(100% - 36px); padding-top: 32px; }
+    .character-records-heading { gap: 14px; }
+    .section-title { font-size: 1.4rem; }
+    .character-actions { width: 100%; gap: 8px; }
+    .character-actions .action-btn { flex: 1 1 auto; padding: 7px 9px; font-size: 0.85rem; }
+    .world-info-note { flex-basis: 100%; margin-left: 0; }
+    .touhou-hero { height: clamp(270px, 44svh, 380px); padding: 66px 24px 22px; background-position: 60% center; }
+    .touhou-hero::before { background: linear-gradient(90deg, rgba(255, 253, 253, 0.85), rgba(255, 253, 253, 0.4) 60%, transparent); }
+    .touhou-hero::after { height: 56px; bottom: -27px; }
+    .touhou-hero-content { width: min(320px, 80%); gap: 8px; }
+    .touhou-hero-kicker { padding-left: 10px; gap: 10px; font-size: 0.85rem; }
+    .menu-tools { top: 14px; right: 16px; gap: 8px; }
+    .menu-tools .ghost-btn { padding: 5px 8px; font-size: 0.8rem; }
+    .character-card { min-height: 222px; }
+}
+@media (max-height: 620px) {
+    .touhou-hero { height: 245px; min-height: 0; padding-top: 50px; padding-bottom: 20px; }
+    .touhou-hero-content { width: min(240px, 70%); gap: 4px; }
+    .touhou-hero-kicker { font-size: 0.75rem; }
+}
+@media (prefers-reduced-motion: reduce) { .character-card { transition: none; } }
+.touhou-reduce-motion .character-card { transition: none; }
+.touhou-high-contrast .touhou-hero { background: var(--washi); }
+.touhou-high-contrast .touhou-hero::before,
+.touhou-high-contrast .touhou-hero::after,
+.touhou-high-contrast .character-records::after,
+.touhou-high-contrast .character-card::after { display: none; }
+.touhou-high-contrast .title-calligraphy { display: none; }
+.touhou-high-contrast .title-heading-text { position: static; display: block; width: auto; height: auto; clip-path: none; white-space: normal; overflow-wrap: anywhere; color: var(--ink); font: 2.5rem/1.3 var(--font-display); }
+.touhou-high-contrast .character-card { border-color: var(--ink); }
+.touhou-high-contrast .touhou-hero-kicker { color: var(--ink); }

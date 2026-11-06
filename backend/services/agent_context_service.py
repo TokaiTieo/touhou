@@ -13,6 +13,7 @@ from backend.services.npc_memory_service import recall_npc_memories_readonly
 
 HOST = "@host"
 PLAYER = "@player"
+CONTEXT_POLICY_VERSION = 4
 
 
 def digest(value):
@@ -126,14 +127,15 @@ class EvidenceContext:
             rows = [{"id": item.get("id") or digest(item), "kind": "shared_experience", **copy.deepcopy(item)}
                     for item in items if isinstance(item, dict) and self._visible(item)]
             return self._select(rows, query, limit, budget_chars)
-        npc = self._records[self.reader.npc_id]
         owner_key = storage_name(self._records, self.reader.npc_id)
         rows = []
-        for item in recall_npc_memories_readonly(self._character, owner_key, query=query, limit=30):
-            if item.get("owner_npc_id") not in (None, "", self.reader.npc_id):
-                continue
-            if not self._visible(item, owner=self.reader.npc_id):
-                continue
+
+        def eligible(item):
+            return (item.get("owner_npc_id") in (None, "", self.reader.npc_id)
+                    and self._visible(item, owner=self.reader.npc_id))
+
+        # Filter before embedding, ranking and top-k, not just before publication.
+        for item in recall_npc_memories_readonly(self._character, owner_key, query=query, limit=30, eligible=eligible):
             rows.append({**item, "id": item.get("id") or digest(item), "kind": "memory", "owner_npc_id": self.reader.npc_id})
         for item in self._character.get("life_state", {}).get("diaries", {}).get(self.reader.npc_id, []):
             if isinstance(item, dict) and self._visible(item, owner=self.reader.npc_id):

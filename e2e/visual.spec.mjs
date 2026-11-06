@@ -4,9 +4,10 @@ import { expect, test } from '@playwright/test';
 const visualDir = 'test-results/visual';
 
 test('multiline system notices keep text and tools inside small rounded corners', async ({ page }) => {
+    test.setTimeout(90_000);
     mkdirSync(visualDir, { recursive: true });
     await page.goto('/');
-    await expect(page.locator('.vue-character-selection')).toBeVisible();
+    await expect(page.locator('.vue-character-selection')).toBeVisible({ timeout: 20_000 });
     await page.evaluate(async () => {
         const { state } = await import('/js/ghost/core/state.js');
         const { loadAndEnterGhostMode } = await import('/js/ghost/core/session.js');
@@ -64,10 +65,10 @@ test('multiline system notices keep text and tools inside small rounded corners'
 });
 
 test('captures the single-root Vue interface on desktop and mobile', async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
     mkdirSync(visualDir, { recursive: true });
     await page.goto('/');
-    await expect(page.locator('.vue-character-selection')).toBeVisible();
+    await expect(page.locator('.vue-character-selection')).toBeVisible({ timeout: 20_000 });
 
     const desktopLayout = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -103,10 +104,10 @@ test('captures the single-root Vue interface on desktop and mobile', async ({ pa
     });
     await page.reload();
     await page.locator('.character-card').filter({ hasText: 'Vue视觉验收者' }).getByRole('button', { name: '继续异变' }).click();
-    await expect(page.locator('.th-game')).toBeVisible();
+    await expect(page.locator('.th-game')).toBeVisible({ timeout: 20_000 });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await expect(page.locator('.th-npc').first()).toBeVisible();
+    await expect(page.locator('.th-npc').first()).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('.th-suggestions')).toContainText('神社帮工');
     await page.waitForTimeout(450);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);

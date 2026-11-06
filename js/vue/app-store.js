@@ -9,7 +9,7 @@ export const appUi = reactive({
     },
     modal: null,
     modalPayload: null,
-    sceneArtwork: '/static/hakurei-shrine-hero-v1.png'
+    sceneArtwork: '/static/ui/hakurei-panorama-v2.png'
 });
 
 export function showCharacterScreen(characters = [], world = null) {

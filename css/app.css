@@ -1,45 +1,116 @@
+/* Inherited palette tokens keep day, night and accessibility modes consistent. */
 :root {
-    color-scheme: light;
     --touhou-font-scale: 1;
-    /* ===== 东方异变录 · 唯美主题令牌(桜/月/藤/金/淡墨) ===== */
-    --washi: #FBF8F1;
-    --washi-warm: #F5EDE2;
-    --ink: #2A2A2A;
-    --ink-soft: #574D54;
-    --ink-faint: #9A8D93;
-    --sakura: #F8C4D5;
-    --sakura-deep: #DF89A5;
-    --sakura-veil: rgba(248, 196, 213, 0.32);
-    --kin: #B78F45;
-    --kin-bright: #E6CD94;
-    --kin-line: rgba(183, 143, 69, 0.42);
-    --tsuki: #A8D8E8;
-    --tsuki-deep: #5E96AC;
-    --fuji: #B19CD8;
-    --fuji-deep: #8A72B4;
-    --shu: #C05A68;
-    --panel: rgba(255, 253, 249, 0.94);
-    --radius-s: 8px;
-    --radius-m: 12px;
-    --radius-l: 16px;
-    --shadow-soft: 0 10px 34px rgba(122, 92, 104, 0.13);
-    --shadow-float: 0 22px 70px rgba(122, 92, 104, 0.2);
-    --ease-drift: cubic-bezier(0.25, 0.6, 0.3, 1);
-    --font-mincho: "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", "SimSun", "Songti SC", serif;
-    /* ===== 旧令牌(保留兼容,表面色由文末唯美覆写层接管) ===== */
-    --app-ink: #151116;
-    --app-ink-soft: #211a21;
-    --app-panel: #261e26;
-    --app-panel-raised: #302630;
-    --app-paper: #f2e7d6;
-    --app-paper-muted: #b9aa9d;
-    --app-vermilion: #a92439;
-    --app-vermilion-bright: #d13d52;
-    --app-gold: #d1a24e;
-    --app-moss: #557866;
-    --app-lake: #47798c;
-    --app-line: rgba(242, 231, 214, 0.14);
-    --app-shadow: 0 24px 70px rgba(0, 0, 0, 0.44);
+    --font-mincho: "Yu Mincho", "Hiragino Mincho ProN", "SimSun", "Songti SC", serif;
+    --font-display: "KaiTi", "STKaiti", "Kaiti SC", "Yu Mincho", "SimSun", serif;
+    --font-body: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    --radius-s: 6px;
+    --radius-m: 8px;
+    --radius-l: 8px;
+    --ease-drift: cubic-bezier(0.2, 0.65, 0.3, 1);
+    color-scheme: light;
+    background: #f8f9fc;
+}
+
+body {
+    --washi: #181c1e;
+    --washi-warm: #242a2b;
+    --panel: #23292b;
+    --surface: #2c3335;
+    --input: #1c2224;
+    --ink: #f0f3ef;
+    --ink-soft: #d0d8d4;
+    --ink-faint: #a5b4ae;
+    --line: #414d4b;
+    --shu: #f3a4a9;
+    --vermilion: #a92f43;
+    --vermilion-hover: #c43b51;
+    --on-vermilion: #ffffff;
+    --accent-soft: #35292e;
+    --accent-line: #80535d;
+    --tsuki-deep: #90cec0;
+    --jade-soft: #243b37;
+    --jade-line: #4e7a70;
+    --kin: #d8c18e;
+    --kin-bright: #eadbb5;
+    --scene-wash: rgba(24, 28, 30, 0.72);
+    --message-surface: rgba(35, 41, 43, 0.97);
+    --scrim: rgba(9, 13, 15, 0.7);
+    --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.12);
+    --shadow-float: 0 18px 54px rgba(0, 0, 0, 0.32);
+    --sakura: var(--accent-soft);
+    --sakura-deep: var(--shu);
+    --sakura-veil: var(--accent-soft);
+    --tsuki: var(--jade-soft);
+    --fuji: var(--ink-faint);
+    --fuji-deep: var(--tsuki-deep);
+    --kin-line: var(--line);
+    --app-ink: var(--washi);
+    --app-ink-soft: var(--washi-warm);
+    --app-panel: var(--panel);
+    --app-panel-raised: var(--surface);
+    --app-paper: var(--ink);
+    --app-paper-muted: var(--ink-faint);
+    --app-vermilion: var(--vermilion);
+    --app-vermilion-bright: var(--shu);
+    --app-gold: var(--kin);
+    --app-moss: var(--tsuki-deep);
+    --app-lake: var(--tsuki-deep);
+    --app-line: var(--line);
+    --app-shadow: var(--shadow-float);
+}
+
+body.light-theme {
+    color-scheme: light;
+    --kin-bright: #a98949;
+    --washi: #fdfbfc;
+    --washi-warm: #f8f4f4;
+    --panel: #fffcfc;
+    --surface: #ffffff;
+    --input: rgba(255, 255, 255, 0.78);
+    --ink: #382c2c;
+    --ink-soft: #584949;
+    --ink-faint: #786565;
+    --line: #e6d7d5;
+    --shu: #a42d2a;
+    --vermilion: #b8322b;
+    --vermilion-hover: #9d2722;
+    --accent-soft: #faeeed;
+    --accent-line: #dbb0a9;
+    --tsuki-deep: #4a7169;
+    --jade-soft: #eef4f1;
+    --jade-line: #aec8c0;
+    --kin: #947448;
+    --scene-wash: linear-gradient(90deg, rgba(255, 253, 253, 0.4), transparent 62%);
+    --message-surface: #fffcfc;
+    --veil: #fdfbfc;
+    --scene-title: #942b25;
+    --shadow-soft: 0 6px 20px rgba(92, 43, 42, 0.06);
+    --shadow-float: 0 20px 60px rgba(93, 59, 85, 0.2);
+}
+
+.touhou-high-contrast body {
+    color-scheme: dark;
+    --washi: #080b0a;
+    --washi-warm: #101612;
+    --panel: #101612;
+    --surface: #151d18;
+    --input: #080b0a;
+    --ink: #ffffff;
+    --ink-soft: #ffffff;
+    --ink-faint: #e1eee5;
+    --line: #a4b9ac;
+    --shu: #ffb9c1;
+    --accent-soft: #29151e;
+    --accent-line: #ffb9c1;
+    --tsuki-deep: #a8efd3;
+    --jade-soft: #10291e;
+    --jade-line: #a8efd3;
+    --kin: #ffe1a0;
+    --message-surface: #101612;
+    --scene-wash: rgba(8, 11, 10, 0.94);
+    --veil: #101612;
+    --scene-title: #ffffff;
 }
 
 * {
@@ -70,9 +141,33 @@ html {
 body {
     background: var(--washi);
     color: var(--ink);
-    font-family: var(--font-mincho);
+    letter-spacing: 0;
+    font-family: var(--font-body);
     font-size: 14px;
-    letter-spacing: 0.02em;
+    line-height: 1.6;
+    --washi: #20212d;
+    --washi-warm: #2c2c3b;
+    --panel: #2a2a38;
+    --surface: #353442;
+    --input: #242431;
+    --ink: #f5eef2;
+    --ink-soft: #ddd3dd;
+    --ink-faint: #b9adbd;
+    --line: #51485c;
+    --shu: #f5a5b6;
+    --vermilion: #ac3554;
+    --vermilion-hover: #c54967;
+    --accent-soft: #3c2c3d;
+    --accent-line: #986779;
+    --tsuki-deep: #a9c9dc;
+    --jade-soft: #303747;
+    --jade-line: #687b95;
+    --kin: #d8bc8e;
+    --scene-wash: linear-gradient(180deg, rgba(29, 28, 44, 0.28), rgba(29, 28, 44, 0.72) 65%, rgba(29, 28, 44, 0.88));
+    --message-surface: rgba(42, 40, 56, 0.94);
+    --veil: rgba(42, 40, 56, 0.94);
+    --scene-title: #fff4ef;
+    --shadow-soft: 0 8px 28px rgba(18, 16, 35, 0.12);
 }
 
 button,
@@ -95,7 +190,7 @@ select:focus-visible,
 textarea:focus-visible,
 label.file-command:focus-within,
 label.file-drop:focus-within {
-    outline: 2px solid #f0c66d;
+    outline: 2px solid var(--line);
     outline-offset: 2px;
 }
 
@@ -118,8 +213,8 @@ button:disabled {
 
 .touhou-vue-shell {
     display: grid;
-    grid-template-rows: 54px minmax(0, 1fr);
     background: var(--app-ink);
+    grid-template-rows: 64px minmax(0, 1fr);
 }
 
 .app-chrome {
@@ -129,11 +224,12 @@ button:disabled {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 18px;
-    padding: 0 16px;
-    border-bottom: 1px solid rgba(209, 162, 78, 0.34);
-    background: rgba(17, 13, 18, 0.98);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    border-bottom: 1px solid var(--line);
+    background: var(--scrim);
+    box-shadow: none;
+    border-top: 0;
+    gap: 20px;
+    padding: 0 22px;
 }
 
 .app-brand,
@@ -149,8 +245,8 @@ button:disabled {
 }
 
 .app-brand-mark {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
 }
 
 .app-brand-copy {
@@ -160,15 +256,16 @@ button:disabled {
 }
 
 .app-brand-copy strong {
-    color: #fff4e3;
+    color: var(--ink-soft);
     font-family: "Yu Mincho", "MS Mincho", "SimSun", serif;
-    font-size: 0.94rem;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .app-brand-copy small {
     margin-top: 4px;
-    color: #8f8178;
-    font-size: 0.57rem;
+    color: var(--ink-soft);
+    font-size: 0.65rem;
 }
 
 .app-game-toolbar {
@@ -185,16 +282,16 @@ button:disabled {
     height: 31px;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(242, 231, 214, 0.18);
-    border-radius: 4px;
-    background: #302631;
-    color: #dfd1c4;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink-soft);
     cursor: pointer;
 }
 
 .icon-button:hover {
-    border-color: rgba(209, 162, 78, 0.56);
-    color: #ffe3ad;
+    border-color: var(--line);
+    color: var(--ink-soft);
 }
 
 .app-runtime-badge {
@@ -202,8 +299,8 @@ button:disabled {
     align-items: center;
     gap: 6px;
     padding: 4px 7px;
-    border: 1px solid rgba(71, 121, 140, 0.4);
-    color: #9cc7d8;
+    border: 1px solid var(--jade-line);
+    color: var(--ink-soft);
     font: 0.58rem Consolas, monospace;
 }
 
@@ -211,7 +308,7 @@ button:disabled {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #72b88e;
+    background: var(--panel);
 }
 
 .game-view {
@@ -240,13 +337,13 @@ button:disabled {
 }
 
 .vue-error-state strong {
-    color: #f2c4c9;
+    color: var(--ink-soft);
     font: 700 1.1rem "Yu Mincho", "Microsoft YaHei", serif;
 }
 
 .vue-error-state p {
     max-width: 560px;
-    color: #bcaeb1;
+    color: var(--ink-soft);
     line-height: 1.7;
     text-align: center;
 }
@@ -254,7 +351,7 @@ button:disabled {
 .loading-spinner {
     width: 28px;
     height: 28px;
-    border: 2px solid rgba(242, 231, 214, 0.16);
+    border: 2px solid var(--line);
     border-top-color: var(--app-vermilion-bright);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -264,68 +361,8 @@ button:disabled {
     to { transform: rotate(360deg); }
 }
 
-.character-screen {
-    height: 100%;
-    overflow-y: auto;
-    background: #131014;
-    scrollbar-color: rgba(209, 162, 78, 0.42) transparent;
-}
-
-.screen-bar {
-    min-height: 54px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 9px clamp(18px, 4vw, 64px);
-    border-bottom: 1px solid var(--app-line);
-    background: #1c161c;
-}
-
-.screen-context {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.screen-context-mark {
-    width: 32px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-top: 6px solid var(--app-vermilion);
-    background: var(--app-paper);
-    color: #6f2330;
-    font: 800 0.74rem "Yu Mincho", serif;
-}
-
-.screen-context > span:last-child {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.screen-context strong {
-    color: #f4e8d8;
-    font: 700 0.88rem "Yu Mincho", "Microsoft YaHei", serif;
-}
-
-.screen-context small {
-    margin-top: 3px;
-    color: #90837b;
-    font-size: 0.62rem;
-}
-
-.menu-tools {
-    display: flex;
-    gap: 7px;
-}
-
 .ghost-btn,
 .action-btn,
-.character-card-actions button,
 .dialog-command-row button,
 .snapshot-actions button,
 .primary-command,
@@ -336,261 +373,30 @@ button:disabled {
 .cancel-btn {
     min-height: 32px;
     padding: 5px 11px;
-    border: 1px solid rgba(242, 231, 214, 0.17);
-    border-radius: 4px;
-    background: #302630;
-    color: #ddd0c2;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink-soft);
     cursor: pointer;
 }
 
 .ghost-btn:hover,
 .action-btn:hover,
-.character-card-actions button:hover,
 .dialog-command-row button:hover,
 .snapshot-actions button:hover,
 .helper-command-strip button:hover,
 .pending-task button:hover,
 .producer-block button:hover {
-    border-color: rgba(209, 162, 78, 0.52);
-    color: #ffe2a9;
-}
-
-.touhou-hero {
-    position: relative;
-    min-height: 238px;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-    padding: 36px clamp(22px, 6vw, 88px);
-    border-bottom: 2px solid var(--app-vermilion);
-    background: url("/static/hakurei-shrine-hero-v1.png") center 44% / cover;
-}
-
-.touhou-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(13, 10, 14, 0.48);
-}
-
-.touhou-hero::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0;
-    height: 72px;
-    background: rgba(15, 12, 16, 0.72);
-}
-
-.touhou-hero-content,
-.touhou-hero-seal {
-    position: relative;
-    z-index: 1;
-}
-
-.touhou-hero-content {
-    max-width: 690px;
-}
-
-.touhou-hero-kicker {
-    margin-bottom: 7px;
-    color: #f1c66f;
-    font-size: 0.7rem;
-}
-
-.touhou-hero h1 {
-    color: #fff5e7;
-    font: 800 2rem "Yu Mincho", "MS Mincho", "SimSun", serif;
-}
-
-.touhou-hero p {
-    max-width: 620px;
-    margin-top: 10px;
-    color: #ddd0c3;
-    font-size: 0.82rem;
-    line-height: 1.7;
-}
-
-.touhou-hero-seal {
-    display: flex;
-    gap: 5px;
-    margin-left: auto;
-}
-
-.touhou-hero-seal span {
-    width: 38px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(255, 244, 223, 0.48);
-    background: rgba(142, 30, 49, 0.9);
-    color: #fff3dc;
-    font: 800 1rem "Yu Mincho", serif;
-}
-
-.character-records {
-    width: min(1180px, calc(100% - 36px));
-    margin: 0 auto;
-    padding: 24px 0 54px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.section-title > span {
-    width: 29px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    background: var(--app-vermilion);
-    color: white;
-    font: 800 0.7rem "Yu Mincho", serif;
-}
-
-.section-title strong {
-    color: #f1e5d5;
-    font: 700 0.9rem "Yu Mincho", "Microsoft YaHei", serif;
-}
-
-.touhou-world-info {
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 11px;
-    border: 1px solid rgba(71, 121, 140, 0.26);
-    background: rgba(71, 121, 140, 0.08);
-    color: #a9c6d0;
-    font-size: 0.68rem;
-}
-
-.world-info-label {
-    color: #7fabbc;
-}
-
-.world-info-name {
-    color: #e3eef0;
-    font-weight: 700;
-}
-
-.world-info-note {
-    margin-left: auto;
-    color: #91857c;
-}
-
-.empty-character-state {
-    padding: 34px 16px;
-    border: 1px dashed rgba(209, 162, 78, 0.28);
-    color: #9f9187;
-    line-height: 1.7;
-    text-align: center;
-}
-
-.vue-character-list {
-    display: grid;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.character-card {
-    position: relative;
-    min-height: 76px;
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 13px;
-    border: 1px solid var(--app-line);
-    border-left: 3px solid var(--app-moss);
-    border-radius: 4px;
-    background: #211a21;
-}
-
-.character-card:hover {
-    border-color: rgba(209, 162, 78, 0.34);
-    background: #282028;
-}
-
-.character-card.dead {
-    border-left-color: var(--app-vermilion);
-    opacity: 0.76;
-}
-
-.character-record-seal {
-    width: 35px;
-    height: 39px;
-    display: grid;
-    place-items: center;
-    border-top: 6px solid var(--app-vermilion);
-    background: var(--app-paper);
-    color: #6c2430;
-    font: 800 0.66rem Consolas, monospace;
-}
-
-.character-card-info {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.character-card-info strong {
-    color: #f3e7d7;
-    font: 700 0.86rem "Yu Mincho", "Microsoft YaHei", serif;
-}
-
-.character-card-info span {
-    margin-top: 3px;
-    color: #b8a99e;
-    font-size: 0.68rem;
-}
-
-.character-card-info small {
-    margin-top: 4px;
-    color: #7f747a;
-    font-size: 0.6rem;
-}
-
-.character-card-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 5px;
-}
-
-.character-card-actions button {
-    min-height: 29px;
-    padding: 4px 8px;
-    font-size: 0.64rem;
-}
-
-.character-card-actions .character-play-btn {
-    border-color: rgba(209, 162, 78, 0.42);
-    background: #7d2434;
-    color: #fff4e3;
-}
-
-.character-card-actions .character-delete-btn {
-    color: #d8959c;
-}
-
-.character-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--app-line);
+    border-color: var(--line);
+    color: var(--ink-soft);
 }
 
 .action-btn.primary,
 .primary-command,
 .save-btn {
-    border-color: rgba(255, 228, 181, 0.3);
+    border-color: var(--line);
     background: var(--app-vermilion);
-    color: #fff6e8;
+    color: var(--ink-soft);
 }
 
 .vue-modal-backdrop {
@@ -601,8 +407,8 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr);
     place-items: center;
     padding: 18px;
-    background: rgba(8, 6, 9, 0.78);
-    backdrop-filter: blur(4px);
+    background: var(--scrim);
+    backdrop-filter: none;
 }
 
 .record-dialog,
@@ -615,10 +421,10 @@ button:disabled {
     max-height: min(860px, 92vh);
     overflow-wrap: anywhere;
     overflow: hidden;
-    border: 1px solid rgba(209, 162, 78, 0.34);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    background: #1c171d;
-    box-shadow: var(--app-shadow);
+    background: var(--panel);
+    box-shadow: none;
 }
 
 .compact-dialog {
@@ -634,8 +440,8 @@ button:disabled {
     justify-content: space-between;
     gap: 16px;
     padding: 10px 14px 10px 18px;
-    border-bottom: 1px solid rgba(209, 162, 78, 0.24);
-    background: #251d24;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
 }
 
 .record-dialog__header > div,
@@ -649,7 +455,7 @@ button:disabled {
 .record-dialog__header small,
 .vue-snapshot-dialog > header small,
 .dialog-header small {
-    color: #9f8d80;
+    color: var(--ink-soft);
     font-size: 0.58rem;
 }
 
@@ -657,7 +463,7 @@ button:disabled {
 .vue-snapshot-dialog > header strong,
 .dialog-header strong {
     margin-top: 3px;
-    color: #f3e5d2;
+    color: var(--ink-soft);
     font: 700 0.9rem "Yu Mincho", "Microsoft YaHei", serif;
 }
 
@@ -666,7 +472,7 @@ button:disabled {
     max-height: calc(92vh - 60px);
     overflow-y: auto;
     padding: 18px;
-    scrollbar-color: rgba(209, 162, 78, 0.42) transparent;
+    scrollbar-color: var(--line) transparent;
 }
 
 .template-grid {
@@ -679,19 +485,19 @@ button:disabled {
 .template-grid button {
     min-height: 40px;
     padding: 7px 9px;
-    border: 1px solid rgba(242, 231, 214, 0.14);
-    border-radius: 4px;
-    background: #2a222a;
-    color: #cfc0b5;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink-soft);
     cursor: pointer;
     font-size: 0.68rem;
 }
 
 .template-grid button:hover,
 .template-grid button.active {
-    border-color: rgba(209, 162, 78, 0.56);
-    background: #3a2b32;
-    color: #ffe4af;
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
 }
 
 .field-stack,
@@ -705,7 +511,7 @@ button:disabled {
 .field-stack > span,
 .profile-form label > span,
 .form-group > label {
-    color: #d7c6b8;
+    color: var(--ink-soft);
     font-size: 0.68rem;
     font-weight: 700;
 }
@@ -721,11 +527,11 @@ button:disabled {
 .producer-block textarea,
 .snapshot-branch-name input {
     width: 100%;
-    border: 1px solid rgba(242, 231, 214, 0.16);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
     outline: 0;
-    background: #110e12;
-    color: #f1e6d8;
+    background: var(--panel);
+    color: var(--ink-soft);
 }
 
 .field-stack input,
@@ -756,7 +562,7 @@ button:disabled {
 .producer-block input:focus,
 .producer-block select:focus,
 .producer-block textarea:focus {
-    border-color: rgba(209, 162, 78, 0.65);
+    border-color: var(--line);
 }
 
 .profile-form {
@@ -783,9 +589,9 @@ button:disabled {
 .dialog-status {
     margin-top: 12px;
     padding: 8px 10px;
-    border: 1px solid rgba(169, 36, 57, 0.38);
-    background: rgba(169, 36, 57, 0.1);
-    color: #efafb7;
+    border: 1px solid var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--ink-soft);
     font-size: 0.68rem;
 }
 
@@ -796,10 +602,10 @@ button:disabled {
     display: grid;
     place-items: center;
     overflow: hidden;
-    border: 1px dashed rgba(209, 162, 78, 0.42);
-    border-radius: 4px;
-    background: #282128;
-    color: #dbc7ad;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink-soft);
     cursor: pointer;
     font-size: 0.68rem;
 }
@@ -829,23 +635,23 @@ button:disabled {
     padding: 14px;
     margin-bottom: 14px;
     border-left: 3px solid var(--app-vermilion);
-    background: #282028;
+    background: var(--panel);
 }
 
 .import-preview strong,
 .record-subject strong {
-    color: #f1e3d1;
+    color: var(--ink-soft);
     font: 700 0.92rem "Yu Mincho", "Microsoft YaHei", serif;
 }
 
 .import-preview span,
 .record-subject span {
-    color: #9f9187;
+    color: var(--ink-soft);
     font-size: 0.65rem;
 }
 
 .import-preview p {
-    color: #b9aaa0;
+    color: var(--ink-soft);
     font-size: 0.7rem;
     line-height: 1.6;
 }
@@ -864,12 +670,12 @@ button:disabled {
 }
 
 .record-rows dt {
-    color: #d0aa66;
+    color: var(--ink-soft);
     font-size: 0.66rem;
 }
 
 .record-rows dd {
-    color: #cec0b5;
+    color: var(--ink-soft);
     font-size: 0.72rem;
     line-height: 1.65;
     overflow-wrap: anywhere;
@@ -878,15 +684,15 @@ button:disabled {
 .record-list-item + .record-list-item {
     margin-top: 7px;
     padding-top: 7px;
-    border-top: 1px dashed rgba(242, 231, 214, 0.1);
+    border-top: 1px dashed var(--line);
 }
 
 .record-note {
     margin-top: 12px;
     padding: 9px 10px;
-    border: 1px solid rgba(71, 121, 140, 0.28);
-    background: rgba(71, 121, 140, 0.08);
-    color: #a9c2cb;
+    border: 1px solid var(--jade-line);
+    background: var(--jade-soft);
+    color: var(--ink-soft);
     font-size: 0.68rem;
     line-height: 1.6;
 }
@@ -905,16 +711,16 @@ button:disabled {
     gap: 14px;
     padding: 8px 10px;
     border: 1px solid var(--app-line);
-    background: #251e25;
+    background: var(--panel);
 }
 
 .relationship-ledger strong {
-    color: #eadcca;
+    color: var(--ink-soft);
     font-size: 0.72rem;
 }
 
 .relationship-ledger span {
-    color: #e1b966;
+    color: var(--ink-soft);
     font-size: 0.68rem;
     text-align: right;
 }
@@ -922,7 +728,7 @@ button:disabled {
 .relationship-latest,
 .dialog-empty {
     margin-top: 12px;
-    color: #95877e;
+    color: var(--ink-soft);
     font-size: 0.66rem;
     line-height: 1.6;
 }
@@ -938,8 +744,8 @@ button:disabled {
     margin-top: 14px;
     padding: 14px;
     border-left: 3px solid var(--app-lake);
-    background: #242127;
-    color: #d5c9bf;
+    background: var(--panel);
+    color: var(--ink-soft);
     font-size: 0.74rem;
     line-height: 1.7;
 }
@@ -956,8 +762,8 @@ button:disabled {
 .pending-task {
     margin-top: 12px;
     padding: 13px;
-    border: 1px solid rgba(209, 162, 78, 0.32);
-    background: rgba(209, 162, 78, 0.07);
+    border: 1px solid var(--line);
+    background: var(--panel);
 }
 
 .pending-task small,
@@ -966,19 +772,19 @@ button:disabled {
 }
 
 .pending-task small {
-    color: #9d8f85;
+    color: var(--ink-soft);
     font-size: 0.58rem;
 }
 
 .pending-task strong {
     margin-top: 4px;
-    color: #f0d497;
+    color: var(--ink-soft);
     font-size: 0.76rem;
 }
 
 .pending-task p {
     margin: 8px 0 12px;
-    color: #b9aba1;
+    color: var(--ink-soft);
     font-size: 0.68rem;
     line-height: 1.6;
 }
@@ -996,7 +802,7 @@ button:disabled {
 .snapshot-branch-name label {
     display: block;
     margin-bottom: 6px;
-    color: #ad9e93;
+    color: var(--ink-soft);
     font-size: 0.62rem;
 }
 
@@ -1014,7 +820,7 @@ button:disabled {
     gap: 14px;
     padding: 9px 10px;
     border: 1px solid var(--app-line);
-    background: #251e25;
+    background: var(--panel);
 }
 
 .snapshot-item + .snapshot-item {
@@ -1028,13 +834,13 @@ button:disabled {
 }
 
 .snapshot-item strong {
-    color: #eadccc;
+    color: var(--ink-soft);
     font-size: 0.72rem;
 }
 
 .snapshot-item span {
     margin-top: 4px;
-    color: #8f8179;
+    color: var(--ink-soft);
     font-size: 0.6rem;
 }
 
@@ -1046,7 +852,7 @@ button:disabled {
 
 .snapshot-empty {
     padding: 34px 16px;
-    color: #8d8078;
+    color: var(--ink-soft);
     text-align: center;
 }
 
@@ -1057,48 +863,48 @@ button:disabled {
 }
 
 .form-hint {
-    color: #847980;
+    color: var(--ink-soft);
     font-size: 0.61rem;
     line-height: 1.55;
 }
 
 .api-key-status {
     padding: 8px 10px;
-    border: 1px solid rgba(71, 121, 140, 0.32);
-    background: rgba(71, 121, 140, 0.08);
-    color: #a8c4cf;
+    border: 1px solid var(--jade-line);
+    background: var(--jade-soft);
+    color: var(--ink-soft);
     font-size: 0.68rem;
 }
 
 .api-key-status.ok,
 .api-key-status.success {
-    border-color: rgba(85, 120, 102, 0.45);
-    color: #a9d2ba;
+    border-color: var(--line);
+    color: var(--ink-soft);
 }
 
 .api-key-status.error {
-    border-color: rgba(169, 36, 57, 0.44);
-    color: #eba7af;
+    border-color: var(--accent-line);
+    color: var(--ink-soft);
 }
 
 .usage-diagnostics {
     padding: 12px;
     border: 1px solid var(--app-line);
-    background: #231c23;
+    background: var(--panel);
 }
 
 .usage-diagnostics__heading {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    color: #eadccc;
+    color: var(--ink-soft);
     font-size: 0.7rem;
 }
 
 .usage-diagnostics__heading span,
 .usage-diagnostics p,
 .usage-diagnostics small {
-    color: #8e8280;
+    color: var(--ink-soft);
     font-size: 0.61rem;
 }
 
@@ -1114,13 +920,13 @@ button:disabled {
     flex-direction: column;
     gap: 5px;
     padding: 8px;
-    background: #171317;
-    color: #8e8280;
+    background: var(--panel);
+    color: var(--ink-soft);
     font-size: 0.57rem;
 }
 
 .usage-diagnostics__grid strong {
-    color: #dfc17d;
+    color: var(--ink-soft);
     font-size: 0.68rem;
     overflow-wrap: anywhere;
 }
@@ -1138,9 +944,9 @@ button:disabled {
 
 .producer-console-note {
     padding: 9px 10px;
-    border: 1px solid rgba(169, 36, 57, 0.32);
-    background: rgba(169, 36, 57, 0.08);
-    color: #deb8bc;
+    border: 1px solid var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--ink-soft);
     font-size: 0.66rem;
 }
 
@@ -1155,7 +961,7 @@ button:disabled {
     min-width: 0;
     padding: 11px;
     border: 1px solid var(--app-line);
-    background: #241d24;
+    background: var(--panel);
 }
 
 .producer-wide {
@@ -1164,7 +970,7 @@ button:disabled {
 
 .producer-block h3 {
     margin-bottom: 8px;
-    color: #dfc27f;
+    color: var(--ink-soft);
     font-size: 0.7rem;
 }
 
@@ -1179,8 +985,8 @@ button:disabled {
     margin-top: 8px;
     padding: 8px;
     overflow-wrap: anywhere;
-    background: #151115;
-    color: #9e9189;
+    background: var(--panel);
+    color: var(--ink-soft);
     font: 0.61rem/1.6 Consolas, "Microsoft YaHei", sans-serif;
 }
 
@@ -1195,7 +1001,7 @@ button:disabled {
 }
 
 .producer-pair strong {
-    color: #d5c7bb;
+    color: var(--ink-soft);
     text-align: right;
 }
 
@@ -1217,7 +1023,7 @@ button:disabled {
 }
 
 .producer-memory-item code {
-    color: #84b6c7;
+    color: var(--ink-soft);
 }
 
 .vue-loading-overlay {
@@ -1226,8 +1032,8 @@ button:disabled {
     z-index: 140;
     display: grid;
     place-items: center;
-    background: rgba(8, 6, 9, 0.7);
-    backdrop-filter: blur(3px);
+    background: var(--scrim);
+    backdrop-filter: none;
 }
 
 .vue-loading-card {
@@ -1237,11 +1043,11 @@ button:disabled {
     justify-content: center;
     gap: 12px;
     padding: 18px;
-    border: 1px solid rgba(209, 162, 78, 0.36);
+    border: 1px solid var(--line);
     border-radius: 6px;
-    background: #211a21;
-    box-shadow: var(--app-shadow);
-    color: #e3d6c8;
+    background: var(--panel);
+    box-shadow: none;
+    color: var(--ink-soft);
     font-size: 0.72rem;
 }
 
@@ -1253,22 +1059,22 @@ button:disabled {
     max-width: min(520px, calc(100vw - 32px));
     padding: 9px 14px;
     transform: translateX(-50%);
-    border: 1px solid rgba(209, 162, 78, 0.35);
-    border-radius: 4px;
-    background: #2a2229;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
-    color: #f1e5d6;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    box-shadow: none;
+    color: var(--ink-soft);
     font-size: 0.7rem;
     text-align: center;
 }
 
 .vue-toast.is-success {
-    border-color: rgba(85, 120, 102, 0.58);
+    border-color: var(--line);
 }
 
 .vue-toast.is-error {
-    border-color: rgba(209, 61, 82, 0.62);
-    color: #f3b8bf;
+    border-color: var(--line);
+    color: var(--ink-soft);
 }
 
 .toast-enter-active,
@@ -1289,25 +1095,6 @@ button:disabled {
     opacity: 0;
 }
 
-/* 晴日变体:默认主题已是薄樱浅色,light-theme 只做轻微提亮 */
-body.light-theme {
-    color-scheme: light;
-    background: #FDFBF7;
-}
-
-body.light-theme .touhou-vue-shell,
-body.light-theme .character-screen {
-    background: #FDFBF7;
-}
-
-body.light-theme .app-chrome {
-    background: rgba(255, 253, 249, 0.98);
-}
-
-body.light-theme .screen-bar {
-    background: #FAF5EC;
-}
-
 @media (max-width: 900px) {
     .app-chrome {
         gap: 9px;
@@ -1317,10 +1104,6 @@ body.light-theme .screen-bar {
     .app-brand-copy small,
     .app-runtime-badge {
         display: none;
-    }
-
-    .touhou-hero {
-        min-height: 214px;
     }
 
     .template-grid {
@@ -1337,12 +1120,31 @@ body.light-theme .screen-bar {
         grid-template-rows: 50px minmax(0, 1fr);
     }
 
+    .touhou-vue-shell:has(.app-game-toolbar.has-content) {
+        grid-template-rows: 86px minmax(0, 1fr);
+    }
+
     .app-chrome {
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 4px 10px;
+    }
+
+    .app-chrome:has(.app-game-toolbar.has-content) {
+        grid-template-rows: 36px 38px;
+        padding-block: 3px;
+    }
+
+    .app-game-toolbar.has-content {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .app-game-toolbar:not(.has-content) {
+        display: none;
     }
 
     .app-brand-copy {
-        display: none;
+        display: flex;
     }
 
     .app-brand-mark {
@@ -1351,6 +1153,8 @@ body.light-theme .screen-bar {
     }
 
     .app-chrome-actions {
+        grid-column: 2;
+        grid-row: 1;
         gap: 4px;
     }
 
@@ -1359,67 +1163,10 @@ body.light-theme .screen-bar {
         height: 29px;
     }
 
-    .screen-bar {
-        align-items: flex-start;
-        padding: 9px 12px;
-    }
-
-    .screen-context small {
-        display: none;
-    }
-
-    .menu-tools {
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-
     .ghost-btn {
         min-height: 29px;
         padding: 4px 7px;
         font-size: 0.62rem;
-    }
-
-    .touhou-hero {
-        min-height: 188px;
-        padding: 24px 18px;
-    }
-
-    .touhou-hero h1 {
-        font-size: 1.45rem;
-    }
-
-    .touhou-hero p {
-        font-size: 0.72rem;
-    }
-
-    .touhou-hero-seal {
-        display: none;
-    }
-
-    .character-records {
-        width: calc(100% - 24px);
-        padding-top: 18px;
-    }
-
-    .touhou-world-info {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .world-info-note {
-        margin-left: 0;
-    }
-
-    .character-card {
-        grid-template-columns: 38px minmax(0, 1fr);
-    }
-
-    .character-card-actions {
-        grid-column: 1 / -1;
-        justify-content: flex-start;
-        padding-top: 8px;
-        border-top: 1px solid var(--app-line);
     }
 
     .template-grid {
@@ -1460,11 +1207,6 @@ body.light-theme .screen-bar {
 
 @media (max-width: 420px) {
     .template-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .character-actions {
-        display: grid;
         grid-template-columns: 1fr;
     }
 

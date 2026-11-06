@@ -141,6 +141,14 @@ export const CharacterSelection = defineComponent({
     },
     template: `
         <div class="vue-character-selection">
+            <header class="character-records-heading">
+                <h2 class="section-title"><span aria-hidden="true">記</span><strong>异变记录</strong></h2>
+                <div class="character-actions with-border">
+                    <button class="action-btn primary" @click="createCharacter"><span class="title-icon icon-plus" aria-hidden="true"></span>创建新外来者</button>
+                    <button class="action-btn" @click="importCharacter('player')"><span class="title-icon icon-upload" aria-hidden="true"></span>导入角色</button>
+                    <button class="action-btn secondary" @click="importCharacter('npc')"><span class="title-icon icon-person" aria-hidden="true"></span>导入NPC</button>
+                </div>
+            </header>
             <div class="world-info touhou-world-info">
                 <span class="world-info-label">当前舞台</span>
                 <span class="world-info-name">{{ world.name || '幻想乡 - 东方Project' }}</span>
@@ -158,19 +166,13 @@ export const CharacterSelection = defineComponent({
                         <small>地点 · {{ character.current_scene || '未知' }}</small>
                     </div>
                     <div class="character-card-actions">
-                        <button class="character-play-btn" :disabled="busyId === character.character_id" @click="play(character)">继续异变</button>
-                        <button class="character-snapshot-btn" @click="openSnapshots(character)">时序</button>
-                        <button class="character-export-btn" @click="exportCharacter(character)">导出</button>
-                        <button class="character-to-npc-btn" @click="convertToNPC(character)">转为NPC</button>
-                        <button class="character-delete-btn" @click="removeCharacter(character)">删除</button>
+                        <button class="character-play-btn" :disabled="busyId === character.character_id" @click="play(character)">继续异变<span class="title-icon icon-arrow" aria-hidden="true"></span></button>
+                        <button class="character-snapshot-btn" title="时序" aria-label="时序" @click="openSnapshots(character)"><span class="title-icon icon-history" aria-hidden="true"></span><span>时序</span></button>
+                        <button class="character-export-btn" title="导出" aria-label="导出" @click="exportCharacter(character)"><span class="title-icon icon-download" aria-hidden="true"></span><span>导出</span></button>
+                        <button class="character-to-npc-btn" title="转为NPC" aria-label="转为NPC" @click="convertToNPC(character)"><span class="title-icon icon-person" aria-hidden="true"></span><span>转为NPC</span></button>
+                        <button class="character-delete-btn" title="删除" aria-label="删除" @click="removeCharacter(character)"><span class="title-icon icon-trash" aria-hidden="true"></span></button>
                     </div>
                 </article>
-            </div>
-
-            <div class="character-actions with-border">
-                <button class="action-btn primary" @click="createCharacter">创建新外来者</button>
-                <button class="action-btn" @click="importCharacter('player')">导入角色</button>
-                <button class="action-btn secondary" @click="importCharacter('npc')">导入NPC</button>
             </div>
 
             <Teleport to="body">

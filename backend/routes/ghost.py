@@ -749,6 +749,7 @@ async def npc_dialogue(request: NPCDialogueRequest):
         record_history=request.record_history,
         turn_id=request.turn_id,
         npc_id=request.npc_id,
+        is_continue=request.is_continue,
         npc_name=request.npc_name,
         scene_npcs=request.scene_npcs,
     )

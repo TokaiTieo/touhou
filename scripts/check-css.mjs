@@ -15,6 +15,11 @@ for (const file of files('css')) {
 }
 const shell = postcss.parse(readFileSync('css/vue-game.css', 'utf8'));
 shell.walkRules(rule => assert(!/\.th-(message|composer|toolbar)(?=[\s.:>#[-]|$)/.test(rule.selector), `Component rule escaped its owner: ${rule.selector}`));
+for (const file of ['css/app.css', 'css/vue-game.css']) {
+    postcss.parse(readFileSync(file, 'utf8')).walkRules(rule => {
+        assert(!/\.(touhou-hero|character-card|character-records|character-screen)(?=[\s.:>#[-]|$)/.test(rule.selector), `Title rule escaped its owner in ${file}: ${rule.selector}`);
+    });
+}
 const messages = postcss.parse(readFileSync('css/components/messages.css', 'utf8'));
 messages.walkRules('.th-message.is-system .th-message-body', rule => rule.walkDecls('border-radius', decl => assert.equal(decl.value, '8px')));
 console.log(`CSS parsed and component ownership checked: ${files('css').length} files`);

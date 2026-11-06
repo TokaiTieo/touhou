@@ -7,15 +7,163 @@ import re
 
 from backend.services.action_resolution_service import performed_text
 from backend.services.agent_contracts import AgentLimits, HostNarration, MAX_PARTICIPANTS, Reader, default_agent_state
-from backend.services.agent_context_service import EvidenceContext, HOST, PLAYER, catalogue, digest
+from backend.services.agent_context_service import CONTEXT_POLICY_VERSION, EvidenceContext, HOST, PLAYER, catalogue, digest
 from backend.services.agent_rules_service import ProposalMerger
 from backend.services.life_simulation_service import absolute_hour
-from backend.services.npc_agent_runtime import NPCRuntime, npc_prompt, ledger_io, record_agent_usage
+from backend.services.npc_agent_runtime import HOST_RESULT_POLICY_VERSION, NPCRuntime, npc_prompt, ledger_io, record_agent_usage
 from backend.services.npc_identity_service import resolve_npc
 from backend.services.npc_memory_service import commit_memory_usage
 
 
 CALL_ENVELOPE_BYTES = 62000
+_MODIFIERS = r"(?:(?:然后|随后|接着|同时|另外|转而|转头|转身|先|再|并且|并|只|悄悄|单独|私下|低声|分别|一起|共同)\s*)*"
+_ADDRESS = re.compile(r"(?:我\s*)?" + _MODIFIERS + r"(?:我\s*)?(?P<lead>向|对着|对|与|和|跟|朝|给|询问|邀请|请教|帮助|协助|告诉|告知|拜托|提醒|安慰|感谢|答复|回应|问候|问)\s*")
+_INTERACTION = re.compile(_MODIFIERS + r"(?:说|问好|问候|打招呼|问|告诉|告知|承诺|聊|交谈|对话|交流|商量|讨论|交涉|谈|交易|交换|递|转交|赠送|交给|提供|邀请|请教|帮助|协助|安慰|道歉|拜托|约定|请求|求助|询问|回应|答复|握手|挥手|点头|切磋|挑战|决斗|拥抱|亲吻|调查)")
+_NOT_INTERACTING = re.compile(r"(?:我\s*)?" + _MODIFIERS + r"(?:不|没|未|别|拒绝|无法|不能|打算|计划|准备|想|如果|假如|听说|提到|独自)")
+_PRIVATE_ASIDE = re.compile(r"(?:我\s*)?" + _MODIFIERS + r"(?:私下|悄悄|单独|低声|耳语)")
+_SELF_PAUSE = re.compile(r"(?:我\s*)?(?:想了想|思考片刻|沉思片刻|停顿片刻|稍作停顿|独自坐下|坐下|沉默片刻)")
+_CONNECTOR = re.compile(r"(?:然后|随后|接着|同时|另外|转而|转头|转身|再|并且|并|后)\s*(?=(?:我)?" + _MODIFIERS + r"(?:向|对|与|和|跟|朝|给|询问|邀请|请教|告诉|告知))")
+
+
+def _unquoted_positions(text):
+    pairs, stack, outside = {'"': '"', "'": "'", '“': '”', '‘': '’', '「': '」', '『': '』'}, [], set()
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if char == "\\" and stack:
+            index += 2
+            continue
+        apostrophe = (char == "'" and 0 < index < len(text) - 1
+                      and text[index - 1:index + 2:2].isascii()
+                      and text[index - 1].isalnum() and text[index + 1].isalnum())
+        if stack and char == stack[-1] and not apostrophe:
+            stack.pop()
+        elif char in pairs and not apostrophe:
+            stack.append(pairs[char])
+        elif not stack:
+            if char in ("”", "’", "」", "』"):
+                raise ValueError("对话引号未配对，请明确每段互动的对象")
+            outside.add(index)
+        index += 1
+    if stack:
+        raise ValueError("对话引号未闭合，请明确每段互动的对象")
+    return outside
+
+
+def _input_sections(text):
+    """Keep the UI's action/speech boundary instead of flattening both to prose."""
+    text = text.strip()
+    outside = _unquoted_positions(text)
+    if text.startswith("（动作："):
+        depth, end = 1, None
+        for index in range(4, len(text)):
+            if index not in outside:
+                continue
+            depth += (text[index] == "（") - (text[index] == "）")
+            if depth == 0:
+                end = index
+                break
+        if end is None:
+            raise ValueError("动作括号未闭合，请明确每段互动的对象")
+        tail = text[end + 1:].strip()
+        return [("action", text[4:end]), ("speech" if _quoted_continuation(tail) else "raw", tail)]
+    markers = [match for match in re.finditer(r"【(?:动作|语言)】", text) if match.start() in outside]
+    if not markers:
+        return [("raw", text)]
+    sections = [("raw", text[:markers[0].start()].strip())]
+    for index, marker in enumerate(markers):
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(text)
+        sections.append(("speech" if marker[0] == "【语言】" else "action", text[marker.end():end].strip()))
+    return sections
+
+
+def _address_list_prefix(text, names):
+    head = _ADDRESS.match(text.strip())
+    if not head:
+        return False
+    rest = text.strip()[head.end():]
+    while rest:
+        name = next((name for name in names if rest.startswith(name)), None)
+        if name is None:
+            return False
+        rest = rest[len(name):].lstrip()
+        if not rest:
+            return True
+        separator = re.match(r"^(?:、|和|与|及|,|，)\s*", rest)
+        if not separator:
+            return False
+        rest = rest[separator.end():]
+    return False
+
+
+def _interaction_clauses(text, names):
+    """Split unquoted sentences, keeping only address-list commas together."""
+    outside = _unquoted_positions(text)
+    start, index, clauses = 0, 0, []
+    while index < len(text):
+        if index in outside:
+            char, tail = text[index], text[index + 1:].lstrip()
+            separator = char in "。；;！!？?\n" or (char == "." and not (index and text[index - 1].isdigit() and tail[:1].isdigit()))
+            separator = separator or (char in "，,、" and
+                (bool(_ADDRESS.match(tail)) or not _address_list_prefix(text[start:index], names)))
+            connector = _CONNECTOR.match(text, index)
+            if separator or connector:
+                if text[start:index].strip():
+                    clauses.append(text[start:index].strip())
+                start = index + 1 if separator else connector.end()
+                index = start
+                continue
+        index += 1
+    if text[start:].strip():
+        clauses.append(text[start:].strip())
+    return clauses
+
+
+def _quoted_continuation(text):
+    body = re.sub(r"^(?:我)?(?:继续说|接着说|补充道|说道|说)\s*[:：]?\s*", "", text).strip()
+    return bool(body and body[0] in ('"', "'", '“', '‘', '「', '『')
+                and all(body[index].isspace() for index in _unquoted_positions(body)))
+
+
+def _clause_targets(clause, names, preferred):
+    head = _ADDRESS.match(clause)
+    if not head:
+        return None
+    rest, targets = clause[head.end():], []
+    while rest:
+        name = next((name for name in names if rest.startswith(name)), None)
+        if name is None:
+            if targets:
+                raise ValueError("互动名单中存在无法确定的人物，请使用完整姓名或分别发送")
+            return []
+        identities = names[name]
+        if len(identities) > 1:
+            identities = [identity for identity in identities if identity in preferred]
+            if len(identities) != 1:
+                raise ValueError("人物姓名重复，请先选择唯一的 NPC 再发送互动")
+        targets.append(identities[0])
+        rest = rest[len(name):].lstrip()
+        separator = re.match(r"^(?:、|和|与|及|,|，)\s*", rest)
+        if not separator:
+            break
+        following = rest[separator.end():]
+        if separator[0].strip() in (",", "，") and not any(following.startswith(name) for name in names):
+            rest = following
+            break
+        rest = following
+        if not rest:
+            raise ValueError("互动名单不完整，请明确每段互动的对象")
+    if not targets or rest.startswith("的"):
+        return []
+    # After a speech verb (e.g. "tell A"), negation belongs to the payload.
+    if head["lead"] in ("向", "对着", "对", "与", "和", "跟", "朝", "给") and (
+            _NOT_INTERACTING.match(rest) or not _INTERACTION.match(rest)):
+        return []
+    for index in _unquoted_positions(rest):
+        nested = _ADDRESS.match(rest, index)
+        if index and nested and any(rest[nested.end():].startswith(name) for name in names):
+            raise ValueError("同一段存在多个可能的互动对象，请分句写明；转述的话请加引号")
+    return list(dict.fromkeys(targets))
 
 
 def server_presence(character, records, scene):
@@ -43,44 +191,61 @@ def server_presence(character, records, scene):
 
 
 def interaction_segments(turn, records):
-    """An explicit addressee is required; a name occurring in prose is not enough."""
+    """Route each utterance independently, including explicit UI dialogue targets."""
+    selected = [key for key in turn.interaction_npc_ids if key in records]
     if turn.npc_id:
         npc = resolve_npc(turn.npc_id)
         identity = npc["id"] if npc else turn.npc_id
-        return {identity: turn.action_text} if identity in records else {}
-    selected = [key for key in turn.interaction_npc_ids if key in records]
-    output = {}
-    # No action-clause sharing between different addressees, even within one turn.
-    text = turn.action_text.replace("（动作：", "").replace("【动作】", "")
-    for clause in re.split(r"[；;\n]", text):
-        clause = clause.strip(" ）()")
-        effective = performed_text(clause)
-        if not re.match(r"^(?:我)?(?:只|悄悄|单独|分别)?(?:向|对|与|和|给|询问|邀请|请教|帮助|协助)", effective):
-            continue
-        # Only the address list before the first following verb may activate NPCs.
-        addressed = re.sub(r"^(?:我)?(?:只|悄悄|单独|分别)?(?:向|对|与|和|给|询问|邀请|请教|帮助|协助)", "", effective)
-        names = sorted(((npc["name"], key) for key, npc in records.items()), key=lambda pair: -len(pair[0]))
-        targets = []
-        while addressed:
-            match = next(((name, key) for name, key in names if addressed.startswith(name)), None)
-            if not match:
-                break
-            name, key = match
-            targets.append(key)
-            addressed = addressed[len(name):].lstrip()
-            separator = re.match(r"^(?:、|和|与|及|,|，)\s*", addressed)
-            if not separator:
-                break
-            addressed = addressed[separator.end():]
-        for key in targets:
+        selected = [identity] if identity in records else []
+    if turn.is_continue:
+        if turn.kind != "npc_dialogue" or not turn.npc_id or len(selected) != 1:
+            raise ValueError("继续对话需要明确选择当前 NPC")
+        return {selected[0]: "玩家等待你继续当前对话，没有新的发言或动作。"}
+    names = {}
+    for key, npc in records.items():
+        names.setdefault(npc["name"], []).append(key)
+    names = dict(sorted(names.items(), key=lambda pair: -len(pair[0])))
+    output, current = {}, list(selected)
+    # None means UI-default; [] means blocked. Explicit targets survive only
+    # known self pauses, never an unknown action that might change the audience.
+    speech_audience = None
+
+    def distribute(clause, audience):
+        for key in audience:
             output[key] = (output.get(key, "") + "\n" + clause).strip()
-    if selected and not output:
-        # Explicit UI selection declares a shared addressed action; never inferred from presence.
-        output = {key: turn.action_text for key in selected}
+
+    for kind, text in _input_sections(turn.action_text):
+        if not text:
+            continue
+        if kind == "speech":
+            if speech_audience == []:
+                raise ValueError("后续发言的对象不明确，请在动作中重新写明接收者")
+            current = list(selected) if speech_audience is None else list(speech_audience)
+            distribute(text, current)
+            continue
+        for clause in _interaction_clauses(text, names):
+            targets = _clause_targets(clause, names, selected)
+            if targets is not None:
+                current = targets
+                speech_audience = list(targets)
+                distribute(clause, current)
+            elif _quoted_continuation(clause):
+                distribute(clause, current)
+            else:
+                if _PRIVATE_ASIDE.match(clause) and len(current) != 1:
+                    raise ValueError("私下互动的对象不明确，请单独写出接收者")
+                nonverbal_refusal = any(re.fullmatch(
+                    r"(?:我)?(?:不|没有)(?:向|朝|对着)" + re.escape(name) + r"(?:挥手|点头|问好|打招呼)", clause)
+                    for name in names)
+                if (speech_audience is not None or selected) and not _SELF_PAUSE.fullmatch(clause) and not nonverbal_refusal:
+                    speech_audience = []
+                # An unparsed action proves no audience. Do not attach its body
+                # or a following quote to the last (or UI-selected) recipient.
+                current = []
     return output
 
 
-def activation_plan(turn, character, records):
+def activation_plan(turn, character, records, *, present_ids=None):
     inputs = interaction_segments(turn, records)
     ordered = list(inputs)
     events = character.get("agent_state", {}).get("events", [])
@@ -90,7 +255,9 @@ def activation_plan(turn, character, records):
             target = event.get("target_id")
             if target in records and target not in ordered:
                 ordered.append(target)
-    return ordered[:MAX_PARTICIPANTS], ordered[MAX_PARTICIPANTS:], inputs
+    present = set(records if present_ids is None else present_ids)
+    active = [key for key in ordered if key in present][:MAX_PARTICIPANTS]
+    return active, [key for key in ordered if key not in active], inputs
 
 
 def _world_entries():
@@ -160,25 +327,23 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         raise ValueError("当前场景已变化，请刷新后重试")
     present = server_presence(snapshot, records, scene) if present_ids is None else list(present_ids)
     entries = _world_entries() if world_entries is None else world_entries
-    active, deferred, inputs = activation_plan(context.turn, snapshot, records)
-    unavailable = [key for key in active if key not in present]
-    active = [key for key in active if key in present]
-    deferred = list(dict.fromkeys(deferred + unavailable))
+    active, deferred, inputs = activation_plan(context.turn, snapshot, records, present_ids=present)
     # The whole-turn set only grows, and never exceeds six, even across batches.
     selected, completed, access = list(active), {}, []
     state = candidate.character.setdefault("agent_state", default_agent_state())
     state["mode"] = "collaborative"
-    fingerprint = digest({"revision": context.base_character_revision, "tasks_revision": context.base_tasks_revision,
+    fingerprint = digest({"context_policy": CONTEXT_POLICY_VERSION,
+                          "revision": context.base_character_revision, "tasks_revision": context.base_tasks_revision,
                           "epoch": snapshot.get("timeline_epoch", ""), "permissions": state.get("permission_version", 1),
                           "turn": context.turn.model_dump(), "snapshot": {k: v for k, v in snapshot.items()
                             if k not in ("story_summary", "last_played", "_last_context_budget")}, "records": records, "world": entries})
     scope = "npc-turn:" + digest([context.turn.character_id, snapshot.get("timeline_epoch", ""), context.turn.turn_id])
     runtime = runtime or await ledger_io(NPCRuntime, scope, AgentLimits.model_validate(state.get("limits", {})),
                                                  generate=evaluation.generate if evaluation else None, checkpoint=evaluation is None)
-    slots = {"host": digest([fingerprint, "host"])}
+    slots = {"host": digest([fingerprint, "host", HOST_RESULT_POLICY_VERSION])}
     slots.update({str(index): digest([fingerprint, "npc", index]) for index in range(MAX_PARTICIPANTS) if active})
     bound = CALL_ENVELOPE_BYTES + runtime.limits.max_output_tokens + 256
-    await ledger_io(runtime.ledger.reserve, {job: bound for job in slots.values()})
+    await ledger_io(runtime.ledger.reserve, {job: bound for job in slots.values()}, replace_pending=True)
     merger = ProposalMerger(candidate.character, records, context.turn.turn_id, scene, present)
 
     def reader(identity):
@@ -197,7 +362,8 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         evidence_view = view(identity)
         action = inputs.get(identity, "回应本人收到且尚未处理的互动；未向你披露的玩家指令不可推测")
         evidence = evidence_view.assemble(action)
-        prompt = npc_prompt(reader(identity), evidence, action, [PLAYER, *present], absolute_hour(snapshot))
+        intent = "continue_dialogue" if context.turn.is_continue and identity in inputs else "interaction"
+        prompt = npc_prompt(reader(identity), evidence, action, [PLAYER, *present], absolute_hour(snapshot), intent=intent)
         if len(prompt.encode("utf-8")) > CALL_ENVELOPE_BYTES:
             raise ValueError("人物上下文超过预留预算，尚未发送请求")
         checkpoint_job = runtime.job(reader(identity), fingerprint, prompt)
@@ -222,7 +388,10 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
                 outcomes = await asyncio.gather(*jobs)
             except BaseException:
                 for task in jobs:
-                    task.cancel()
+                    # gather already cancels siblings on parent cancellation. A
+                    # second cancel would interrupt their ledger cleanup await.
+                    if not task.done() and not task.cancelling():
+                        task.cancel()
                 await asyncio.gather(*jobs, return_exceptions=True)
                 raise
             for identity, outcome, usage in outcomes:
@@ -257,7 +426,8 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         turn_runner.mark(context, "candidate_settlement")
         def prepare():
             initial = _initial_result(candidate)
-            initial["agent_inputs"] = [{"npc_id": key, "content": value} for key, value in inputs.items() if key in selected]
+            initial["agent_inputs"] = [] if context.turn.is_continue else [
+                {"npc_id": key, "content": value} for key, value in inputs.items() if key in selected]
             for part in initial["agent_inputs"]:
                 merger._remember_speech(PLAYER, [part["npc_id"]], part["content"], "input_" + digest([fingerprint, part["npc_id"]])[:24])
             turn_orchestrator.settle(candidate, initial, persist=False)
@@ -287,9 +457,10 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         if len(prompt.encode("utf-8")) > CALL_ENVELOPE_BYTES:
             raise ValueError("发布上下文超过预留预算，尚未提交回合")
         turn_runner.mark(context, "host_narrating")
-        host = await runtime.invoke(reader(HOST), prompt, host_view, runtime.job(reader(HOST), fingerprint, prompt),
-                                    kind="host", billing_job=slots["host"])
         valid_ids = {event["id"] for event in public_events}
+        host_job = runtime.job(reader(HOST), [fingerprint, "host", HOST_RESULT_POLICY_VERSION], prompt)
+        host = await runtime.invoke(reader(HOST), prompt, host_view, host_job,
+                                    kind="host", billing_job=slots["host"], allowed_event_ids=sorted(valid_ids))
         if set(host["result"]["cited_event_ids"]) - valid_ids:
             raise ValueError("主持人引用了不存在或无权公开的事件，本回合保留待恢复")
         if asyncio.current_task().cancelling():
@@ -297,7 +468,8 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         result["description"] = host["result"]["description"]
         await ledger_io(runtime.ledger.release_unused)
         result["agent_events"] = public_events
-        result["agent_inputs"] = [{"npc_id": key, "content": value} for key, value in inputs.items() if key in selected]
+        result["agent_inputs"] = [] if context.turn.is_continue else [
+            {"npc_id": key, "content": value} for key, value in inputs.items() if key in selected]
         result["agent_turn"] = {"mode": "collaborative", "participants": selected, "deferred": deferred,
                                 "budget": await ledger_io(runtime.ledger.summary), "status": "settled", "audit": narration_audit(result["description"], public_events)}
         if deferred:

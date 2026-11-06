@@ -1,9 +1,6 @@
-/* composer: component styles and responsive states. */
-
-
 .th-composer {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    grid-template-columns: minmax(0, 1fr) 8.5rem;
 }
 
 .th-suggestions {
@@ -59,7 +56,7 @@
 
 .th-send {
     display: grid;
-    grid-template-columns: 34px 1fr;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     padding: 0 9px 0 5px;
     cursor: pointer;
@@ -68,8 +65,6 @@
 .th-send:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .th-send span { width: 29px; height: 29px; display: grid; place-items: center; font: 800 0.8rem 'Yu Mincho', serif; }
-
-body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 
 @media (max-width: 1080px) {
     .th-composer-fields { grid-template-columns: 1fr; }
@@ -81,103 +76,117 @@ body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 }
 
 @media (max-width: 560px) {
-    .th-composer { grid-template-columns: minmax(0, 1fr) 5.25rem; }
-    .th-send { min-width: 76px; grid-template-columns: 25px minmax(0, 1fr); padding-right: 5px; }
+    .th-composer { grid-template-columns: minmax(0, 1fr); }
+    .th-composer-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .th-composer-fields label { grid-template-columns: 28px minmax(0, 1fr); }
+    .th-composer textarea { min-height: 76px; padding-inline: 8px; }
+    .th-send { min-width: 76px; padding-inline: 4px; }
     .th-send span { width: 23px; height: 25px; }
     .th-send strong { font-size: 0.64rem; }
 }
 
 .th-composer {
-    gap: 12px 14px;
-    padding: 16px clamp(18px, 2.4vw, 32px) 18px;
-    border-top: 1px solid var(--kin-line);
-    background: rgba(255, 253, 249, 0.94);
-    box-shadow: 0 -14px 36px rgba(122, 92, 104, 0.1);
-    backdrop-filter: blur(6px);
+    box-shadow: none;
+    background: var(--veil);
+    border-top: 1px solid var(--accent-line);
+    backdrop-filter: none;
+    padding: 12px clamp(16px, 3vw, 42px) 22px;
+    gap: 16px;
 }
 
 .th-suggestions button {
-    border: 1px solid rgba(183, 143, 69, 0.26);
-    border-radius: 999px;
-    background: #FFFDF9;
     color: var(--ink-soft);
     transition: border-color 0.3s var(--ease-drift), color 0.3s var(--ease-drift),
         box-shadow 0.3s var(--ease-drift);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    padding: 4px 10px 4px 5px;
 }
 
 .th-suggestions button:hover {
     border-color: var(--sakura-deep);
     color: var(--shu);
-    box-shadow: 0 4px 12px rgba(223, 137, 165, 0.2);
+    box-shadow: none;
 }
 
 .th-composer-fields label {
-    border: 1px solid rgba(183, 143, 69, 0.28);
-    border-radius: var(--radius-m);
-    background: #FFFFFF;
     overflow: hidden;
     transition: border-color 0.3s var(--ease-drift), box-shadow 0.3s var(--ease-drift);
+    border: 1px solid var(--line);
+    border-color: var(--line);
+    background: var(--input);
+    border-radius: 6px;
 }
 
 .th-composer-fields label:focus-within {
-    border-color: var(--sakura-deep);
-    box-shadow: 0 0 0 3px rgba(248, 196, 213, 0.32);
+    border-color: var(--shu);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .th-composer-fields label > span {
-    border-right: 1px solid rgba(183, 143, 69, 0.2);
-    color: var(--kin);
+    color: var(--shu);
+    background: transparent;
+    border-right: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
 }
 
 .th-composer textarea {
+    letter-spacing: 0;
     color: var(--ink);
-    font: 0.86rem/1.7 var(--font-mincho);
-    letter-spacing: 0.03em;
+    font: 1rem/1.8 var(--font-display);
 }
 
 .th-composer textarea::placeholder {
-    color: #B8A9AE;
+    color: var(--ink-faint);
 }
 
 .th-voice {
-    border: 1px solid rgba(94, 150, 172, 0.4);
     border-radius: 50%;
-    background: rgba(168, 216, 232, 0.2);
-    color: var(--tsuki-deep);
+    border: 0;
+    background: transparent;
+    color: var(--ink-faint);
 }
 
 .th-send {
-    border: 1px solid rgba(255, 241, 246, 0.6);
-    border-radius: var(--radius-m);
-    background: linear-gradient(140deg, var(--sakura-deep), var(--shu));
-    color: #FFFBF7;
-    box-shadow: 0 10px 24px rgba(192, 90, 104, 0.3);
+    box-shadow: none;
     transition: box-shadow 0.32s var(--ease-drift), transform 0.32s var(--ease-drift),
         filter 0.32s var(--ease-drift);
 }
 
 .th-send:hover:not(:disabled) {
-    background: linear-gradient(140deg, #E89AB2, #C96474);
-    box-shadow: 0 14px 30px rgba(192, 90, 104, 0.4);
-    transform: translateY(-1px);
+    box-shadow: none;
+    background: var(--vermilion-hover);
+    transform: none;
 }
 
 .th-send.cancel {
-    background: linear-gradient(140deg, #B9A8C6, var(--fuji-deep));
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--ink);
 }
 
 .th-suggestions button span {
-    border: 1px solid rgba(192, 90, 104, 0.5);
-    border-radius: 50%;
-    background: rgba(255, 253, 249, 0.92);
     color: var(--shu);
+    border-right: 1px solid var(--line);
+    border: 1px solid var(--accent-line);
+    border-radius: 50%;
+    width: 21px;
+    height: 21px;
+    background: var(--accent-soft);
+    font-size: 0.65rem;
 }
 
 .th-send span {
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(2px);
+    display: none;
+    backdrop-filter: none;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font-size: 1rem;
 }
 
 .th-suggestions::-webkit-scrollbar {
@@ -187,11 +196,11 @@ body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 
 .th-suggestions::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    background: rgba(183, 143, 69, 0.28);
+    background: var(--panel);
 }
 
 .th-suggestions::-webkit-scrollbar-thumb:hover {
-    background: rgba(223, 137, 165, 0.45);
+    background: var(--accent-soft);
 }
 
 .th-suggestions::-webkit-scrollbar-track {
@@ -204,22 +213,32 @@ body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
     min-height: 3rem;
     padding-block: 10px;
     overflow: visible;
+    background: var(--vermilion);
+    color: var(--on-vermilion);
+    border: 4px double var(--washi);
+    border-radius: 8px;
+    outline: 1px solid var(--vermilion);
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 4px 10px rgba(142, 40, 35, 0.1);
 }
 
 .th-send strong {
     letter-spacing: 0;
     white-space: nowrap;
     display: block;
-    font-size: 0.8rem;
+    font-size: 1.1rem;
     line-height: 1.6;
     min-height: 1.6em;
     overflow: visible;
+    font-family: var(--font-display);
+    font-weight: 600;
 }
 
 @media (max-width: 560px) {
-    .th-send { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; gap: 8px; }
+    .th-send { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; min-height: 42px; padding-block: 6px; }
     .th-send strong {
         letter-spacing: 0;
+        font-size: 0.8rem;
     }
 }
 
@@ -240,3 +259,5 @@ body.light-theme .th-composer { background: rgba(255, 253, 249, 0.98); }
 .touhou-high-contrast .th-composer { border-color: currentColor; box-shadow: none; }
 
 .touhou-high-contrast .th-composer textarea { color: #fff; }
+
+@media (max-width: 560px) { .th-composer { padding: 10px 12px 12px; gap: 9px; } }
