@@ -13,6 +13,7 @@ from backend.services.life_simulation_service import absolute_hour
 from backend.services.npc_agent_runtime import HOST_RESULT_POLICY_VERSION, NPCRuntime, npc_prompt, ledger_io, record_agent_usage
 from backend.services.npc_identity_service import resolve_npc
 from backend.services.npc_memory_service import commit_memory_usage
+from backend.services.wiki_store import freeze as freeze_wiki
 
 
 CALL_ENVELOPE_BYTES = 62000
@@ -332,14 +333,16 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
     selected, completed, access = list(active), {}, []
     state = candidate.character.setdefault("agent_state", default_agent_state())
     state["mode"] = "collaborative"
-    fingerprint = digest({"context_policy": CONTEXT_POLICY_VERSION,
+    scope = "npc-turn:" + digest([context.turn.character_id, snapshot.get("timeline_epoch", ""), context.turn.turn_id])
+    runtime = runtime or await ledger_io(NPCRuntime, scope, AgentLimits.model_validate(state.get("limits", {})),
+                                         generate=evaluation.generate if evaluation else None, checkpoint=evaluation is None)
+    wiki = await ledger_io(freeze_wiki, runtime.ledger)
+    runtime.evidence_guard = wiki.check if wiki else None
+    fingerprint = digest({**({"wiki": wiki.fingerprint} if wiki else {}), "context_policy": CONTEXT_POLICY_VERSION,
                           "revision": context.base_character_revision, "tasks_revision": context.base_tasks_revision,
                           "epoch": snapshot.get("timeline_epoch", ""), "permissions": state.get("permission_version", 1),
                           "turn": context.turn.model_dump(), "snapshot": {k: v for k, v in snapshot.items()
                             if k not in ("story_summary", "last_played", "_last_context_budget")}, "records": records, "world": entries})
-    scope = "npc-turn:" + digest([context.turn.character_id, snapshot.get("timeline_epoch", ""), context.turn.turn_id])
-    runtime = runtime or await ledger_io(NPCRuntime, scope, AgentLimits.model_validate(state.get("limits", {})),
-                                                 generate=evaluation.generate if evaluation else None, checkpoint=evaluation is None)
     slots = {"host": digest([fingerprint, "host", HOST_RESULT_POLICY_VERSION])}
     slots.update({str(index): digest([fingerprint, "npc", index]) for index in range(MAX_PARTICIPANTS) if active})
     bound = CALL_ENVELOPE_BYTES + runtime.limits.max_output_tokens + 256
@@ -354,11 +357,13 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         source = copy.deepcopy(snapshot)
         source.setdefault("agent_state", {})["events"] = copy.deepcopy(merger.state["events"])
         return EvidenceContext(reader(identity), source, context.tasks, scene,
-                               records=records, world_entries=entries, present_ids=present)
+                               records=records, world_entries=entries, present_ids=present, wiki=wiki)
 
     await ledger_io(runtime.ledger.register_turn, reader(HOST), fingerprint)
 
     async def decide(identity):
+        if wiki:
+            await ledger_io(wiki.check)
         evidence_view = view(identity)
         action = inputs.get(identity, "回应本人收到且尚未处理的互动；未向你披露的玩家指令不可推测")
         evidence = evidence_view.assemble(action)
@@ -457,6 +462,8 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         if len(prompt.encode("utf-8")) > CALL_ENVELOPE_BYTES:
             raise ValueError("发布上下文超过预留预算，尚未提交回合")
         turn_runner.mark(context, "host_narrating")
+        if wiki:
+            await ledger_io(wiki.check)
         valid_ids = {event["id"] for event in public_events}
         host_job = runtime.job(reader(HOST), [fingerprint, "host", HOST_RESULT_POLICY_VERSION], prompt)
         host = await runtime.invoke(reader(HOST), prompt, host_view, host_job,
@@ -478,6 +485,8 @@ async def run_agent_turn(context, *, runtime=None, records=None, present_ids=Non
         record_agent_usage(candidate.character, result["agent_turn"]["budget"], host["runtime"].get("used_model", "unknown"))
         candidate.character["agent_state"]["last_turn"] = copy.deepcopy(result["agent_turn"])
         candidate.prepared_result = result
+        if wiki:
+            wiki.check()
         if evaluation is not None or not persist:
             if evaluation:
                 evaluation.character, evaluation.tasks = candidate.character, candidate.tasks
@@ -515,8 +524,12 @@ async def run_retrieval_turn(context):
     reader = Reader(save_id=context.turn.character_id, epoch=str(context.character.get("timeline_epoch", "")),
                     npc_id=HOST, task_id=str(context.turn.turn_id),
                     permission_version=int(context.character.get("agent_state", {}).get("permission_version", 1)))
+    scope = "retrieval-turn:" + digest([reader.save_id, reader.epoch, reader.task_id])
+    runtime = await ledger_io(NPCRuntime, scope, generate=evaluation.generate if evaluation else None, checkpoint=evaluation is None)
+    wiki = await ledger_io(freeze_wiki, runtime.ledger)
+    runtime.evidence_guard = wiki.check if wiki else None
     view = EvidenceContext(reader, context.character, context.tasks, context.turn.scene, records=records,
-                           present_ids=present, world_entries=_world_entries())
+                           present_ids=present, world_entries=_world_entries(), wiki=wiki)
     evidence = view.assemble(context.turn.action_text)
     profiles = [{"id": key, "name": records[key]["name"], "profile": {field: records[key].get("profile", {}).get(field)
                  for field in ("identity", "personality", "description", "spellcard_style")}} for key in present]
@@ -525,14 +538,15 @@ async def run_retrieval_turn(context):
               "保持角色口吻，尊重自由探索和普通或恋爱交往，提议的数值与动作由后端规则裁定。只输出 schema JSON。\n" +
               json.dumps({"scene": context.turn.scene, "player_action": context.turn.action_text, "evidence": evidence,
                           "npcs": profiles, "selected_npc": context.turn.npc_id, "schema": EnvironmentTurnResult.model_json_schema()}, ensure_ascii=False))
-    scope = "retrieval-turn:" + digest([reader.save_id, reader.epoch, reader.task_id])
-    runtime = await ledger_io(NPCRuntime, scope, generate=evaluation.generate if evaluation else None, checkpoint=evaluation is None)
-    fingerprint = digest([context.base_character_revision, context.base_tasks_revision, context.character.get("agent_state", {}), prompt])
+    fingerprint = digest([context.base_character_revision, context.base_tasks_revision, context.character.get("agent_state", {}), prompt,
+                          *([wiki.fingerprint] if wiki else [])])
     job = runtime.job(reader, fingerprint, prompt)
-    await ledger_io(runtime.ledger.reserve, {job: runtime.reservation(prompt)})
+    await ledger_io(runtime.ledger.reserve, {job: runtime.reservation(prompt)}, replace_pending=True)
     await ledger_io(runtime.ledger.register_turn, reader, fingerprint)
     try:
         async with asyncio.timeout(runtime.limits.timeout_seconds):
+            if wiki:
+                await ledger_io(wiki.check)
             generated = await runtime.invoke(reader, prompt, evidence, job, kind="retrieval")
             if asyncio.current_task().cancelling():
                 raise asyncio.CancelledError()
@@ -540,6 +554,8 @@ async def run_retrieval_turn(context):
             result["contract_valid"] = True
             result["agent_turn"] = {"mode": "retrieval", "participants": [], "budget": await ledger_io(runtime.ledger.summary)}
             record_agent_usage(context.character, result["agent_turn"]["budget"], generated["runtime"].get("used_model", "unknown"))
+            if wiki:
+                wiki.check()
             final = await turn_runner.finalize(context, result)
             await ledger_io(runtime.ledger.set_status, "committed")
     except asyncio.CancelledError:

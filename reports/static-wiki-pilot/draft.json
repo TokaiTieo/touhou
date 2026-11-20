@@ -1,0 +1,549 @@
+{
+  "policy": 1,
+  "sources": {
+    "npc:npc_reimu:name": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_reimu].name",
+      "kind": "npc",
+      "hash": "df594879866bb45c67ac9df9b55053b4cbfacd6750103be0ff7a403574d6308d",
+      "value": "博丽灵梦"
+    },
+    "npc:npc_reimu:profile.identity": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_reimu].profile.identity",
+      "kind": "npc",
+      "hash": "cf486f3c16174394c0d26d236d3894213ae714019afdcebfce54edb4049c7a31",
+      "value": "博丽神社巫女，幻想乡的平衡守护者"
+    },
+    "npc:npc_reimu:location_id": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_reimu].location_id",
+      "kind": "npc",
+      "hash": "db64fdc0da7451b54e989335424b86ce8b7497d39c3bb5ebe5b801143c9d339f",
+      "value": "loc_hakurei"
+    },
+    "place:loc_hakurei:name": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_hakurei].name",
+      "kind": "place",
+      "hash": "3e7e68a3f6568388fb1e2c00e4f94fdc6a14f9258d0500de66f3e48eb2cabde9",
+      "value": "博丽神社"
+    },
+    "npc:npc_sanae:name": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sanae].name",
+      "kind": "npc",
+      "hash": "2191b7847d5f41a8823d28181bf797f281e9436914df2100f103e8446fff42f1",
+      "value": "东风谷早苗"
+    },
+    "npc:npc_sanae:profile.identity": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sanae].profile.identity",
+      "kind": "npc",
+      "hash": "40b9b5581c0be92bbf5e914b1d091c6b81f2c1d2ba3b2ff1f1fe580a98764e83",
+      "value": "守矢神社风祝，现人神"
+    },
+    "npc:npc_sanae:location_id": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sanae].location_id",
+      "kind": "npc",
+      "hash": "ddc5a17baff4a001760c6dc8577894e037234436d8b9e9358146dceeca41228b",
+      "value": "loc_moriya"
+    },
+    "place:loc_moriya:name": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_moriya].name",
+      "kind": "place",
+      "hash": "be59647a3a4aea0ecac2439f232050eda9f10fa61a4eee74b3c324d41168f129",
+      "value": "守矢神社"
+    },
+    "npc:npc_sakuya:name": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sakuya].name",
+      "kind": "npc",
+      "hash": "3e3390726575efd65d5c23eb7806ff4fb321896e35eb6a60ac386baab58d1ea4",
+      "value": "十六夜咲夜"
+    },
+    "npc:npc_sakuya:profile.identity": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sakuya].profile.identity",
+      "kind": "npc",
+      "hash": "d836272bb1e05e99a883ffa2e9bf8e1cfbfa61c3cf030f1d8bef1ab55e6f7fce",
+      "value": "红魔馆女仆长，时间操纵者"
+    },
+    "npc:npc_sakuya:location_id": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_sakuya].location_id",
+      "kind": "npc",
+      "hash": "0c81b50558dfaf0ae4c2b86a32867f20ad9bf93e5939adbb206ddeabb495c4c1",
+      "value": "loc_scarlet"
+    },
+    "place:loc_scarlet:name": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_scarlet].name",
+      "kind": "place",
+      "hash": "b70d0353256d5ee54d7e9a8433443d33706811333223c57bdcd4d517b4d6daa0",
+      "value": "红魔馆"
+    },
+    "npc:npc_remilia:name": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_remilia].name",
+      "kind": "npc",
+      "hash": "bbbeae244274b000edaeb68a5190bcf9ea944c9e9b2b865eaf1053f3dab54cfe",
+      "value": "蕾米莉亚"
+    },
+    "npc:npc_remilia:profile.identity": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_remilia].profile.identity",
+      "kind": "npc",
+      "hash": "a33ffd53e14a4a14515c0680e2a5f0d1542544c209b64b0415b1fae391c030fe",
+      "value": "红魔馆主人，命运的吸血鬼"
+    },
+    "npc:npc_remilia:location_id": {
+      "file": "npcs/npc_index.json",
+      "selector": "npcs[id=npc_remilia].location_id",
+      "kind": "npc",
+      "hash": "0c81b50558dfaf0ae4c2b86a32867f20ad9bf93e5939adbb206ddeabb495c4c1",
+      "value": "loc_scarlet"
+    },
+    "place:loc_hakurei:description": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_hakurei].description",
+      "kind": "place",
+      "hash": "6c9c1cc54d4c93ca619226e19ccb0b416733b908a1196f2b0b2eb5361a67dcf4",
+      "value": "博丽灵梦守护的边境神社，大结界最薄弱处，也是外界与幻想乡的连接点。境内有塞钱箱、本殿与灵梦偷懒用的走廊。"
+    },
+    "book:wi_loc_hakurei:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_hakurei].title",
+      "kind": "book",
+      "hash": "3e7e68a3f6568388fb1e2c00e4f94fdc6a14f9258d0500de66f3e48eb2cabde9",
+      "value": "博丽神社"
+    },
+    "book:wi_loc_hakurei:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_hakurei].content",
+      "kind": "book",
+      "hash": "6fd912114af8f179400d6c075cab107be600733cfb36f5dcb84d54b49b7cff3a",
+      "value": "博丽神社位于幻想乡边缘，是灵梦的住处和结界节点。这里常有来客、宴会与异变咨询，表面清静，实际是各方消息交汇处。"
+    },
+    "place:loc_moriya:description": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_moriya].description",
+      "kind": "place",
+      "hash": "41810ca76c5de99d9b90aee2159c485a9be512044bae40a646d116136f3878f8",
+      "value": "位于妖怪之山山顶的现代风格神社，风神八坂神奈子、山神洩矢诹访子与风祝东风谷早苗在此经营。"
+    },
+    "book:wi_loc_moriya:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_moriya].title",
+      "kind": "book",
+      "hash": "be59647a3a4aea0ecac2439f232050eda9f10fa61a4eee74b3c324d41168f129",
+      "value": "守矢神社"
+    },
+    "book:wi_loc_moriya:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_moriya].content",
+      "kind": "book",
+      "hash": "b2e2bd6a1cac27ef75ef7ce26675f5c5c3d5ecf0ba491f90b82ee75e8d313c64",
+      "value": "守矢神社位于妖怪之山，由神奈子、诹访子与早苗经营。早苗通常在这里履行风祝职责，神社积极获取信仰并愿意采用新方法。"
+    },
+    "place:loc_scarlet:description": {
+      "file": "locations/location_base.json",
+      "selector": "locations[id=loc_scarlet].description",
+      "kind": "place",
+      "hash": "966b2d24df066c3a88b71e759803ba5711e8d559c79e71cbc96860b37ff52b5e",
+      "value": "矗立于雾之湖畔的深红色洋馆，吸血鬼蕾米莉亚与芙兰朵露的居城。由完美潇洒的女仆长咲夜管理，馆内有巨大图书馆与地下封印室。"
+    },
+    "book:wi_loc_scarlet:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_scarlet].title",
+      "kind": "book",
+      "hash": "b70d0353256d5ee54d7e9a8433443d33706811333223c57bdcd4d517b4d6daa0",
+      "value": "红魔馆"
+    },
+    "book:wi_loc_scarlet:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_loc_scarlet].content",
+      "kind": "book",
+      "hash": "733d9256c7ec7d04a98c62ac1307d86956303e722836a2cd122bfada2d5fb760",
+      "value": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。"
+    },
+    "book:wi_faction_scarlet:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_faction_scarlet].title",
+      "kind": "book",
+      "hash": "8075f4cea07942a110fe63f89824cdd1c86fe484e533a95b1967f5314347834a",
+      "value": "红魔馆关系"
+    },
+    "book:wi_faction_scarlet:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_faction_scarlet].content",
+      "kind": "book",
+      "hash": "b8e07548ce6ab41e2215fae3abf5eeebf7d188efef2de7a8f16684f6498ea9ac",
+      "value": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。"
+    },
+    "book:wi_faction_moriya:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_faction_moriya].title",
+      "kind": "book",
+      "hash": "5f1f71c9b3664741d58ead9d51af91592c9f975e13d142f2d229dfdba13a720b",
+      "value": "守矢关系"
+    },
+    "book:wi_faction_moriya:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_faction_moriya].content",
+      "kind": "book",
+      "hash": "214243b3b248e3de6993959316d3eb1f9b3144640fddcc42b71ad14f94752eb4",
+      "value": "神奈子擅长经营与规划，诹访子更古老也更随性，早苗负责现实沟通和奇迹。三人并非上下级式的单一关系。"
+    },
+    "book:wi_spellcard_rules:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_spellcard_rules].title",
+      "kind": "book",
+      "hash": "0b99f8b16dff1d9215eddedd846c8236dba1caecd894fb23fc683ad813c2763f",
+      "value": "符卡规则"
+    },
+    "book:wi_spellcard_rules:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_spellcard_rules].content",
+      "kind": "book",
+      "hash": "15514e850ff77d86de4e9cee063c214d1e1b68de7e89b2e52becb53e28da44a8",
+      "value": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。"
+    },
+    "book:wi_incident_custom:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_incident_custom].title",
+      "kind": "book",
+      "hash": "36495ad3e6e7a5df2b1bae9b252a92745eee50452bdc09e66c6a9e6dfd5e6fa8",
+      "value": "异变解决惯例"
+    },
+    "book:wi_incident_custom:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_incident_custom].content",
+      "kind": "book",
+      "hash": "2d568aeb11d813d46c6dcc8672f0f94ba42f4e3d40c2a1880488a30af8e36603",
+      "value": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。"
+    },
+    "book:wi_outsider:title": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_outsider].title",
+      "kind": "book",
+      "hash": "e025e4505537644b4bd0b4c60a9356ca93951362a07cb02956a466f36201c644",
+      "value": "外来者"
+    },
+    "book:wi_outsider:content": {
+      "file": "world_info.json",
+      "selector": "entries[id=wi_outsider].content",
+      "kind": "book",
+      "hash": "78f7233d38bc19f81d5bcc8750cb75a2f7c5b82051b3659ab24d2d08bf3c1a48",
+      "value": "外来者通常不了解幻想乡常识，最初会引起好奇或警惕；是否寻找归途由玩家决定，任何地点都不会仅因外来身份被系统封锁。"
+    }
+  },
+  "pages": {
+    "npc_reimu": {
+      "type": "person",
+      "title": "博丽灵梦",
+      "entity": "npc_reimu",
+      "readers": [
+        "npc_reimu"
+      ],
+      "scene": "博丽神社",
+      "claims": [
+        {
+          "text": "博丽灵梦：博丽神社巫女，幻想乡的平衡守护者。",
+          "refs": [
+            "npc:npc_reimu:name",
+            "npc:npc_reimu:profile.identity"
+          ],
+          "links": []
+        },
+        {
+          "text": "博丽灵梦的设定地点是博丽神社（不是实时位置）。",
+          "refs": [
+            "npc:npc_reimu:name",
+            "npc:npc_reimu:location_id",
+            "place:loc_hakurei:name"
+          ],
+          "links": [
+            "loc_hakurei"
+          ]
+        }
+      ]
+    },
+    "npc_sanae": {
+      "type": "person",
+      "title": "东风谷早苗",
+      "entity": "npc_sanae",
+      "readers": [
+        "npc_sanae"
+      ],
+      "scene": "守矢神社",
+      "claims": [
+        {
+          "text": "东风谷早苗：守矢神社风祝，现人神。",
+          "refs": [
+            "npc:npc_sanae:name",
+            "npc:npc_sanae:profile.identity"
+          ],
+          "links": []
+        },
+        {
+          "text": "东风谷早苗的设定地点是守矢神社（不是实时位置）。",
+          "refs": [
+            "npc:npc_sanae:name",
+            "npc:npc_sanae:location_id",
+            "place:loc_moriya:name"
+          ],
+          "links": [
+            "loc_moriya"
+          ]
+        }
+      ]
+    },
+    "npc_sakuya": {
+      "type": "person",
+      "title": "十六夜咲夜",
+      "entity": "npc_sakuya",
+      "readers": [
+        "npc_sakuya"
+      ],
+      "scene": "红魔馆",
+      "claims": [
+        {
+          "text": "十六夜咲夜：红魔馆女仆长，时间操纵者。",
+          "refs": [
+            "npc:npc_sakuya:name",
+            "npc:npc_sakuya:profile.identity"
+          ],
+          "links": []
+        },
+        {
+          "text": "十六夜咲夜的设定地点是红魔馆（不是实时位置）。",
+          "refs": [
+            "npc:npc_sakuya:name",
+            "npc:npc_sakuya:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "links": [
+            "loc_scarlet"
+          ]
+        }
+      ]
+    },
+    "npc_remilia": {
+      "type": "person",
+      "title": "蕾米莉亚",
+      "entity": "npc_remilia",
+      "readers": [
+        "npc_remilia"
+      ],
+      "scene": "红魔馆",
+      "claims": [
+        {
+          "text": "蕾米莉亚：红魔馆主人，命运的吸血鬼。",
+          "refs": [
+            "npc:npc_remilia:name",
+            "npc:npc_remilia:profile.identity"
+          ],
+          "links": []
+        },
+        {
+          "text": "蕾米莉亚的设定地点是红魔馆（不是实时位置）。",
+          "refs": [
+            "npc:npc_remilia:name",
+            "npc:npc_remilia:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "links": [
+            "loc_scarlet"
+          ]
+        }
+      ]
+    },
+    "loc_hakurei": {
+      "type": "place",
+      "title": "博丽神社",
+      "entity": "loc_hakurei",
+      "readers": [
+        "npc_reimu"
+      ],
+      "scene": "博丽神社",
+      "claims": [
+        {
+          "text": "博丽灵梦守护的边境神社，大结界最薄弱处，也是外界与幻想乡的连接点。",
+          "refs": [
+            "place:loc_hakurei:name",
+            "place:loc_hakurei:description"
+          ],
+          "links": []
+        },
+        {
+          "text": "博丽神社位于幻想乡边缘，是灵梦的住处和结界节点。这里常有来客、宴会与异变咨询，表面清静，实际是各方消息交汇处。",
+          "refs": [
+            "book:wi_loc_hakurei:title",
+            "book:wi_loc_hakurei:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "loc_moriya": {
+      "type": "place",
+      "title": "守矢神社",
+      "entity": "loc_moriya",
+      "readers": [
+        "npc_sanae"
+      ],
+      "scene": "守矢神社",
+      "claims": [
+        {
+          "text": "位于妖怪之山山顶的现代风格神社，风神八坂神奈子、山神洩矢诹访子与风祝东风谷早苗在此经营。",
+          "refs": [
+            "place:loc_moriya:name",
+            "place:loc_moriya:description"
+          ],
+          "links": []
+        },
+        {
+          "text": "守矢神社位于妖怪之山，由神奈子、诹访子与早苗经营。早苗通常在这里履行风祝职责，神社积极获取信仰并愿意采用新方法。",
+          "refs": [
+            "book:wi_loc_moriya:title",
+            "book:wi_loc_moriya:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "loc_scarlet": {
+      "type": "place",
+      "title": "红魔馆",
+      "entity": "loc_scarlet",
+      "readers": [
+        "npc_sakuya",
+        "npc_remilia"
+      ],
+      "scene": "红魔馆",
+      "claims": [
+        {
+          "text": "矗立于雾之湖畔的深红色洋馆，吸血鬼蕾米莉亚与芙兰朵露的居城。",
+          "refs": [
+            "place:loc_scarlet:name",
+            "place:loc_scarlet:description"
+          ],
+          "links": []
+        },
+        {
+          "text": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。",
+          "refs": [
+            "book:wi_loc_scarlet:title",
+            "book:wi_loc_scarlet:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "scarlet": {
+      "type": "faction",
+      "title": "红魔馆成员",
+      "entity": "scarlet",
+      "readers": [
+        "npc_sakuya",
+        "npc_remilia",
+        "npc_patchouli",
+        "npc_meiling",
+        "npc_flandre"
+      ],
+      "scene": "",
+      "claims": [
+        {
+          "text": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。",
+          "refs": [
+            "book:wi_faction_scarlet:title",
+            "book:wi_faction_scarlet:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "moriya": {
+      "type": "faction",
+      "title": "守矢成员",
+      "entity": "moriya",
+      "readers": [
+        "npc_sanae",
+        "npc_kanako",
+        "npc_suwako"
+      ],
+      "scene": "",
+      "claims": [
+        {
+          "text": "神奈子擅长经营与规划，诹访子更古老也更随性，早苗负责现实沟通和奇迹。三人并非上下级式的单一关系。",
+          "refs": [
+            "book:wi_faction_moriya:title",
+            "book:wi_faction_moriya:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "spellcard": {
+      "type": "rule",
+      "title": "符卡规则",
+      "entity": "spellcard",
+      "readers": [
+        "*"
+      ],
+      "scene": "",
+      "claims": [
+        {
+          "text": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。",
+          "refs": [
+            "book:wi_spellcard_rules:title",
+            "book:wi_spellcard_rules:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "incident": {
+      "type": "rule",
+      "title": "异变解决惯例",
+      "entity": "incident",
+      "readers": [
+        "*"
+      ],
+      "scene": "",
+      "claims": [
+        {
+          "text": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。",
+          "refs": [
+            "book:wi_incident_custom:title",
+            "book:wi_incident_custom:content"
+          ],
+          "links": []
+        }
+      ]
+    },
+    "outsider": {
+      "type": "rule",
+      "title": "外来者",
+      "entity": "outsider",
+      "readers": [
+        "@host"
+      ],
+      "scene": "",
+      "claims": [
+        {
+          "text": "外来者通常不了解幻想乡常识，最初会引起好奇或警惕；是否寻找归途由玩家决定，任何地点都不会仅因外来身份被系统封锁。",
+          "refs": [
+            "book:wi_outsider:title",
+            "book:wi_outsider:content"
+          ],
+          "links": []
+        }
+      ]
+    }
+  },
+  "conflicts": []
+}

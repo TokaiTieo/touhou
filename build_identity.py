@@ -30,10 +30,17 @@ def build_identity(root, *, source_worlds=False):
     world_root = root / "worlds" if source_worlds else root / "release" / "build_worlds_clean"
     if not world_root.exists():
         raise ValueError("Prepare clean release worlds before building")
+    wiki = world_root / "world_touhou/wiki"
+    if source_worlds and (wiki / "published.json").is_file():
+        from backend.services.wiki_store import Store, release_files
+        for name, content in release_files(Store(wiki.parent, wiki)).items():
+            files["worlds/world_touhou/wiki/" + name] = hashlib.sha256(content.encode("utf-8")).hexdigest()
     for path in sorted(world_root.rglob("*")):
         if not path.is_file():
             continue
         relative = path.relative_to(world_root)
+        if source_worlds and path.is_relative_to(wiki):
+            continue
         if source_worlds and "sessions" in relative.parts:
             continue
         if "sessions" in relative.parts or path.name.startswith("."):
