@@ -218,12 +218,15 @@ class NPCRuntime:
         self.limits = limits or AgentLimits()
         self.ledger = BudgetLedger(path or CHECKPOINT_PATH, scope, self.limits.max_tokens, self.limits.max_requests)
         self.generate, self.checkpoint = generate, checkpoint
+        self.evidence_guard = None
 
     def reservation(self, prompt):
         return len(prompt.encode("utf-8")) + 256 + self.limits.max_output_tokens
 
     async def _generate(self, payload):
         prompt, job = payload["prompt"], payload.get("billing_job", payload["job"])
+        if self.evidence_guard:
+            self.evidence_guard()
         request_id = await ledger_io(self.ledger.start, job, self.reservation(prompt))
         usage = {}
         success = False
@@ -233,6 +236,8 @@ class NPCRuntime:
             else:
                 response = await call_ai_async(prompt, temperature=0.65, max_output_tokens=self.limits.max_output_tokens, single_attempt=True, structured=True)
             usage = get_last_ai_usage()
+            if self.evidence_guard:
+                self.evidence_guard()
             if not self.generate and get_last_ai_error():
                 raise AgentDecisionError("人物或主持人请求失败，结果保留待恢复；没有提交回合")
             from backend.services.ai_contracts import EnvironmentTurnResult

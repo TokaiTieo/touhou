@@ -155,13 +155,16 @@ class RecoveryTests(unittest.IsolatedAsyncioTestCase):
         records = {f'npc_test_{i}': {'id': f'npc_test_{i}', 'name': f'访客{i}', 'profile': {'identity': '旅客'}} for i in range(6)}
         ctx.turn.action_text = '向' + '、'.join(row['name'] for row in records.values()) + '问好'
         calls, running, maximum = [], 0, 0
+        first_batch = asyncio.Event()
         async def generate(prompt, temperature):
             nonlocal running, maximum
             calls.append(prompt)
             running += 1
             maximum = max(maximum, running)
             try:
-                await asyncio.sleep(.03)
+                if running == 3:
+                    first_batch.set()
+                await asyncio.wait_for(first_batch.wait(), timeout=5)
                 return '{"commands":[{"kind":"wait"}]}' if '独立的人物' in prompt else '{"description":"庭院安静。","cited_event_ids":[]}'
             finally:
                 running -= 1

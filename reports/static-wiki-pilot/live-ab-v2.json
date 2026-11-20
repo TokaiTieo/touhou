@@ -1,0 +1,459 @@
+{
+  "edition": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+  "model": "deepseek-v4-flash",
+  "results": [
+    {
+      "case": "place",
+      "enabled": false,
+      "question": "我想找风祝早苗。她的设定地点是哪座神社？这能证明她此刻一定在那里吗？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "f772af8226ccd69509a6fe782bc3c9937b72332a0fb17ad49d03e88ec16721ff",
+      "evidence": [
+        {
+          "id": "wi_loc_moriya",
+          "kind": "world_info",
+          "content": "守矢神社位于妖怪之山，由神奈子、诹访子与早苗经营。早苗通常在这里履行风祝职责，神社积极获取信仰并愿意采用新方法。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 6920,
+      "evidence_terms": {
+        "守矢": true,
+        "此刻": false
+      },
+      "usage": {
+        "prompt_tokens": 2331,
+        "completion_tokens": 358,
+        "total_tokens": 2689
+      },
+      "answer": "人间之里的街角，午后的风把晒着的稻穗吹得沙沙响。你向卖团子的老婆婆打听风祝早苗，她抬手指向妖怪之山的方向：“守矢神社，就在那边山上。早苗大人平时都在那儿当风祝，不过她可不是总待在神社里——那孩子爱往村里跑，前些日子还在这儿帮人修过水车呢。”她顿了顿，又补一句：“至于此刻在不在神社，我可说不准，神明的行踪哪是我这老婆子能算的。”旁边一个挑担的年轻人插嘴说，听说守矢神社最近在村里拉信仰、试些新法子，早苗有时会在村中走动，但这也只是听来的话。\n\n⏰ 过了1小时",
+      "calls": 1,
+      "seconds": 8.468
+    },
+    {
+      "case": "place",
+      "enabled": true,
+      "question": "我想找风祝早苗。她的设定地点是哪座神社？这能证明她此刻一定在那里吗？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "f46395dc5675a4f52bac4789f5f0240c811d1ad864697e5e00435ebf3573afa6",
+      "evidence": [
+        {
+          "id": "wiki:npc_sanae:1",
+          "kind": "wiki",
+          "title": "东风谷早苗",
+          "content": "东风谷早苗的设定地点是守矢神社（不是实时位置）。",
+          "links": [
+            "守矢神社"
+          ],
+          "refs": [
+            "npc:npc_sanae:name",
+            "npc:npc_sanae:location_id",
+            "place:loc_moriya:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wi_loc_moriya",
+          "kind": "world_info",
+          "content": "守矢神社位于妖怪之山，由神奈子、诹访子与早苗经营。早苗通常在这里履行风祝职责，神社积极获取信仰并愿意采用新方法。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_sanae:0",
+          "kind": "wiki",
+          "title": "东风谷早苗",
+          "content": "东风谷早苗：守矢神社风祝，现人神。",
+          "links": [],
+          "refs": [
+            "npc:npc_sanae:name",
+            "npc:npc_sanae:profile.identity"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7647,
+      "evidence_terms": {
+        "守矢": true,
+        "此刻": false
+      },
+      "usage": {
+        "prompt_tokens": 2657,
+        "completion_tokens": 362,
+        "total_tokens": 3019
+      },
+      "answer": "人间之里的街道上，午后的阳光斜照在屋檐上，你拉住一位正在整理货摊的杂货店老板打听。\n\n“风祝早苗啊？”老板把手里的木箱搁下，想了想，“她可是守矢神社的风祝，那神社在妖怪之山上头。要说她平时在哪儿，那自然多半是在神社里履行风祝的职责。不过——”他摆了摆手，“这可不代表她现在就蹲在神社里。守矢神社那帮人为了收集信仰，成天往人里跑，早苗本人也常下山办事。你要找她，去守矢神社碰碰运气是最稳妥的，但能不能见着，我可不敢打包票。”\n\n他顿了顿，又补了一句：“妖怪之山那边路不太好走，你自己掂量着办。”\n\n⏰ 过了1小时",
+      "calls": 1,
+      "seconds": 4.535
+    },
+    {
+      "case": "faction",
+      "enabled": true,
+      "question": "红魔馆成员中谁决策、谁管理、谁守门？请区分这三个职责。",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "3d81b651356272488cf162f87b3d88a58cfc1d2f79c83f6049bfb44d16fec0bd",
+      "evidence": [
+        {
+          "id": "wiki:scarlet:0",
+          "kind": "wiki",
+          "title": "红魔馆成员",
+          "content": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。",
+          "links": [],
+          "refs": [
+            "book:wi_faction_scarlet:title",
+            "book:wi_faction_scarlet:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:loc_scarlet:1",
+          "kind": "wiki",
+          "title": "红魔馆",
+          "content": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。",
+          "links": [],
+          "refs": [
+            "book:wi_loc_scarlet:title",
+            "book:wi_loc_scarlet:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:loc_scarlet:0",
+          "kind": "wiki",
+          "title": "红魔馆",
+          "content": "矗立于雾之湖畔的深红色洋馆，吸血鬼蕾米莉亚与芙兰朵露的居城。",
+          "links": [],
+          "refs": [
+            "place:loc_scarlet:name",
+            "place:loc_scarlet:description"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_remilia:1",
+          "kind": "wiki",
+          "title": "蕾米莉亚",
+          "content": "蕾米莉亚的设定地点是红魔馆（不是实时位置）。",
+          "links": [
+            "红魔馆"
+          ],
+          "refs": [
+            "npc:npc_remilia:name",
+            "npc:npc_remilia:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 8186,
+      "evidence_terms": {
+        "蕾米莉亚": true,
+        "咲夜": true,
+        "美铃": true
+      },
+      "usage": {
+        "prompt_tokens": 2920,
+        "completion_tokens": 388,
+        "total_tokens": 3308
+      },
+      "answer": "人间之里的茶摊边，几个村民正围着一位刚从雾之湖方向回来的行脚商打听红魔馆的事。你凑近时，行脚商正压低声音说：“那馆子里头，拿主意的和管事的可不是一个人。”\n\n“怎么说？”卖团子的老伯把扇子一收。\n\n“红魔馆那位当家的吸血鬼——蕾米莉亚，大事都是她拍板。”行脚商竖起一根手指，“可馆里上上下下怎么运转、谁做什么、账目和规矩，全是咲夜在管。她才是真正把活儿安排下去的人。”\n\n旁边一个年轻人插嘴：“那守门的呢？我听说门口总有个红头发的。”\n\n“美铃。”行脚商点头，“守门的是她，白天多半在门房那边打盹——这话是听来的，我可没亲眼见着。”\n\n老伯哼了一声：“那图书馆呢？”\n\n“帕秋莉管书和知识，这个倒是常有人提。”行脚商摊手，“至于地下那位芙兰朵露……村里说法不一，只知道不该轻慢对待。具体怎样，我就不清楚了。”\n\n他顿了顿，又补一句：“反正啊，别把‘谁说了算’和‘谁在管’混成一件事，红魔馆分得清。”说完便低头喝茶，似乎不愿再多讲。\n\n⏰ 过了30分钟",
+      "calls": 1,
+      "seconds": 5.4
+    },
+    {
+      "case": "faction",
+      "enabled": false,
+      "question": "红魔馆成员中谁决策、谁管理、谁守门？请区分这三个职责。",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "3496088116a5e72c04320e15f0e0ede379e27385323f603757c9b50098419d8b",
+      "evidence": [
+        {
+          "id": "wi_faction_scarlet",
+          "kind": "world_info",
+          "content": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wi_loc_scarlet",
+          "kind": "world_info",
+          "content": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7206,
+      "evidence_terms": {
+        "蕾米莉亚": true,
+        "咲夜": true,
+        "美铃": true
+      },
+      "usage": {
+        "prompt_tokens": 2453,
+        "completion_tokens": 365,
+        "total_tokens": 2818
+      },
+      "answer": "人间之里的茶摊边，你向一位刚从雾之湖方向回来的行脚商人打听红魔馆的规矩。他压低声音，用筷子蘸着茶水在桌上比划：“那馆子分工清楚得很。拿主意的是蕾米莉亚大小姐——馆里大小事最终都由她点头。管事的则是女仆长咲夜，日常调度、来客接待、馆内杂务，全经她的手。守门的嘛，是红发的门卫美铃，白天多半在正门外打盹，不过真有事她也会拦。”他顿了顿，又补一句，“至于那位不动的大图书馆帕秋莉，是出主意、查资料的，不算决策也不算守门；地下那位妹妹……传闻不少，但具体如何，外人说不清。”说完他端起茶碗，像是怕多说惹麻烦。\n\n⏰ 过了30分钟",
+      "calls": 1,
+      "seconds": 4.939
+    },
+    {
+      "case": "rule",
+      "enabled": false,
+      "question": "我想不打架就解决异变。符卡决斗和协商撤退是否冲突？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "da2048068050f980aa0352a6865cfc6ce75738f3748f01e1bce489eff84b016a",
+      "evidence": [
+        {
+          "id": "wi_spellcard_rules",
+          "kind": "world_info",
+          "content": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wi_incident_custom",
+          "kind": "world_info",
+          "content": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7203,
+      "evidence_terms": {
+        "符卡": true,
+        "协商": true
+      },
+      "usage": {
+        "prompt_tokens": 2436,
+        "completion_tokens": 337,
+        "total_tokens": 2773
+      },
+      "answer": "人间之里的街角，午后的风把晾在檐下的布巾吹得轻轻作响。你刚把“不想靠打架解决异变”这句话说出口，旁边卖团子的老婆婆就笑呵呵地抬起头来。\n\n“符卡决斗和协商撤退冲不冲突？”她一边翻着炭火上的团子，一边慢悠悠地说，“小伙子，符卡决斗讲的是把招式亮出来、留出能躲的余地，认输也认个明白。它可不是非得拼到有人倒下才算数。你要一边打一边喊停、谈条件、甚至借地形溜走，规矩上都不算犯规——当然，对面愿不愿意听，那是另一回事。”\n\n她把一串团子递过来，又压低声音补了一句：“至于这次异变到底能不能光靠嘴皮子解决……这我可说不准。有人说源头在更远的地方，也有人说只要找到起头的人，好好把话讲开就行。传闻嘛，听一半信一半。”她顿了顿，眼神里带着点看热闹的意味，“不过要我说，先礼后兵，礼不成再亮符卡，也不丢人。”",
+      "calls": 1,
+      "seconds": 4.536
+    },
+    {
+      "case": "rule",
+      "enabled": true,
+      "question": "我想不打架就解决异变。符卡决斗和协商撤退是否冲突？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "36da31897031a8ea550812a6b50c2597ba12e99ba94998e400ddae81b8ad66dd",
+      "evidence": [
+        {
+          "id": "wiki:incident:0",
+          "kind": "wiki",
+          "title": "异变解决惯例",
+          "content": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。",
+          "links": [],
+          "refs": [
+            "book:wi_incident_custom:title",
+            "book:wi_incident_custom:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:spellcard:0",
+          "kind": "wiki",
+          "title": "符卡规则",
+          "content": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。",
+          "links": [],
+          "refs": [
+            "book:wi_spellcard_rules:title",
+            "book:wi_spellcard_rules:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7442,
+      "evidence_terms": {
+        "符卡": true,
+        "协商": true
+      },
+      "usage": {
+        "prompt_tokens": 2572,
+        "completion_tokens": 461,
+        "total_tokens": 3033
+      },
+      "answer": "人间之里的午后，茶摊边飘着烤团子的香气。你刚把“不打架解决异变”的念头说出口，旁边一位正擦着茶杯的老店主便抬起头来，眯眼笑了笑。\n\n“哦？不靠弹幕就摆平异变，这可不是没先例的事。”他往你这边推了推茶壶，“解决异变本来就没有唯一的路子——查源头、坐下来谈、办场仪式，或者像你打算的那样先试试协商，都行得通。关键是别把‘不打’误当成‘不用面对’，当事人怎么反应、事后留下什么余波，可都得照实算。”\n\n他顿了顿，又补了一句，语气很随意：“至于符卡决斗和协商撤退冲不冲突……按符卡规则的说法，决斗讲究宣言、弹幕的美感、给人留出可回避的余地，还有明确认输。它通常不取人性命，也不禁止交涉、撤退，或者借地形周旋。所以先谈、谈不拢再宣布符卡，甚至打一半喊停撤退，都不算坏了规矩。至于具体怎么裁定，那得看场上人的反应，不是我这茶摊能说了算的。”\n\n他抬手指了指村外的方向：“不过异变源头那边现在是什么态度，我可不敢乱讲。你要是想不打架就解决，最好先摸清对面愿不愿意谈——这个，我这儿可没有准信。”\n\n⏰ 过了30分钟",
+      "calls": 1,
+      "seconds": 4.966
+    }
+  ],
+  "cap": 10000000,
+  "budget": {
+    "scope": "wiki-ab-nov20",
+    "token_limit": 10000000,
+    "request_limit": 6,
+    "charged_tokens": 17640,
+    "reserved_and_charged": 17640,
+    "actual_tokens": 17640,
+    "unknown_requests": 0,
+    "requests": 6,
+    "calls": [
+      {
+        "charged": 2689,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2331,
+          "completion_tokens": 358,
+          "total_tokens": 2689
+        },
+        "status": "complete",
+        "elapsed_ms": 6962
+      },
+      {
+        "charged": 3019,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2657,
+          "completion_tokens": 362,
+          "total_tokens": 3019
+        },
+        "status": "complete",
+        "elapsed_ms": 3374
+      },
+      {
+        "charged": 3308,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2920,
+          "completion_tokens": 388,
+          "total_tokens": 3308
+        },
+        "status": "complete",
+        "elapsed_ms": 4241
+      },
+      {
+        "charged": 2818,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2453,
+          "completion_tokens": 365,
+          "total_tokens": 2818
+        },
+        "status": "complete",
+        "elapsed_ms": 3707
+      },
+      {
+        "charged": 2773,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2436,
+          "completion_tokens": 337,
+          "total_tokens": 2773
+        },
+        "status": "complete",
+        "elapsed_ms": 3465
+      },
+      {
+        "charged": 3033,
+        "estimated": false,
+        "usage": {
+          "prompt_tokens": 2572,
+          "completion_tokens": 461,
+          "total_tokens": 3033
+        },
+        "status": "complete",
+        "elapsed_ms": 3909
+      }
+    ]
+  }
+}

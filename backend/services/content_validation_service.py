@@ -406,4 +406,14 @@ def validate_world_content(world_root: Path, schemas_root: Path = None) -> Dict:
         "incidents": len(incidents),
         "world_info_entries": len(world_info),
     }
+    pointer = world_root / "wiki" / "published.json"
+    if pointer.exists():
+        from backend.services.wiki_store import Store, INVALID
+        store = Store(world_root, pointer.parent)
+        try:
+            if store.index()["active"]:
+                _, bundle = store.read()
+                counts["wiki_pages"] = len(bundle["pages"])
+        except INVALID as exc:
+            errors.append(f"static wiki: {exc}")
     return {"valid": not errors, "errors": errors, "counts": counts}

@@ -1,0 +1,428 @@
+{
+  "edition": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+  "model": "offline-fixture",
+  "results": [
+    {
+      "case": "place",
+      "enabled": false,
+      "question": "我想找风祝早苗。她的设定地点是哪座神社？这能证明她此刻一定在那里吗？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "f772af8226ccd69509a6fe782bc3c9937b72332a0fb17ad49d03e88ec16721ff",
+      "evidence": [
+        {
+          "id": "wi_loc_moriya",
+          "kind": "world_info",
+          "content": "守矢神社位于妖怪之山，由神奈子、诹访子与早苗经营。早苗通常在这里履行风祝职责，神社积极获取信仰并愿意采用新方法。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 6920,
+      "evidence_terms": {
+        "守矢": true,
+        "此刻": false
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 1.016
+    },
+    {
+      "case": "place",
+      "enabled": true,
+      "question": "我想找风祝早苗。她的设定地点是哪座神社？这能证明她此刻一定在那里吗？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "66608916cc4eef80ceb2e46ec2e743a69a8413b7f1abf305048945d214e63360",
+      "evidence": [
+        {
+          "id": "wiki:npc_sanae:1",
+          "kind": "wiki",
+          "title": "东风谷早苗",
+          "content": "东风谷早苗的设定地点是守矢神社（不是实时位置）。",
+          "links": [
+            "守矢神社"
+          ],
+          "refs": [
+            "npc:npc_sanae:name",
+            "npc:npc_sanae:location_id",
+            "place:loc_moriya:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_reimu:1",
+          "kind": "wiki",
+          "title": "博丽灵梦",
+          "content": "博丽灵梦的设定地点是博丽神社（不是实时位置）。",
+          "links": [
+            "博丽神社"
+          ],
+          "refs": [
+            "npc:npc_reimu:name",
+            "npc:npc_reimu:location_id",
+            "place:loc_hakurei:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_remilia:1",
+          "kind": "wiki",
+          "title": "蕾米莉亚",
+          "content": "蕾米莉亚的设定地点是红魔馆（不是实时位置）。",
+          "links": [
+            "红魔馆"
+          ],
+          "refs": [
+            "npc:npc_remilia:name",
+            "npc:npc_remilia:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_sakuya:1",
+          "kind": "wiki",
+          "title": "十六夜咲夜",
+          "content": "十六夜咲夜的设定地点是红魔馆（不是实时位置）。",
+          "links": [
+            "红魔馆"
+          ],
+          "refs": [
+            "npc:npc_sakuya:name",
+            "npc:npc_sakuya:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 8171,
+      "evidence_terms": {
+        "守矢": true,
+        "此刻": false
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 0.09
+    },
+    {
+      "case": "faction",
+      "enabled": true,
+      "question": "红魔馆成员中谁决策、谁管理、谁守门？请区分这三个职责。",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "3d81b651356272488cf162f87b3d88a58cfc1d2f79c83f6049bfb44d16fec0bd",
+      "evidence": [
+        {
+          "id": "wiki:scarlet:0",
+          "kind": "wiki",
+          "title": "红魔馆成员",
+          "content": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。",
+          "links": [],
+          "refs": [
+            "book:wi_faction_scarlet:title",
+            "book:wi_faction_scarlet:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:loc_scarlet:1",
+          "kind": "wiki",
+          "title": "红魔馆",
+          "content": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。",
+          "links": [],
+          "refs": [
+            "book:wi_loc_scarlet:title",
+            "book:wi_loc_scarlet:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:loc_scarlet:0",
+          "kind": "wiki",
+          "title": "红魔馆",
+          "content": "矗立于雾之湖畔的深红色洋馆，吸血鬼蕾米莉亚与芙兰朵露的居城。",
+          "links": [],
+          "refs": [
+            "place:loc_scarlet:name",
+            "place:loc_scarlet:description"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:npc_remilia:1",
+          "kind": "wiki",
+          "title": "蕾米莉亚",
+          "content": "蕾米莉亚的设定地点是红魔馆（不是实时位置）。",
+          "links": [
+            "红魔馆"
+          ],
+          "refs": [
+            "npc:npc_remilia:name",
+            "npc:npc_remilia:location_id",
+            "place:loc_scarlet:name"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 8186,
+      "evidence_terms": {
+        "蕾米莉亚": true,
+        "咲夜": true,
+        "美铃": true
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 0.071
+    },
+    {
+      "case": "faction",
+      "enabled": false,
+      "question": "红魔馆成员中谁决策、谁管理、谁守门？请区分这三个职责。",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "3496088116a5e72c04320e15f0e0ede379e27385323f603757c9b50098419d8b",
+      "evidence": [
+        {
+          "id": "wi_faction_scarlet",
+          "kind": "world_info",
+          "content": "红魔馆成员彼此关系紧密但职责不同。蕾米莉亚作决定，咲夜执行管理，帕秋莉提供知识，美铃守门，芙兰朵露需要被认真而非轻慢地对待。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wi_loc_scarlet",
+          "kind": "world_info",
+          "content": "红魔馆坐落在雾之湖畔，由蕾米莉亚统领、咲夜管理。馆内有帕秋莉的大图书馆与芙兰朵露常居的地下区域，来客会受到礼仪与实力的双重审视。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7206,
+      "evidence_terms": {
+        "蕾米莉亚": true,
+        "咲夜": true,
+        "美铃": true
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 0.063
+    },
+    {
+      "case": "rule",
+      "enabled": false,
+      "question": "我想不打架就解决异变。符卡决斗和协商撤退是否冲突？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "da2048068050f980aa0352a6865cfc6ce75738f3748f01e1bce489eff84b016a",
+      "evidence": [
+        {
+          "id": "wi_spellcard_rules",
+          "kind": "world_info",
+          "content": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wi_incident_custom",
+          "kind": "world_info",
+          "content": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。",
+          "visibility": {
+            "scope": "public"
+          },
+          "source": "world_book",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 7203,
+      "evidence_terms": {
+        "符卡": true,
+        "协商": true
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 0.062
+    },
+    {
+      "case": "rule",
+      "enabled": true,
+      "question": "我想不打架就解决异变。符卡决斗和协商撤退是否冲突？",
+      "save_hash": "6f00438e0e67d6f3129b2237ee8fcb0a0a79c65c969938dbb37dddb052fd5e62",
+      "prompt_hash": "c6b9174f51f5c3ef4a95fdb7b105555b0c68c650316a08765c9b0eb60e8f7807",
+      "evidence": [
+        {
+          "id": "wiki:incident:0",
+          "kind": "wiki",
+          "title": "异变解决惯例",
+          "content": "异变没有唯一解。调查源头、协商停手、举行仪式、符卡对决或玩家自创方案都可成立；结局应保留当事人的反应与后续余波。",
+          "links": [],
+          "refs": [
+            "book:wi_incident_custom:title",
+            "book:wi_incident_custom:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:spellcard:0",
+          "kind": "wiki",
+          "title": "符卡规则",
+          "content": "符卡决斗强调宣言、弹幕美感、可回避空间与明确认输。胜负会影响疲劳、熟练度和关系，通常不造成永久死亡，也不禁止交涉、撤退或利用环境。",
+          "links": [],
+          "refs": [
+            "book:wi_spellcard_rules:title",
+            "book:wi_spellcard_rules:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:outsider:0",
+          "kind": "wiki",
+          "title": "外来者",
+          "content": "外来者通常不了解幻想乡常识，最初会引起好奇或警惕；是否寻找归途由玩家决定，任何地点都不会仅因外来身份被系统封锁。",
+          "links": [],
+          "refs": [
+            "book:wi_outsider:title",
+            "book:wi_outsider:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        },
+        {
+          "id": "wiki:loc_hakurei:1",
+          "kind": "wiki",
+          "title": "博丽神社",
+          "content": "博丽神社位于幻想乡边缘，是灵梦的住处和结界节点。这里常有来客、宴会与异变咨询，表面清静，实际是各方消息交汇处。",
+          "links": [],
+          "refs": [
+            "book:wi_loc_hakurei:title",
+            "book:wi_loc_hakurei:content"
+          ],
+          "source": "2fa969e2b7acb1a37abcb4ff59cae02906fc4a5d5a769c68b4660cd404b826cc",
+          "scope": {
+            "save_id": "wiki-ab",
+            "epoch": "one",
+            "reader_id": "@host",
+            "permission_version": 1
+          }
+        }
+      ],
+      "request_chars": 8213,
+      "evidence_terms": {
+        "符卡": true,
+        "协商": true
+      },
+      "answer": "离线测试回执。",
+      "calls": 1,
+      "seconds": 0.069
+    }
+  ],
+  "cap": 10000000,
+  "budget": {
+    "scope": "wiki-ab-nov20",
+    "token_limit": 10000000,
+    "request_limit": 6,
+    "charged_tokens": 0,
+    "reserved_and_charged": 0,
+    "actual_tokens": 0,
+    "unknown_requests": 0,
+    "requests": 0,
+    "calls": []
+  }
+}

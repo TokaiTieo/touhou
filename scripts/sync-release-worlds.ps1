@@ -29,7 +29,8 @@ Get-ChildItem -LiteralPath $sourceRoot -File -Recurse | ForEach-Object {
         throw "Source file escaped worlds directory."
     }
     $relative = $_.FullName.Substring($sourcePrefix.Length)
-    if ($relative.StartsWith($sessionSegment, [StringComparison]::OrdinalIgnoreCase)) {
+    if ($relative.StartsWith($sessionSegment, [StringComparison]::OrdinalIgnoreCase) -or
+        $relative.StartsWith("world_touhou\wiki\", [StringComparison]::OrdinalIgnoreCase)) {
         return
     }
     $destination = Join-Path $targetRoot $relative
@@ -39,6 +40,10 @@ Get-ChildItem -LiteralPath $sourceRoot -File -Recurse | ForEach-Object {
 }
 
 New-Item -ItemType Directory -Path (Join-Path $targetRoot "world_touhou\sessions\characters") -Force | Out-Null
+if (Test-Path -LiteralPath (Join-Path $sourceRoot "world_touhou\wiki\published.json")) {
+    & python (Join-Path $PSScriptRoot "static-wiki.py") export --destination (Join-Path $targetRoot "world_touhou\wiki") | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "Static wiki release validation failed." }
+}
 
 $files = Get-ChildItem -LiteralPath $targetRoot -File -Recurse
 $saveFiles = $files | Where-Object {
