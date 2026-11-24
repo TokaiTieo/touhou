@@ -38,7 +38,7 @@ def storage_name(records, identity):
 class EvidenceContext:
     TOOLS = frozenset(("search_history", "recall_npc_memory", "search_world_info", "get_task_context", "get_npc_context"))
 
-    def __init__(self, reader: Reader, character, tasks, scene, *, records=None, world_entries=(), present_ids=()):
+    def __init__(self, reader: Reader, character, tasks, scene, *, records=None, world_entries=(), present_ids=(), wiki=None):
         if reader.save_id != str(character.get("character_id")) or reader.epoch != str(character.get("timeline_epoch", "")):
             raise ValueError("Reader belongs to a different save or timeline")
         self.reader = reader
@@ -47,6 +47,7 @@ class EvidenceContext:
         if reader.npc_id != HOST and reader.npc_id not in self._records:
             raise ValueError("Unknown stable NPC ID")
         self._world = copy.deepcopy(list(world_entries))
+        self._wiki = wiki
         self.scene = scene
         self._present = frozenset(present_ids)
         self.usage = []
@@ -144,10 +145,21 @@ class EvidenceContext:
         self.usage.extend({"npc_name": owner_key, "memory_id": item["id"]} for item in selected if item["kind"] == "memory")
         return selected
 
-    def search_world_info(self, query="", limit=6, budget_chars=2500):
-        rows = []
+    def search_world_info(self, query="", limit=6, budget_chars=2500, source="combined"):
+        if source not in ("combined", "world_book"):
+            raise ValueError("未知的世界知识来源")
+        rows, excluded = [], set()
+        if self._wiki:
+            authorized = {entry.get("id") for entry in self._world if isinstance(entry, dict)
+                          and self._visible(entry, public_world=True)
+                          and entry.get("status") not in ("draft", "pending", "revoked", "retracted", "withdrawn")
+                          and entry.get("truth_status") != "pending"}
+            rows, excluded = self._wiki.rows(self.reader.npc_id, self.scene, query,
+                                             original=source == "world_book", allowed_books=authorized)
         for item in self._world:
-            if not isinstance(item, dict) or not self._visible(item, public_world=True):
+            if not isinstance(item, dict) or item.get("id") in excluded or not self._visible(item, public_world=True):
+                continue
+            if item.get("status") in ("draft", "pending", "revoked", "retracted", "withdrawn") or item.get("truth_status") == "pending":
                 continue
             keywords = item.get("keywords", [])
             keywords = [keywords] if isinstance(keywords, str) else keywords
@@ -207,6 +219,8 @@ class EvidenceContext:
         if tool not in self.TOOLS:
             raise ValueError("Unknown evidence tool")
         allowed = {"query", "limit", "budget_chars"} | ({"npc_id"} if tool == "get_npc_context" else set())
+        if tool == "search_world_info":
+            allowed.add("source")
         if not isinstance(arguments, dict) or set(arguments) - allowed:
             raise ValueError("Evidence identity and permissions are server-bound")
         return getattr(self, tool)(**arguments)
